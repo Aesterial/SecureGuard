@@ -5,6 +5,7 @@
 var SETTINGS_KEY = "secureguard.settings.v1";
 var DEFAULT_SETTINGS = {
   screenshotGuardEnabled: true,
+  lightThemeEnabled: false,
   startupEnabled: false,
   autoLockEnabled: false,
   autoLockMinutes: 5,
@@ -208,6 +209,7 @@ function initApp(invoke) {
 
   var settingsControls = {
     screenshotGuard: document.getElementById("setting-screenshot-guard"),
+    lightThemeEnabled: document.getElementById("setting-light-theme"),
     startupEnabled: document.getElementById("setting-startup-enabled"),
     autoLockEnabled: document.getElementById("setting-auto-lock-enabled"),
     autoLockMinutes: document.getElementById("setting-auto-lock-minutes"),
@@ -398,6 +400,7 @@ function initApp(invoke) {
   function normalizeSettings(source) {
     var out = {
       screenshotGuardEnabled: DEFAULT_SETTINGS.screenshotGuardEnabled,
+      lightThemeEnabled: DEFAULT_SETTINGS.lightThemeEnabled,
       startupEnabled: DEFAULT_SETTINGS.startupEnabled,
       autoLockEnabled: DEFAULT_SETTINGS.autoLockEnabled,
       autoLockMinutes: DEFAULT_SETTINGS.autoLockMinutes,
@@ -410,6 +413,7 @@ function initApp(invoke) {
     }
 
     out.screenshotGuardEnabled = !!source.screenshotGuardEnabled;
+    out.lightThemeEnabled = !!source.lightThemeEnabled;
     out.startupEnabled = !!source.startupEnabled;
     out.autoLockEnabled = !!source.autoLockEnabled;
     out.confirmDelete = source.confirmDelete !== false;
@@ -451,6 +455,8 @@ function initApp(invoke) {
   function renderSettings() {
     settingsControls.screenshotGuard.checked =
       !!appSettings.screenshotGuardEnabled;
+    settingsControls.lightThemeEnabled.checked =
+      !!appSettings.lightThemeEnabled;
     settingsControls.startupEnabled.checked = !!appSettings.startupEnabled;
     settingsControls.autoLockEnabled.checked = !!appSettings.autoLockEnabled;
     settingsControls.autoLockMinutes.value = String(
@@ -458,6 +464,13 @@ function initApp(invoke) {
     );
     settingsControls.confirmDelete.checked = !!appSettings.confirmDelete;
     settingsControls.blockContextMenu.checked = !!appSettings.blockContextMenu;
+  }
+
+  function applyTheme() {
+    document.body.classList.toggle(
+      "theme-light",
+      !!appSettings.lightThemeEnabled,
+    );
   }
 
   function clearAutoLockTimer() {
@@ -765,6 +778,7 @@ function initApp(invoke) {
   }
 
   renderSettings();
+  applyTheme();
 
   settingsControls.screenshotGuard.addEventListener(
     "change",
@@ -778,6 +792,17 @@ function initApp(invoke) {
 
   settingsControls.startupEnabled.addEventListener("change", async function () {
     await applyStartupSetting(settingsControls.startupEnabled.checked, false);
+  });
+
+  settingsControls.lightThemeEnabled.addEventListener("change", function () {
+    appSettings.lightThemeEnabled = settingsControls.lightThemeEnabled.checked;
+    saveSettings();
+    applyTheme();
+    notify(
+      appSettings.lightThemeEnabled
+        ? "Белая тема включена"
+        : "Белая тема выключена",
+    );
   });
 
   settingsControls.autoLockEnabled.addEventListener("change", function () {

@@ -103,8 +103,13 @@ unsafe extern "system" fn keyboard_proc(
     w_param: WPARAM,
     l_param: LPARAM,
 ) -> LRESULT {
-    if code == HC_ACTION as i32 && PROTECTION_ON.load(Ordering::SeqCst) {
+    if code == HC_ACTION as i32 {
         let kb = *(l_param as *const KBDLLHOOKSTRUCT);
+
+        if !PROTECTION_ON.load(Ordering::SeqCst) {
+            return CallNextHookEx(ptr::null_mut(), code, w_param, l_param);
+        }
+
         if kb.vkCode == 0x2C {
             clear_clipboard();
             return 1;
@@ -224,6 +229,7 @@ fn monitor_capture_tools() {
         thread::sleep(Duration::from_secs(3));
     }
 }
+
 #[cfg(target_os = "windows")]
 fn monitor_clipboard(hwnd: HWND) {
     loop {

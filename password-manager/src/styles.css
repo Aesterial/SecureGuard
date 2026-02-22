@@ -17,6 +17,24 @@
     --rad: 8px;
 }
 
+body.theme-light {
+    --black: #f2f5f8;
+    --bg: #ffffff;
+    --bg2: #ffffff;
+    --bg3: #ebeff4;
+    --card: #ffffff;
+    --card-h: #f7f9fc;
+    --input: #ffffff;
+    --border: #d8e0ea;
+    --border-h: #bac6d4;
+    --white: #111827;
+    --gray1: #1f2937;
+    --gray2: #4b5563;
+    --gray3: #6b7280;
+    --gray4: #94a3b8;
+    --danger: #dc2626;
+}
+
 *,
 *::before,
 *::after {
@@ -33,6 +51,9 @@ body {
     overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
 }
 
 ::-webkit-scrollbar {
