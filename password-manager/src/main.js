@@ -192,6 +192,7 @@ function initApp(invoke) {
   var authenticated = false;
   var settingsSyncInProgress = false;
   var startupSyncInProgress = false;
+  var weakConfirmResolver = null;
 
   var loaded = loadSettings();
   var appSettings = loaded.settings;
@@ -215,6 +216,7 @@ function initApp(invoke) {
   };
 
   var modals = {
+    weak: document.getElementById("weak-modal"),
     seed: document.getElementById("seed-modal"),
     del: document.getElementById("del-modal"),
   };
@@ -267,6 +269,11 @@ function initApp(invoke) {
   function hideModal(name) {
     if (modals[name]) modals[name].classList.add("hidden");
     if (name === "seed") document.getElementById("modal-seed").value = "";
+    if (name === "weak") {
+      document.getElementById("weak-list").innerHTML = "";
+      document.getElementById("weak-text").textContent =
+        "Точно использовать такую сид-фразу/пароль?";
+    }
   }
 
   function notify(msg, type) {
@@ -286,6 +293,106 @@ function initApp(invoke) {
         el.classList.add("hidden");
       }, 300);
     }, 2500);
+  }
+
+  function evaluatePasswordStrength(password) {
+    var score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    return {
+      weak: score < 3,
+      score: score,
+    };
+  }
+
+  function evaluateSeedStrength(seedPhrase) {
+    var words = seedPhrase.trim().split(/\s+/).filter(Boolean);
+    var score = 0;
+    var uniqueWords = {};
+    var totalWordLength = 0;
+
+    for (var i = 0; i < words.length; i++) {
+      var lower = words[i].toLowerCase();
+      uniqueWords[lower] = true;
+      totalWordLength += words[i].length;
+    }
+
+    var uniqueCount = Object.keys(uniqueWords).length;
+    var avgWordLength = words.length > 0 ? totalWordLength / words.length : 0;
+    var hasDigits = /\d/.test(seedPhrase);
+    var hasSpecial = /[^A-Za-z0-9\s]/.test(seedPhrase);
+    var hasMixedCase = /[A-Z]/.test(seedPhrase) && /[a-z]/.test(seedPhrase);
+
+    if (words.length >= 4) score++;
+    if (words.length >= 6) score++;
+    if (uniqueCount >= Math.max(3, words.length - 1)) score++;
+    if (avgWordLength >= 5) score++;
+    if (hasDigits || hasSpecial || hasMixedCase) score++;
+
+    return {
+      weak: score < 3 || words.length < 4,
+      score: score,
+    };
+  }
+
+  function getWeakSecrets(password, seedPhrase) {
+    var weakSecrets = [];
+    if (evaluatePasswordStrength(password).weak) {
+      weakSecrets.push("пароль");
+    }
+    if (evaluateSeedStrength(seedPhrase).weak) {
+      weakSecrets.push("сид-фразу");
+    }
+    return weakSecrets;
+  }
+
+  function resolveWeakConfirmation(confirmed) {
+    if (weakConfirmResolver) {
+      var resolver = weakConfirmResolver;
+      weakConfirmResolver = null;
+      resolver(confirmed);
+    }
+    hideModal("weak");
+  }
+
+  function confirmWeakSecrets(weakSecrets) {
+    if (!weakSecrets || weakSecrets.length === 0) {
+      return Promise.resolve(true);
+    }
+
+    return new Promise(function (resolve) {
+      weakConfirmResolver = resolve;
+
+      var weakText = document.getElementById("weak-text");
+      var weakList = document.getElementById("weak-list");
+      weakList.innerHTML = "";
+
+      if (weakSecrets.length === 1 && weakSecrets[0] === "пароль") {
+        weakText.textContent =
+          "Точно использовать такой пароль? Это может снизить безопасность.";
+      } else if (weakSecrets.length === 1 && weakSecrets[0] === "сид-фразу") {
+        weakText.textContent =
+          "Точно использовать такую сид-фразу? Это может снизить безопасность.";
+      } else {
+        weakText.textContent =
+          "Точно использовать такой пароль и такую сид-фразу? Это может снизить безопасность.";
+      }
+
+      for (var i = 0; i < weakSecrets.length; i++) {
+        var li = document.createElement("li");
+        li.textContent =
+          weakSecrets[i] === "пароль"
+            ? "Пароль легко подобрать. Добавьте длину, цифры и спецсимволы."
+            : "Сид-фраза слишком простая. Лучше использовать больше уникальных слов.";
+        weakList.appendChild(li);
+      }
+
+      showModal("weak");
+    });
   }
 
   function normalizeSettings(source) {
@@ -368,6 +475,7 @@ function initApp(invoke) {
       await invoke("logout");
     } catch (e) {}
 
+    resolveWeakConfirmation(false);
     hideModal("seed");
     hideModal("del");
     currentId = null;
@@ -782,6 +890,14 @@ function initApp(invoke) {
         return;
       }
 
+      var regWeakSecrets = getWeakSecrets(p, s);
+      if (regWeakSecrets.length > 0) {
+        var regConfirmed = await confirmWeakSecrets(regWeakSecrets);
+        if (!regConfirmed) {
+          return;
+        }
+      }
+
       setLoad("reg-btn", true);
 
       try {
@@ -855,6 +971,14 @@ function initApp(invoke) {
         return;
       }
 
+      var addWeakSecrets = getWeakSecrets(p, s);
+      if (addWeakSecrets.length > 0) {
+        var addConfirmed = await confirmWeakSecrets(addWeakSecrets);
+        if (!addConfirmed) {
+          return;
+        }
+      }
+
       setLoad("save-btn", true);
 
       try {
@@ -869,6 +993,14 @@ function initApp(invoke) {
 
       setLoad("save-btn", false);
     });
+
+  document.getElementById("weak-yes").addEventListener("click", function () {
+    resolveWeakConfirmation(true);
+  });
+
+  document.getElementById("weak-no").addEventListener("click", function () {
+    resolveWeakConfirmation(false);
+  });
 
   document
     .getElementById("modal-yes")
@@ -928,6 +1060,7 @@ function initApp(invoke) {
 
   document.querySelectorAll(".modal-bg").forEach(function (bg) {
     bg.addEventListener("click", function () {
+      resolveWeakConfirmation(false);
       hideModal("seed");
       hideModal("del");
       currentId = null;
@@ -953,6 +1086,7 @@ function initApp(invoke) {
     }
 
     if (e.key === "Escape") {
+      resolveWeakConfirmation(false);
       hideModal("seed");
       hideModal("del");
       currentId = null;

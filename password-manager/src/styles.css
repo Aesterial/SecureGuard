@@ -811,6 +811,19 @@ body {
     flex: 1;
 }
 
+.weak-list {
+    margin-top: -4px;
+    margin-bottom: 10px;
+    padding-left: 18px;
+    color: var(--gray1);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.weak-list li {
+    margin-bottom: 4px;
+}
+
 .del-name {
     background: var(--bg3);
     padding: 8px 12px;
