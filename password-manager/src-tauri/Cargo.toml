@@ -32,3 +32,4 @@ winapi = { version = "0.3", features = [
     "tlhelp32", "psapi", "securitybaseapi", "wow64apiset",
     "winnt", "impl-default"
 ] }
+winreg = "0.52"

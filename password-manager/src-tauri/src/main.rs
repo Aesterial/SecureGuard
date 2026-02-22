@@ -12,6 +12,10 @@ use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::Mutex;
 use tauri::{ClipboardManager, Manager, State};
+#[cfg(target_os = "windows")]
+use winreg::enums::HKEY_CURRENT_USER;
+#[cfg(target_os = "windows")]
+use winreg::RegKey;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PasswordEntry {
@@ -27,6 +31,11 @@ struct AppState {
     passwords: Mutex<Vec<PasswordEntry>>,
     next_id: Mutex<u64>,
 }
+
+#[cfg(target_os = "windows")]
+const STARTUP_RUN_KEY_PATH: &str = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+#[cfg(target_os = "windows")]
+const STARTUP_VALUE_NAME: &str = "SecureGuard";
 
 #[tauri::command]
 async fn login(
@@ -188,6 +197,76 @@ async fn set_screenshot_guard_enabled(
     Ok(enabled)
 }
 
+#[tauri::command]
+async fn get_startup_status(state: State<'_, AppState>) -> Result<bool, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("Не авторизован".into());
+    }
+
+    get_windows_startup_status()
+}
+
+#[tauri::command]
+async fn set_startup_enabled(state: State<'_, AppState>, enabled: bool) -> Result<bool, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("Не авторизован".into());
+    }
+
+    set_windows_startup_enabled(enabled)
+}
+
+#[cfg(target_os = "windows")]
+fn get_windows_startup_status() -> Result<bool, String> {
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let run_key = match hkcu.open_subkey(STARTUP_RUN_KEY_PATH) {
+        Ok(key) => key,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+        Err(err) => return Err(format!("Не удалось открыть ключ автозапуска: {}", err)),
+    };
+
+    match run_key.get_value::<String, _>(STARTUP_VALUE_NAME) {
+        Ok(value) => Ok(!value.trim().is_empty()),
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(err) => Err(format!("Не удалось прочитать автозапуск: {}", err)),
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn get_windows_startup_status() -> Result<bool, String> {
+    Err("Автозапуск поддерживается только на Windows".into())
+}
+
+#[cfg(target_os = "windows")]
+fn set_windows_startup_enabled(enabled: bool) -> Result<bool, String> {
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let (run_key, _) = hkcu
+        .create_subkey(STARTUP_RUN_KEY_PATH)
+        .map_err(|err| format!("Не удалось открыть ключ автозапуска: {}", err))?;
+
+    if enabled {
+        let exe_path = std::env::current_exe()
+            .map_err(|err| format!("Не удалось получить путь приложения: {}", err))?;
+        let startup_value = format!("\"{}\"", exe_path.display());
+
+        run_key
+            .set_value(STARTUP_VALUE_NAME, &startup_value)
+            .map_err(|err| format!("Не удалось включить автозапуск: {}", err))?;
+    } else {
+        match run_key.delete_value(STARTUP_VALUE_NAME) {
+            Ok(_) => {}
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
+            Err(err) => return Err(format!("Не удалось отключить автозапуск: {}", err)),
+        }
+    }
+
+    Ok(enabled)
+}
+
+#[cfg(not(target_os = "windows"))]
+fn set_windows_startup_enabled(_enabled: bool) -> Result<bool, String> {
+    Err("Автозапуск поддерживается только на Windows".into())
+}
+
 fn chrono_now() -> String {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -221,6 +300,8 @@ fn main() {
             is_authenticated,
             get_screenshot_guard_status,
             set_screenshot_guard_enabled,
+            get_startup_status,
+            set_startup_enabled,
         ])
         .run(tauri::generate_context!())
         .expect("Ошибка запуска приложения");

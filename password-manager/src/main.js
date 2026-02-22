@@ -5,6 +5,7 @@
 var SETTINGS_KEY = "secureguard.settings.v1";
 var DEFAULT_SETTINGS = {
   screenshotGuardEnabled: true,
+  startupEnabled: false,
   autoLockEnabled: false,
   autoLockMinutes: 5,
   confirmDelete: true,
@@ -42,6 +43,7 @@ function createFallbackInvoke() {
   var nextId = 1;
   var entries = [];
   var screenshotGuardEnabled = true;
+  var startupEnabled = false;
   var users = {
     test: { password: "test" },
   };
@@ -96,12 +98,27 @@ function createFallbackInvoke() {
       return screenshotGuardEnabled;
     }
 
+    if (command === "get_startup_status") {
+      if (!authenticated) {
+        throw "Не авторизован";
+      }
+      return startupEnabled;
+    }
+
     if (command === "set_screenshot_guard_enabled") {
       if (!authenticated) {
         throw "Не авторизован";
       }
       screenshotGuardEnabled = !!args.enabled;
       return screenshotGuardEnabled;
+    }
+
+    if (command === "set_startup_enabled") {
+      if (!authenticated) {
+        throw "Не авторизован";
+      }
+      startupEnabled = !!args.enabled;
+      return startupEnabled;
     }
 
     if (!authenticated) {
@@ -174,6 +191,7 @@ function initApp(invoke) {
   var autoLockTimer = null;
   var authenticated = false;
   var settingsSyncInProgress = false;
+  var startupSyncInProgress = false;
 
   var loaded = loadSettings();
   var appSettings = loaded.settings;
@@ -189,6 +207,7 @@ function initApp(invoke) {
 
   var settingsControls = {
     screenshotGuard: document.getElementById("setting-screenshot-guard"),
+    startupEnabled: document.getElementById("setting-startup-enabled"),
     autoLockEnabled: document.getElementById("setting-auto-lock-enabled"),
     autoLockMinutes: document.getElementById("setting-auto-lock-minutes"),
     confirmDelete: document.getElementById("setting-confirm-delete"),
@@ -272,6 +291,7 @@ function initApp(invoke) {
   function normalizeSettings(source) {
     var out = {
       screenshotGuardEnabled: DEFAULT_SETTINGS.screenshotGuardEnabled,
+      startupEnabled: DEFAULT_SETTINGS.startupEnabled,
       autoLockEnabled: DEFAULT_SETTINGS.autoLockEnabled,
       autoLockMinutes: DEFAULT_SETTINGS.autoLockMinutes,
       confirmDelete: DEFAULT_SETTINGS.confirmDelete,
@@ -283,6 +303,7 @@ function initApp(invoke) {
     }
 
     out.screenshotGuardEnabled = !!source.screenshotGuardEnabled;
+    out.startupEnabled = !!source.startupEnabled;
     out.autoLockEnabled = !!source.autoLockEnabled;
     out.confirmDelete = source.confirmDelete !== false;
     out.blockContextMenu = source.blockContextMenu !== false;
@@ -323,6 +344,7 @@ function initApp(invoke) {
   function renderSettings() {
     settingsControls.screenshotGuard.checked =
       !!appSettings.screenshotGuardEnabled;
+    settingsControls.startupEnabled.checked = !!appSettings.startupEnabled;
     settingsControls.autoLockEnabled.checked = !!appSettings.autoLockEnabled;
     settingsControls.autoLockMinutes.value = String(
       appSettings.autoLockMinutes,
@@ -444,6 +466,54 @@ function initApp(invoke) {
         appSettings.screenshotGuardEnabled,
         true,
       );
+    }
+  }
+
+  async function applyStartupSetting(enabled, silent) {
+    if (!authenticated) {
+      return;
+    }
+
+    if (startupSyncInProgress) {
+      return;
+    }
+
+    startupSyncInProgress = true;
+    settingsControls.startupEnabled.disabled = true;
+
+    try {
+      var result = await invoke("set_startup_enabled", { enabled: !!enabled });
+      appSettings.startupEnabled = !!result;
+      saveSettings();
+      renderSettings();
+      if (!silent) {
+        notify(
+          appSettings.startupEnabled
+            ? "Автозапуск с Windows включён"
+            : "Автозапуск с Windows выключен",
+        );
+      }
+    } catch (err) {
+      renderSettings();
+      notify(String(err) || "Не удалось изменить автозапуск", "err");
+    }
+
+    settingsControls.startupEnabled.disabled = false;
+    startupSyncInProgress = false;
+  }
+
+  async function syncStartupOnStart() {
+    if (!authenticated) {
+      return;
+    }
+
+    try {
+      var status = await invoke("get_startup_status");
+      appSettings.startupEnabled = !!status;
+      saveSettings();
+      renderSettings();
+    } catch (err) {
+      notify(String(err) || "Не удалось получить статус автозапуска", "err");
     }
   }
 
@@ -598,6 +668,10 @@ function initApp(invoke) {
     },
   );
 
+  settingsControls.startupEnabled.addEventListener("change", async function () {
+    await applyStartupSetting(settingsControls.startupEnabled.checked, false);
+  });
+
   settingsControls.autoLockEnabled.addEventListener("change", function () {
     appSettings.autoLockEnabled = settingsControls.autoLockEnabled.checked;
     saveSettings();
@@ -658,6 +732,7 @@ function initApp(invoke) {
         await invoke("login", { username: u, password: p });
         setAuthenticated(true);
         await syncScreenshotGuardOnStart();
+        await syncStartupOnStart();
         notify("Добро пожаловать!");
         document.getElementById("login-form").reset();
         showPage("dashboard");
@@ -898,6 +973,7 @@ function initApp(invoke) {
       if (ok) {
         setAuthenticated(true);
         await syncScreenshotGuardOnStart();
+        await syncStartupOnStart();
         currentPage = "login";
         showPage("dashboard");
         await loadPasswords();
