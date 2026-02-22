@@ -1,0 +1,7 @@
+[submodule "api/third_party/googleapis"]
+	path = api/third_party/googleapis
+	url = https://github.com/googleapis/googleapis
+
+[submodule "api/third_party/grpc-web"]
+	path = api/third_party/grpc-web
+	url = https://github.com/grpc/grpc-go

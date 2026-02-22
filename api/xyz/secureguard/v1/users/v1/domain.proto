@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package xyz.secureguard.v1.users.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1/users/v1;users";
+
+import "google/protobuf/timestamp.proto";
+
+message User {
+  string id = 1;
+  string username = 2;
+  bool phrase_setted = 3;
+  google.protobuf.Timestamp joined = 4;
+}

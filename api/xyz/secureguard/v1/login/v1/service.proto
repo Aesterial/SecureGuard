@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package xyz.secureguard.v1.login.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1/login/v1;login";
+
+import "xyz/secureguard/v1/login/v1/domain.proto";
+
+service LoginService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+}

@@ -1,0 +1,20 @@
+version: v2
+
+modules:
+  - path: .
+    excludes:
+      - third_party/googleapis
+      - third_party/grpc-web
+  - path: third_party/googleapis
+  - path: third_party/grpc-web
+
+lint:
+  use:
+    - STANDARD
+  ignore:
+    - third_party/googleapis
+    - third_party/grpc-web
+
+breaking:
+  use:
+    - FILE

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package xyz.secureguard.v1.login.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1/login/v1;login";
+
+message AuthorizeRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message RegisterRequest {
+    string username = 1;
+    string password = 2;
+    string phraze = 3;
+}
+
+message AuthorizeResponse {
+    string id = 1;
+}
+
+message RegisterResponse {
+    string id = 1;
+}
