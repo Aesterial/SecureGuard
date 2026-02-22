@@ -170,6 +170,24 @@ async fn is_authenticated(state: State<'_, AppState>) -> Result<bool, String> {
     Ok(state.authenticated.load(Ordering::SeqCst))
 }
 
+#[tauri::command]
+async fn get_screenshot_guard_status() -> Result<bool, String> {
+    Ok(screenshot_guard::is_protection_enabled())
+}
+
+#[tauri::command]
+async fn set_screenshot_guard_enabled(
+    state: State<'_, AppState>,
+    enabled: bool,
+) -> Result<bool, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("Не авторизован".into());
+    }
+
+    screenshot_guard::set_screenshot_protection(enabled);
+    Ok(enabled)
+}
+
 fn chrono_now() -> String {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -201,6 +219,8 @@ fn main() {
             copy_password,
             delete_password,
             is_authenticated,
+            get_screenshot_guard_status,
+            set_screenshot_guard_enabled,
         ])
         .run(tauri::generate_context!())
         .expect("Ошибка запуска приложения");

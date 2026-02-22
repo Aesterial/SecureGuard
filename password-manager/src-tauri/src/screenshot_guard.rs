@@ -20,6 +20,26 @@ use tauri::Window;
 
 static WINDOW_HWND: OnceCell<isize> = OnceCell::new();
 static PROTECTION_ON: AtomicBool = AtomicBool::new(false);
+
+pub fn is_protection_enabled() -> bool {
+    PROTECTION_ON.load(Ordering::SeqCst)
+}
+
+pub fn set_screenshot_protection(enabled: bool) {
+    PROTECTION_ON.store(enabled, Ordering::SeqCst);
+
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(&hwnd) = WINDOW_HWND.get() {
+            if enabled {
+                apply_display_affinity(hwnd as HWND);
+            } else {
+                disable_display_affinity(hwnd as HWND);
+            }
+        }
+    }
+}
+
 pub fn init_screenshot_protection(window: Window) {
     #[cfg(target_os = "windows")]
     {
@@ -46,6 +66,13 @@ fn apply_display_affinity(hwnd: HWND) {
         if result == 0 {
             SetWindowDisplayAffinity(hwnd, 0x00000001);
         }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn disable_display_affinity(hwnd: HWND) {
+    unsafe {
+        let _ = SetWindowDisplayAffinity(hwnd, 0x00000000);
     }
 }
 #[cfg(target_os = "windows")]
@@ -220,5 +247,3 @@ fn monitor_clipboard(hwnd: HWND) {
         thread::sleep(Duration::from_millis(500));
     }
 }
-
-
