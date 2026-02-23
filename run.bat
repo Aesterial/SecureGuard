@@ -14,8 +14,8 @@ cd /d "%~dp0" || (
 )
 
 REM Enter project folder
-cd /d "password-manager" 2>nul || (
-    echo [X] Folder 'password-manager' not found.
+cd /d "client" 2>nul || (
+    echo [X] Folder '"client" ' not found.
     echo     Run setup.bat first.
     pause
     exit /b 1

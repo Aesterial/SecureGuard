@@ -7,7 +7,10 @@ mod crypto;
 mod protection;
 mod screenshot_guard;
 
-use crypto::{decrypt_password, encrypt_password};
+use crypto::{
+    decrypt_password, encrypt_password, hash_account_password, hash_seed_phrase,
+    verify_account_password,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::Mutex;
@@ -26,10 +29,18 @@ pub struct PasswordEntry {
     pub created_at: String,
 }
 
+#[derive(Clone, Debug)]
+struct UserAccount {
+    username: String,
+    password_hash: String,
+    seed_hash: String,
+}
+
 struct AppState {
     authenticated: AtomicBool,
     passwords: Mutex<Vec<PasswordEntry>>,
     next_id: Mutex<u64>,
+    account: Mutex<Option<UserAccount>>,
 }
 
 #[cfg(target_os = "windows")]
@@ -43,25 +54,37 @@ async fn login(
     username: String,
     password: String,
 ) -> Result<String, String> {
-    if username.trim().is_empty() || password.trim().is_empty() {
+    let username = username.trim();
+    if username.is_empty() || password.trim().is_empty() {
         return Err("Введите логин и пароль".into());
     }
-    if username.trim() == "test" && password == "test" {
-        state.authenticated.store(true, Ordering::SeqCst);
-        return Ok("OK".into());
+
+    let account = state.account.lock().await;
+    let account = account.as_ref().ok_or("Сначала зарегистрируйтесь")?;
+    if account.username != username {
+        return Err("Неверный логин или пароль".into());
     }
 
-    Err("Неверный логин или пароль".into())
+    let valid = verify_account_password(&password, &account.password_hash)?;
+    if !valid {
+        return Err("Неверный логин или пароль".into());
+    }
+
+    state.authenticated.store(true, Ordering::SeqCst);
+    Ok("OK".into())
 }
 
 #[tauri::command]
 async fn register(
-    _state: State<'_, AppState>,
+    state: State<'_, AppState>,
     username: String,
     password: String,
     seed_phrase: String,
 ) -> Result<String, String> {
-    if username.trim().is_empty() || username.len() < 3 {
+    let username = username.trim();
+    let seed_phrase = seed_phrase.trim();
+
+    if username.is_empty() || username.len() < 3 {
         return Err("Логин минимум 3 символа".into());
     }
     if password.len() < 8 {
@@ -70,6 +93,22 @@ async fn register(
     if seed_phrase.split_whitespace().count() < 3 {
         return Err("Сид-фраза минимум 3 слова".into());
     }
+
+    let password_hash = hash_account_password(&password)?;
+    let seed_hash = hash_seed_phrase(seed_phrase);
+
+    {
+        let mut account = state.account.lock().await;
+        *account = Some(UserAccount {
+            username: username.to_string(),
+            password_hash,
+            seed_hash,
+        });
+    }
+
+    state.authenticated.store(false, Ordering::SeqCst);
+    state.passwords.lock().await.clear();
+    *state.next_id.lock().await = 0;
 
     Ok("Аккаунт создан! Войдите.".into())
 }
@@ -106,11 +145,20 @@ async fn add_password(
     if password.trim().is_empty() {
         return Err("Введите пароль".into());
     }
-    if seed_phrase.trim().is_empty() {
+    let seed_phrase = seed_phrase.trim();
+    if seed_phrase.is_empty() {
         return Err("Введите сид-фразу".into());
     }
 
-    let (encrypted, salt) = encrypt_password(&password, &seed_phrase)?;
+    {
+        let account = state.account.lock().await;
+        let account = account.as_ref().ok_or("Сначала зарегистрируйтесь")?;
+        if !account.seed_hash.is_empty() && hash_seed_phrase(seed_phrase) != account.seed_hash {
+            return Err("Неверная сид-фраза".into());
+        }
+    }
+
+    let (encrypted, salt) = encrypt_password(&password, seed_phrase)?;
 
     let mut id_counter = state.next_id.lock().await;
     *id_counter += 1;
@@ -148,7 +196,20 @@ async fn copy_password(
             .ok_or("Запись не найдена")?
     };
 
-    let decrypted = decrypt_password(&entry.encrypted_password, &entry.salt, &seed_phrase)?;
+    let seed_phrase = seed_phrase.trim();
+    if seed_phrase.is_empty() {
+        return Err("Введите сид-фразу".into());
+    }
+
+    {
+        let account = state.account.lock().await;
+        let account = account.as_ref().ok_or("Сначала зарегистрируйтесь")?;
+        if !account.seed_hash.is_empty() && hash_seed_phrase(seed_phrase) != account.seed_hash {
+            return Err("Неверная сид-фраза".into());
+        }
+    }
+
+    let decrypted = decrypt_password(&entry.encrypted_password, &entry.salt, seed_phrase)?;
 
     app_handle
         .clipboard_manager()
@@ -283,6 +344,7 @@ fn main() {
             authenticated: AtomicBool::new(false),
             passwords: Mutex::new(Vec::new()),
             next_id: Mutex::new(0),
+            account: Mutex::new(Some(default_account())),
         })
         .setup(|app| {
             let window = app.get_window("main").unwrap();
@@ -305,4 +367,12 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("Ошибка запуска приложения");
+}
+
+fn default_account() -> UserAccount {
+    UserAccount {
+        username: "test".to_string(),
+        password_hash: hash_account_password("test").expect("failed to hash default password"),
+        seed_hash: String::new(),
+    }
 }
