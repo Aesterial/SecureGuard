@@ -1,11 +1,11 @@
 ﻿#[cfg(target_os = "windows")]
 use winapi::shared::minwindef::*;
-#[cfg(target_os = "windows")]
-use winapi::shared::ntdef::NULL;
+// #[cfg(target_os = "windows")]
+// use winapi::shared::ntdef::NULL;
 #[cfg(target_os = "windows")]
 use winapi::um::debugapi::*;
-#[cfg(target_os = "windows")]
-use winapi::um::errhandlingapi::*;
+// #[cfg(target_os = "windows")]
+// use winapi::um::errhandlingapi::*;
 #[cfg(target_os = "windows")]
 use winapi::um::handleapi::*;
 #[cfg(target_os = "windows")]
@@ -1251,15 +1251,15 @@ fn spawn_watchdog() {
                     corrupt_and_exit();
                 }
 
-                check_debugger_windows();
-                check_blacklisted_processes();
-                check_suspicious_drivers();
-                check_parent_process()
+                check_debugger_windows(); // tested, work
+                check_blacklisted_processes(); // tested, work
+                check_suspicious_drivers(); // not tested
+                check_parent_process() // tested, work
             }
 
-            check_hardware_breakpoints();
-            check_ntquery_debug_port();
-            check_ntquery_debug_flags();
+            check_hardware_breakpoints(); // tested (ida, cannot to handling types), work
+            check_ntquery_debug_port(); // not tested
+            check_ntquery_debug_flags(); // not tested
         }
     });
 }
