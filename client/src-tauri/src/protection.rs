@@ -639,6 +639,56 @@ pub fn init_protection() {
     }
 }
 
+/*
+pub fn init_protection() {
+    #[cfg(target_os = "windows")]
+    {
+        check_debugger();
+        check_hardware_breakpoints();
+
+        #[cfg(target_arch = "x86_64")]
+        {
+            raw_syscall::check_debug_port_direct();
+            raw_syscall::check_debug_object_direct();
+            raw_syscall::check_debug_flags_direct();
+            raw_syscall::check_ntdll_hooks();
+            raw_syscall::hide_thread_direct();
+        }
+
+        hide_thread();
+        patch_dbg_attach();
+
+        thread::spawn(|| {
+            thread::sleep(Duration::from_millis(500));
+
+            #[cfg(target_arch = "x86_64")]
+            {
+                raw_syscall::check_debug_port_direct();
+                raw_syscall::check_debug_object_direct();
+                raw_syscall::check_debug_flags_direct();
+                raw_syscall::check_kernel_debugger_direct();
+                raw_syscall::close_handle_trap_direct();
+            }
+
+            check_ntquery_debug_port();
+            check_ntquery_debug_object();
+            check_ntquery_debug_flags();
+            check_heap_flags();
+            check_kernel_debugger();
+        });
+
+        thread::spawn(|| {
+            thread::sleep(Duration::from_secs(2));
+            erase_pe_header();
+        });
+
+        spawn_watchdog();
+        spawn_integrity_watchdog();
+        spawn_syscall_watchdog();
+    }
+}
+*/
+
 
 #[cfg(target_os = "windows")]
 fn check_debugger() {
@@ -1320,7 +1370,7 @@ unsafe fn hash_code_region(addr: usize, len: usize) -> u32 {
 
 
 fn silent_exit() -> ! {
-    process::exit(0);
+    process::exit(0); // or 0xdeadbeef bsod
 }
 
 fn corrupt_and_exit() -> ! {

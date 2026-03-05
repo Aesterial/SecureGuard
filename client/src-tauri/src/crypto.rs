@@ -9,11 +9,38 @@ use rand::{rngs::OsRng, RngCore};
 use sha2::{Digest, Sha256};
 use zeroize::Zeroize;
 
-pub fn encrypt_password(plaintext: &str, seed_phrase: &str) -> Result<(String, String), String> {
+pub const ENCRYPTION_ALGORITHM_AES_256_GCM_ARGON2ID: &str = "aes256gcm-argon2id";
+pub const ENCRYPTION_ALGORITHM_AES_256_GCM_SHA256: &str = "aes256gcm-sha256";
+
+pub fn default_encryption_algorithm() -> &'static str {
+    ENCRYPTION_ALGORITHM_AES_256_GCM_ARGON2ID
+}
+
+pub fn resolve_encryption_algorithm(value: &str) -> Option<&'static str> {
+    let normalized = value.trim().to_ascii_lowercase();
+    match normalized.as_str() {
+        "" | "default" | "argon2id" | "aes-256-gcm-argon2id" | "aes256gcm-argon2id" => {
+            Some(ENCRYPTION_ALGORITHM_AES_256_GCM_ARGON2ID)
+        }
+        "sha256" | "aes-256-gcm-sha256" | "aes256gcm-sha256" => {
+            Some(ENCRYPTION_ALGORITHM_AES_256_GCM_SHA256)
+        }
+        _ => None,
+    }
+}
+
+pub fn encrypt_password(
+    plaintext: &str,
+    seed_phrase: &str,
+    encryption_algorithm: &str,
+) -> Result<(String, String), String> {
+    let algorithm = resolve_encryption_algorithm(encryption_algorithm)
+        .ok_or("Unsupported encryption algorithm".to_string())?;
+
     let mut salt = [0u8; 16];
     OsRng.fill_bytes(&mut salt);
 
-    let mut key = derive_key_from_seed(seed_phrase, &salt)?;
+    let mut key = derive_key_from_seed(seed_phrase, &salt, algorithm)?;
     let cipher = Aes256Gcm::new_from_slice(&key).map_err(|e| format!("Cipher init: {}", e))?;
 
     let mut nonce_bytes = [0u8; 12];
@@ -37,7 +64,11 @@ pub fn decrypt_password(
     encrypted_b64: &str,
     salt_b64: &str,
     seed_phrase: &str,
+    encryption_algorithm: &str,
 ) -> Result<String, String> {
+    let algorithm = resolve_encryption_algorithm(encryption_algorithm)
+        .ok_or("Unsupported encryption algorithm".to_string())?;
+
     let salt = BASE64
         .decode(salt_b64)
         .map_err(|e| format!("Salt decode: {}", e))?;
@@ -52,7 +83,7 @@ pub fn decrypt_password(
     let (nonce_bytes, ciphertext) = combined.split_at(12);
     let nonce = Nonce::from_slice(nonce_bytes);
 
-    let mut key = derive_key_from_seed(seed_phrase, &salt)?;
+    let mut key = derive_key_from_seed(seed_phrase, &salt, algorithm)?;
     let cipher = Aes256Gcm::new_from_slice(&key).map_err(|e| format!("Cipher init: {}", e))?;
 
     let plaintext = cipher
@@ -78,7 +109,19 @@ pub fn hash_seed_phrase(seed_phrase: &str) -> String {
     hex::encode(hasher.finalize())
 }
 
-fn derive_key_from_seed(seed_phrase: &str, salt: &[u8]) -> Result<[u8; 32], String> {
+fn derive_key_from_seed(
+    seed_phrase: &str,
+    salt: &[u8],
+    encryption_algorithm: &str,
+) -> Result<[u8; 32], String> {
+    match encryption_algorithm {
+        ENCRYPTION_ALGORITHM_AES_256_GCM_ARGON2ID => derive_key_argon2id(seed_phrase, salt),
+        ENCRYPTION_ALGORITHM_AES_256_GCM_SHA256 => Ok(derive_key_sha256(seed_phrase, salt)),
+        _ => Err("Unsupported encryption algorithm".into()),
+    }
+}
+
+fn derive_key_argon2id(seed_phrase: &str, salt: &[u8]) -> Result<[u8; 32], String> {
     let mut key = [0u8; 32];
     let argon2 = Argon2::new(
         argon2::Algorithm::Argon2id,
@@ -92,4 +135,14 @@ fn derive_key_from_seed(seed_phrase: &str, salt: &[u8]) -> Result<[u8; 32], Stri
         .map_err(|e| format!("Key derivation: {}", e))?;
 
     Ok(key)
+}
+
+fn derive_key_sha256(seed_phrase: &str, salt: &[u8]) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(seed_phrase.as_bytes());
+    hasher.update(salt);
+    let result = hasher.finalize();
+    let mut key = [0u8; 32];
+    key.copy_from_slice(&result[..32]);
+    key
 }

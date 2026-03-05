@@ -8,8 +8,8 @@ mod protection;
 mod screenshot_guard;
 
 use crypto::{
-    decrypt_password, encrypt_password, hash_account_password, hash_seed_phrase,
-    verify_account_password,
+    decrypt_password, default_encryption_algorithm, encrypt_password, hash_account_password,
+    hash_seed_phrase, resolve_encryption_algorithm, verify_account_password,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -26,6 +26,7 @@ pub struct PasswordEntry {
     pub title: String,
     pub encrypted_password: String,
     pub salt: String,
+    pub encryption_algorithm: String,
     pub created_at: String,
 }
 
@@ -135,6 +136,7 @@ async fn add_password(
     title: String,
     password: String,
     seed_phrase: String,
+    encryption_algorithm: String,
 ) -> Result<PasswordEntry, String> {
     if !state.authenticated.load(Ordering::SeqCst) {
         return Err("Не авторизован".into());
@@ -158,7 +160,9 @@ async fn add_password(
         }
     }
 
-    let (encrypted, salt) = encrypt_password(&password, seed_phrase)?;
+    let algorithm = resolve_encryption_algorithm(&encryption_algorithm)
+        .ok_or("Неподдерживаемый алгоритм шифрования")?;
+    let (encrypted, salt) = encrypt_password(&password, seed_phrase, algorithm)?;
 
     let mut id_counter = state.next_id.lock().await;
     *id_counter += 1;
@@ -169,6 +173,7 @@ async fn add_password(
         title: title.trim().to_string(),
         encrypted_password: encrypted,
         salt,
+        encryption_algorithm: algorithm.to_string(),
         created_at: chrono_now(),
     };
 
@@ -209,7 +214,19 @@ async fn copy_password(
         }
     }
 
-    let decrypted = decrypt_password(&entry.encrypted_password, &entry.salt, seed_phrase)?;
+    let algorithm = if entry.encryption_algorithm.trim().is_empty() {
+        default_encryption_algorithm()
+    } else {
+        resolve_encryption_algorithm(&entry.encryption_algorithm)
+            .ok_or("Неподдерживаемый алгоритм шифрования записи")?
+    };
+
+    let decrypted = decrypt_password(
+        &entry.encrypted_password,
+        &entry.salt,
+        seed_phrase,
+        algorithm,
+    )?;
 
     app_handle
         .clipboard_manager()

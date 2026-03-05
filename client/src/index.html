@@ -465,6 +465,28 @@
                                     <option value="en">English</option>
                                 </select>
                             </div>
+                            <div class="settings-item settings-item-inline">
+                                <div class="settings-copy">
+                                    <h3 id="setting-encryption-title">
+                                        Алгоритм шифрования
+                                    </h3>
+                                    <p id="setting-encryption-desc">
+                                        Выберите, как шифровать пароли через
+                                        сид-фразу.
+                                    </p>
+                                </div>
+                                <select
+                                    id="setting-encryption-algorithm"
+                                    class="select"
+                                >
+                                    <option value="aes256gcm-argon2id">
+                                        AES-256-GCM + Argon2id (рекомендуется)
+                                    </option>
+                                    <option value="aes256gcm-sha256">
+                                        AES-256-GCM + SHA-256 (быстро)
+                                    </option>
+                                </select>
+                            </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
                                     <h3 id="setting-sg-title">

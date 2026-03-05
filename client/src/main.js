@@ -52,6 +52,11 @@ var I18N = {
     "settings.language.desc": "Выберите язык интерфейса приложения.",
     "settings.language.ru": "Русский",
     "settings.language.en": "English",
+    "settings.encryption.title": "Алгоритм шифрования",
+    "settings.encryption.desc":
+      "Выберите способ шифрования паролей сид-фразой.",
+    "settings.encryption.argon2id": "AES-256-GCM + Argon2id (рекомендуется)",
+    "settings.encryption.sha256": "AES-256-GCM + SHA-256 (быстро)",
 
     "settings.screenshotGuard.title": "Screenshot Guard",
     "settings.screenshotGuard.desc":
@@ -123,6 +128,7 @@ var I18N = {
     "notify.copied": "Скопировано",
     "notify.screenshotsBlocked": "Скриншоты заблокированы",
     "notify.languageChanged": "Язык интерфейса изменён",
+    "notify.encryptionChanged": "Алгоритм шифрования обновлён",
 
     "error.fillAllFields": "Заполните все поля",
     "error.loginMin": "Логин: минимум 3 символа",
@@ -193,6 +199,11 @@ var I18N = {
     "settings.language.desc": "Choose the application interface language.",
     "settings.language.ru": "Russian",
     "settings.language.en": "English",
+    "settings.encryption.title": "Encryption algorithm",
+    "settings.encryption.desc":
+      "Choose how passwords are encrypted using the seed phrase.",
+    "settings.encryption.argon2id": "AES-256-GCM + Argon2id (recommended)",
+    "settings.encryption.sha256": "AES-256-GCM + SHA-256 (fast)",
     "settings.screenshotGuard.title": "Screenshot Guard",
     "settings.screenshotGuard.desc":
       "Blocks screenshots and screen capture tools.",
@@ -249,6 +260,7 @@ var I18N = {
     "notify.copied": "Copied",
     "notify.screenshotsBlocked": "Screenshots are blocked",
     "notify.languageChanged": "Interface language changed",
+    "notify.encryptionChanged": "Encryption algorithm updated",
     "error.fillAllFields": "Fill in all fields",
     "error.loginMin": "Username: minimum 3 characters",
     "error.passwordMin": "Password: minimum 8 characters",
@@ -293,6 +305,9 @@ var MESSAGE_KEY_BY_TEXT = {
 };
 
 var SETTINGS_KEY = "secureguard.settings.v1";
+var ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID = "aes256gcm-argon2id";
+var ENCRYPTION_ALGORITHM_AES256_GCM_SHA256 = "aes256gcm-sha256";
+
 var DEFAULT_SETTINGS = {
   screenshotGuardEnabled: true,
   lightThemeEnabled: false,
@@ -302,6 +317,7 @@ var DEFAULT_SETTINGS = {
   confirmDelete: true,
   blockContextMenu: true,
   language: "ru",
+  encryptionAlgorithm: ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID,
 };
 
 function bootstrapApp(retriesLeft) {
@@ -424,6 +440,9 @@ function createFallbackInvoke() {
           title: entry.title,
           encrypted_password: entry.encrypted_password,
           salt: entry.salt,
+          encryption_algorithm:
+            entry.encryption_algorithm ||
+            ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID,
           created_at: entry.created_at,
         };
       });
@@ -433,6 +452,9 @@ function createFallbackInvoke() {
       var title = (args.title || "").trim();
       var password = args.password || "";
       var seed = (args.seedPhrase || "").trim();
+      var encryptionAlgorithm = normalizeEncryptionAlgorithm(
+        args.encryptionAlgorithm,
+      );
       if (!title || !password || !seed) {
         throw "��������� ��� ����";
       }
@@ -441,6 +463,7 @@ function createFallbackInvoke() {
         title: title,
         encrypted_password: password,
         salt: "local",
+        encryption_algorithm: encryptionAlgorithm,
         created_at: new Date().toISOString(),
         _plain: password,
       };
@@ -507,6 +530,9 @@ function initApp(invoke) {
     confirmDelete: document.getElementById("setting-confirm-delete"),
     blockContextMenu: document.getElementById("setting-block-context-menu"),
     language: document.getElementById("setting-language"),
+    encryptionAlgorithm: document.getElementById(
+      "setting-encryption-algorithm",
+    ),
   };
 
   var modals = {
@@ -674,6 +700,8 @@ function initApp(invoke) {
     setText("#page-settings .dash-brand h1", "settings.title");
     setText("#setting-language-title", "settings.language.title");
     setText("#setting-language-desc", "settings.language.desc");
+    setText("#setting-encryption-title", "settings.encryption.title");
+    setText("#setting-encryption-desc", "settings.encryption.desc");
     setText("#setting-sg-title", "settings.screenshotGuard.title");
     setText("#setting-sg-desc", "settings.screenshotGuard.desc");
     setText("#setting-light-theme-title", "settings.lightTheme.title");
@@ -698,6 +726,18 @@ function initApp(invoke) {
     ) {
       settingsControls.language.options[0].text = t("settings.language.ru");
       settingsControls.language.options[1].text = t("settings.language.en");
+    }
+
+    if (
+      settingsControls.encryptionAlgorithm &&
+      settingsControls.encryptionAlgorithm.options.length >= 2
+    ) {
+      settingsControls.encryptionAlgorithm.options[0].text = t(
+        "settings.encryption.argon2id",
+      );
+      settingsControls.encryptionAlgorithm.options[1].text = t(
+        "settings.encryption.sha256",
+      );
     }
 
     setText("#weak-title", "weak.title");
@@ -893,6 +933,19 @@ function initApp(invoke) {
     });
   }
 
+  function normalizeEncryptionAlgorithm(value) {
+    var algorithm = String(value || "")
+      .trim()
+      .toLowerCase();
+    if (
+      algorithm === ENCRYPTION_ALGORITHM_AES256_GCM_SHA256 ||
+      algorithm === "sha256"
+    ) {
+      return ENCRYPTION_ALGORITHM_AES256_GCM_SHA256;
+    }
+    return ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID;
+  }
+
   function normalizeSettings(source) {
     var out = {
       screenshotGuardEnabled: DEFAULT_SETTINGS.screenshotGuardEnabled,
@@ -903,6 +956,7 @@ function initApp(invoke) {
       confirmDelete: DEFAULT_SETTINGS.confirmDelete,
       blockContextMenu: DEFAULT_SETTINGS.blockContextMenu,
       language: DEFAULT_SETTINGS.language,
+      encryptionAlgorithm: DEFAULT_SETTINGS.encryptionAlgorithm,
     };
 
     if (!source || typeof source !== "object") {
@@ -916,6 +970,9 @@ function initApp(invoke) {
     out.confirmDelete = source.confirmDelete !== false;
     out.blockContextMenu = source.blockContextMenu !== false;
     out.language = source.language === "en" ? "en" : "ru";
+    out.encryptionAlgorithm = normalizeEncryptionAlgorithm(
+      source.encryptionAlgorithm,
+    );
 
     var minutes = Number(source.autoLockMinutes);
     if (!isNaN(minutes) && minutes >= 1 && minutes <= 60) {
@@ -965,6 +1022,11 @@ function initApp(invoke) {
     settingsControls.blockContextMenu.checked = !!appSettings.blockContextMenu;
     if (settingsControls.language) {
       settingsControls.language.value = getLanguage();
+    }
+    if (settingsControls.encryptionAlgorithm) {
+      settingsControls.encryptionAlgorithm.value = normalizeEncryptionAlgorithm(
+        appSettings.encryptionAlgorithm,
+      );
     }
   }
 
@@ -1376,6 +1438,20 @@ function initApp(invoke) {
     });
   }
 
+  if (settingsControls.encryptionAlgorithm) {
+    settingsControls.encryptionAlgorithm.addEventListener(
+      "change",
+      function () {
+        appSettings.encryptionAlgorithm = normalizeEncryptionAlgorithm(
+          settingsControls.encryptionAlgorithm.value,
+        );
+        saveSettings();
+        renderSettings();
+        notify(t("notify.encryptionChanged"));
+      },
+    );
+  }
+
   document
     .getElementById("login-btn")
     .addEventListener("click", async function () {
@@ -1515,11 +1591,11 @@ function initApp(invoke) {
   document
     .getElementById("save-btn")
     .addEventListener("click", async function () {
-      var t = document.getElementById("add-title").value.trim();
+      var title = document.getElementById("add-title").value.trim();
       var p = document.getElementById("add-pass").value;
       var s = document.getElementById("add-seed").value;
 
-      if (!t || !p || !s) {
+      if (!title || !p || !s) {
         notify(t("error.fillAllFields"), "err");
         return;
       }
@@ -1535,7 +1611,12 @@ function initApp(invoke) {
       setLoad("save-btn", true);
 
       try {
-        await invoke("add_password", { title: t, password: p, seedPhrase: s });
+        await invoke("add_password", {
+          title: title,
+          password: p,
+          seedPhrase: s,
+          encryptionAlgorithm: appSettings.encryptionAlgorithm,
+        });
         notify(t("notify.passwordSaved"));
         document.getElementById("add-form").reset();
         showPage("dashboard");
