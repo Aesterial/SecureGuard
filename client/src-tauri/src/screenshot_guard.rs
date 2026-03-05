@@ -21,6 +21,16 @@ use tauri::Window;
 static WINDOW_HWND: OnceCell<isize> = OnceCell::new();
 static PROTECTION_ON: AtomicBool = AtomicBool::new(false);
 
+#[cfg(target_os = "windows")]
+fn spawn_guard_thread<F>(name: &str, f: F)
+where
+    F: FnOnce() + Send + 'static,
+{
+    if let Err(err) = thread::Builder::new().name(name.to_string()).spawn(f) {
+        eprintln!("SecureGuard screenshot thread '{}' failed: {}", name, err);
+    }
+}
+
 pub fn is_protection_enabled() -> bool {
     PROTECTION_ON.load(Ordering::SeqCst)
 }
@@ -47,13 +57,13 @@ pub fn init_screenshot_protection(window: Window) {
         let _ = WINDOW_HWND.set(hwnd);
         PROTECTION_ON.store(true, Ordering::SeqCst);
         apply_display_affinity(hwnd as HWND);
-        thread::spawn(|| {
+        spawn_guard_thread("sg-kb-hook", || {
             install_keyboard_hook();
         });
-        thread::spawn(|| {
+        spawn_guard_thread("sg-capture-monitor", || {
             monitor_capture_tools();
         });
-        thread::spawn(move || {
+        spawn_guard_thread("sg-clipboard-monitor", move || {
             monitor_clipboard(hwnd as HWND);
         });
     }

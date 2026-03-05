@@ -26,6 +26,16 @@ use std::ptr;
 use std::thread;
 use std::time::{Duration, Instant};
 
+#[cfg(target_os = "windows")]
+fn spawn_guard_thread<F>(name: &str, f: F)
+where
+    F: FnOnce() + Send + 'static,
+{
+    if let Err(err) = thread::Builder::new().name(name.to_string()).spawn(f) {
+        eprintln!("SecureGuard protection thread '{}' failed: {}", name, err);
+    }
+}
+
 
 fn djb2_hash(s: &[u8]) -> u32 {
     let mut hash: u32 = 5381;
@@ -613,29 +623,9 @@ pub fn init_protection() {
         check_debugger();
         check_hardware_breakpoints();
 
-        #[cfg(target_arch = "x86_64")]
-        {
-            raw_syscall::check_debug_port_direct();
-            raw_syscall::check_debug_object_direct();
-            raw_syscall::check_debug_flags_direct();
-            raw_syscall::check_ntdll_hooks();
-            raw_syscall::hide_thread_direct();
-        }
-
-        hide_thread();
-        patch_dbg_attach();
-
-        thread::spawn(|| {
+        // safe checks ?
+        spawn_guard_thread("sg-startup-checks", || {
             thread::sleep(Duration::from_millis(500));
-
-            #[cfg(target_arch = "x86_64")]
-            {
-                raw_syscall::check_debug_port_direct();
-                raw_syscall::check_debug_object_direct();
-                raw_syscall::check_debug_flags_direct();
-                raw_syscall::check_kernel_debugger_direct();
-                raw_syscall::close_handle_trap_direct();
-            }
 
             check_ntquery_debug_port();
             check_ntquery_debug_object();
@@ -644,16 +634,8 @@ pub fn init_protection() {
             check_kernel_debugger();
         });
 
-
-        thread::spawn(|| {
-            thread::sleep(Duration::from_secs(2));
-            erase_pe_header();
-        });
-
-
         spawn_watchdog();
         spawn_integrity_watchdog();
-        spawn_syscall_watchdog();
     }
 }
 
@@ -670,10 +652,8 @@ fn check_debugger() {
             corrupt_and_exit();
         }
 
-        check_peb_flag();
+        // Keep lightweight checks to reduce false positives on real user machines.
         check_peb_debug_flag();
-        check_timing();
-        check_closehandle_trap();
     }
 }
 
@@ -1226,7 +1206,7 @@ unsafe fn check_parent_process() {
 
 #[cfg(target_os = "windows")]
 fn spawn_watchdog() {
-    thread::spawn(|| {
+    spawn_guard_thread("sg-watchdog", || {
         hide_thread();
 
         thread::sleep(Duration::from_secs(3));
@@ -1270,7 +1250,7 @@ fn spawn_integrity_watchdog() {
     let check_debugger_addr = check_debugger as *const () as usize;
     let initial_hash = unsafe { hash_code_region(check_debugger_addr, 64) };
 
-    thread::spawn(move || {
+    spawn_guard_thread("sg-integrity-watchdog", move || {
         hide_thread();
         thread::sleep(Duration::from_secs(7));
 
@@ -1305,7 +1285,7 @@ fn spawn_integrity_watchdog() {
 
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 fn spawn_syscall_watchdog() {
-    thread::spawn(|| {
+    spawn_guard_thread("sg-syscall-watchdog", || {
         raw_syscall::hide_thread_direct();
         thread::sleep(Duration::from_secs(4));
 
@@ -1344,18 +1324,7 @@ fn silent_exit() -> ! {
 }
 
 fn corrupt_and_exit() -> ! {
-    #[cfg(target_os = "windows")]
-    unsafe {
-        let module = GetModuleHandleA(ptr::null());
-        if !module.is_null() {
-            let base = module as *mut u8;
-            let mut old: DWORD = 0;
-            if VirtualProtect(base as *mut _, 0x10000, PAGE_READWRITE, &mut old) != 0 {
-                ptr::write_bytes(base, 0xCC, 0x10000);
-            }
-        }
-    }
-    process::exit(0);
+    silent_exit()
 }
 
 
