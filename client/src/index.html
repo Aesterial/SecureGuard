@@ -182,7 +182,9 @@
                                 </div>
                                 <div class="field">
                                     <label>
-                                        Сид-фраза
+                                        <span id="reg-seed-label-text"
+                                            >Сид-фраза</span
+                                        >
                                         <span class="info-wrap">
                                             <span
                                                 class="info"
@@ -191,6 +193,7 @@
                                             >
                                             <span
                                                 class="info-tip"
+                                                id="reg-seed-info-tip"
                                                 role="tooltip"
                                                 >Сид-фраза - это секретная фраза
                                                 для шифрования паролей. Если ее
@@ -228,7 +231,7 @@
                                             </svg>
                                         </button>
                                     </div>
-                                    <span class="warn"
+                                    <span class="warn" id="reg-seed-warn"
                                         >⚠ Запишите фразу! Восстановить
                                         невозможно.</span
                                     >
@@ -450,10 +453,24 @@
                     </div>
                     <div class="settings-content">
                         <div class="settings-group">
+                            <div class="settings-item settings-item-inline">
+                                <div class="settings-copy">
+                                    <h3 id="setting-language-title">Язык</h3>
+                                    <p id="setting-language-desc">
+                                        Выберите язык интерфейса приложения.
+                                    </p>
+                                </div>
+                                <select id="setting-language" class="select">
+                                    <option value="ru">Русский</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3>Screenshot Guard</h3>
-                                    <p>
+                                    <h3 id="setting-sg-title">
+                                        Screenshot Guard
+                                    </h3>
+                                    <p id="setting-sg-desc">
                                         Блокирует скриншоты и инструменты
                                         захвата экрана.
                                     </p>
@@ -468,8 +485,10 @@
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3>Белая тема</h3>
-                                    <p>
+                                    <h3 id="setting-light-theme-title">
+                                        Белая тема
+                                    </h3>
+                                    <p id="setting-light-theme-desc">
                                         Использовать светлое оформление
                                         интерфейса.
                                     </p>
@@ -484,8 +503,10 @@
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3>Запуск с Windows</h3>
-                                    <p>
+                                    <h3 id="setting-startup-title">
+                                        Запуск с Windows
+                                    </h3>
+                                    <p id="setting-startup-desc">
                                         Автоматически запускать SecureGuard при
                                         входе в систему.
                                     </p>
@@ -500,8 +521,12 @@
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3>Авто-локаут</h3>
-                                    <p>Автоматический выход при бездействии.</p>
+                                    <h3 id="setting-auto-lock-title">
+                                        Авто-локаут
+                                    </h3>
+                                    <p id="setting-auto-lock-desc">
+                                        Автоматический выход при бездействии.
+                                    </p>
                                 </div>
                                 <label class="switch">
                                     <input
@@ -513,8 +538,10 @@
                             </div>
                             <div class="settings-item settings-item-inline">
                                 <div class="settings-copy">
-                                    <h3>Таймер авто-локаута</h3>
-                                    <p>
+                                    <h3 id="setting-auto-lock-minutes-title">
+                                        Таймер авто-локаута
+                                    </h3>
+                                    <p id="setting-auto-lock-minutes-desc">
                                         Через сколько минут бездействия выйти из
                                         аккаунта.
                                     </p>
@@ -531,8 +558,10 @@
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3>Подтверждение удаления</h3>
-                                    <p>
+                                    <h3 id="setting-confirm-delete-title">
+                                        Подтверждение удаления
+                                    </h3>
+                                    <p id="setting-confirm-delete-desc">
                                         Показывать диалог перед удалением
                                         записи.
                                     </p>
@@ -547,8 +576,10 @@
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3>Блокировка контекстного меню</h3>
-                                    <p>
+                                    <h3 id="setting-block-context-title">
+                                        Блокировка контекстного меню
+                                    </h3>
+                                    <p id="setting-block-context-desc">
                                         Отключает правую кнопку мыши внутри
                                         приложения.
                                     </p>

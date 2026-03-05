@@ -1,6 +1,296 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   bootstrapApp(40);
 });
+
+var I18N = {
+  ru: {
+    "common.username": "Логин",
+    "common.password": "Пароль",
+    "common.seedPhrase": "Сид-фраза",
+    "common.login": "Войти",
+    "common.logout": "Выйти",
+    "common.settings": "Настройки",
+    "common.cancel": "Отмена",
+    "common.delete": "Удалить",
+    "common.justNow": "только что",
+
+    "login.brandSubtitle": "Безопасное хранение паролей",
+    "login.title": "Вход",
+    "login.submit": "Войти",
+    "login.noAccount": "Нет аккаунта?",
+    "login.create": "Создать",
+    "login.usernamePlaceholder": "Введите логин",
+    "login.passwordPlaceholder": "Введите пароль",
+
+    "register.brandSubtitle": "Создание нового аккаунта",
+    "register.title": "Регистрация",
+    "register.confirmPassword": "Подтвердите пароль",
+    "register.seedInfo":
+      "Сид-фраза — это резервный ключ для восстановления доступа. Если вы забудете пароль, используйте сид-фразу.",
+    "register.warn": "Сохраните сид-фразу. Потеря приведёт к потере доступа.",
+    "register.submit": "Создать аккаунт",
+    "register.haveAccount": "Уже есть аккаунт?",
+    "register.usernamePlaceholder": "Минимум 3 символа",
+    "register.passwordPlaceholder": "Минимум 8 символов",
+    "register.passwordConfirmPlaceholder": "Повторите пароль",
+    "register.seedPlaceholder": "Введите сид-фразу (мин. 3 слова)",
+
+    "dashboard.title": "Хранилище",
+    "dashboard.addPassword": "Добавить пароль",
+    "dashboard.emptyTitle": "Записей пока нет",
+    "dashboard.emptySubtitle": "Добавьте первый пароль",
+
+    "add.title": "Новая запись",
+    "add.name": "Название",
+    "add.namePlaceholder": "Gmail, GitHub, VK...",
+    "add.passwordPlaceholder": "Пароль для аккаунта",
+    "add.seedPlaceholder": "Или сид-фраза для аккаунта",
+    "add.save": "Сохранить и закрыть",
+
+    "settings.title": "Настройки",
+    "settings.language.title": "Язык",
+    "settings.language.desc": "Выберите язык интерфейса приложения.",
+    "settings.language.ru": "Русский",
+    "settings.language.en": "English",
+
+    "settings.screenshotGuard.title": "Screenshot Guard",
+    "settings.screenshotGuard.desc":
+      "Блокирует создание скриншотов окна приложения.",
+
+    "settings.lightTheme.title": "Светлая тема",
+    "settings.lightTheme.desc": "Использовать светлую тему интерфейса.",
+
+    "settings.startup.title": "Запуск с Windows",
+    "settings.startup.desc":
+      "Автоматически запускать SecureGuard при входе в систему.",
+
+    "settings.autoLock.title": "Автоблокировка",
+    "settings.autoLock.desc": "Автоматически блокировать приложение.",
+
+    "settings.autoLockMinutes.title": "Таймер автоблокировки",
+    "settings.autoLockMinutes.desc":
+      "Через сколько минут блокировать приложение.",
+
+    "settings.confirmDelete.title": "Подтверждение удаления",
+    "settings.confirmDelete.desc": "Запрашивать подтверждение перед удалением.",
+
+    "settings.blockContext.title": "Блокировать контекстное меню",
+    "settings.blockContext.desc": "Отключает правый клик внутри приложения.",
+
+    "weak.title": "Слабый пароль",
+    "weak.defaultText": "Использовать простой пароль/сид-фразу?",
+    "weak.passwordOnly":
+      "Использовать простой пароль? Это может быть небезопасно.",
+    "weak.seedOnly":
+      "Использовать простую сид-фразу? Это может быть небезопасно.",
+    "weak.both":
+      "Использовать простой пароль и сид-фразу? Это может быть небезопасно.",
+    "weak.passwordTip":
+      "Пароль должен быть длиннее. Используйте буквы, цифры и символы.",
+    "weak.seedTip":
+      "Сид-фраза должна быть длиннее. Лучше использовать несколько случайных слов.",
+    "weak.use": "Использовать",
+
+    "seedModal.title": "Введите сид-фразу",
+    "seedModal.desc": "Она необходима для отображения записи",
+    "seedModal.placeholder": "Введите сид-фразу",
+    "seedModal.copy": "Скопировать",
+
+    "deleteModal.title": "Удалить запись?",
+    "deleteModal.desc": "Это действие необратимо",
+
+    "notify.sessionExpired": "Сессия завершена из-за бездействия",
+    "notify.screenshotGuardOn": "Screenshot Guard включён",
+    "notify.screenshotGuardOff": "Screenshot Guard отключён",
+    "notify.startupOn": "Автозапуск с Windows включён",
+    "notify.startupOff": "Автозапуск с Windows отключён",
+    "notify.deleted": "Удалено",
+    "notify.lightThemeOn": "Светлая тема включена",
+    "notify.lightThemeOff": "Светлая тема отключена",
+    "notify.autoLockOn": "Автоблокировка включена",
+    "notify.autoLockOff": "Автоблокировка отключена",
+    "notify.autoLockTimer": "Таймер автоблокировки: {minutes}.",
+    "notify.confirmDeleteOn": "Подтверждение удаления включено",
+    "notify.confirmDeleteOff": "Подтверждение удаления отключено",
+    "notify.blockContextOn": "Контекстное меню отключено",
+    "notify.blockContextOff": "Контекстное меню включено",
+    "notify.welcome": "Добро пожаловать!",
+    "notify.accountCreated": "Аккаунт создан!",
+    "notify.accountCreatedLogin": "Аккаунт создан! Теперь войдите.",
+    "notify.loggedOut": "Вы вышли",
+    "notify.passwordSaved": "Пароль сохранён!",
+    "notify.passwordCopied": "Пароль скопирован! Очистка через 30с",
+    "notify.copied": "Скопировано",
+    "notify.screenshotsBlocked": "Скриншоты заблокированы",
+    "notify.languageChanged": "Язык интерфейса изменён",
+
+    "error.fillAllFields": "Заполните все поля",
+    "error.loginMin": "Логин: минимум 3 символа",
+    "error.passwordMin": "Пароль: минимум 8 символов",
+    "error.passwordsMismatch": "Пароли не совпадают",
+    "error.seedMin": "Сид-фраза: минимум 3 слова",
+    "error.enterSeed": "Введите сид-фразу",
+    "error.invalidSeed": "Неверная сид-фраза",
+    "error.load": "Ошибка загрузки",
+    "error.delete": "Ошибка удаления",
+    "error.login": "Ошибка входа",
+    "error.register": "Ошибка регистрации",
+    "error.save": "Ошибка сохранения",
+    "error.screenshotGuardChange": "Не удалось изменить Screenshot Guard",
+    "error.startupChange": "Не удалось изменить автозапуск",
+    "error.startupStatus": "Не удалось определить статус автозапуска",
+    "error.loginCredentialsRequired": "Введите логин и пароль",
+    "error.invalidCredentials": "Неверный логин или пароль",
+    "error.loginMinRaw": "Логин должен быть минимум 3 символа",
+    "error.passwordMinRaw": "Пароль должен быть минимум 8 символов",
+    "error.seedMinRaw": "Сид-фраза должна быть минимум 3 слова",
+    "error.userExists": "Пользователь уже существует",
+    "error.notAuthenticated": "Вы не авторизованы",
+    "error.entryNotFound": "Запись не найдена",
+    "error.commandUnavailable": "Команда недоступна: {command}",
+  },
+  en: {
+    "common.username": "Username",
+    "common.password": "Password",
+    "common.seedPhrase": "Seed phrase",
+    "common.login": "Log in",
+    "common.logout": "Log out",
+    "common.settings": "Settings",
+    "common.cancel": "Cancel",
+    "common.delete": "Delete",
+    "common.justNow": "Just now",
+    "login.brandSubtitle": "Reliable password vault",
+    "login.title": "Sign in",
+    "login.submit": "Sign in",
+    "login.noAccount": "No account?",
+    "login.create": "Create",
+    "login.usernamePlaceholder": "Enter username",
+    "login.passwordPlaceholder": "Enter password",
+    "register.brandSubtitle": "Create a secure account",
+    "register.title": "Sign up",
+    "register.confirmPassword": "Confirm password",
+    "register.seedInfo":
+      "Seed phrase is a secret phrase used to encrypt passwords. If you lose it, data recovery is impossible.",
+    "register.warn": "Write this phrase down. Recovery is impossible.",
+    "register.submit": "Create account",
+    "register.haveAccount": "Already have an account?",
+    "register.usernamePlaceholder": "At least 3 characters",
+    "register.passwordPlaceholder": "At least 8 characters",
+    "register.passwordConfirmPlaceholder": "Repeat password",
+    "register.seedPlaceholder": "Secret phrase (min. 3 words)",
+    "dashboard.title": "Vault",
+    "dashboard.addPassword": "Add password",
+    "dashboard.emptyTitle": "No passwords yet",
+    "dashboard.emptySubtitle": "Add your first entry",
+    "add.title": "New password",
+    "add.name": "Name",
+    "add.namePlaceholder": "Gmail, GitHub, VK...",
+    "add.passwordPlaceholder": "Password to store",
+    "add.seedPlaceholder": "Your seed phrase for encryption",
+    "add.save": "Encrypt and save",
+    "settings.title": "Settings",
+    "settings.language.title": "Language",
+    "settings.language.desc": "Choose the application interface language.",
+    "settings.language.ru": "Russian",
+    "settings.language.en": "English",
+    "settings.screenshotGuard.title": "Screenshot Guard",
+    "settings.screenshotGuard.desc":
+      "Blocks screenshots and screen capture tools.",
+    "settings.lightTheme.title": "Light theme",
+    "settings.lightTheme.desc": "Use a light interface appearance.",
+    "settings.startup.title": "Start with Windows",
+    "settings.startup.desc": "Launch SecureGuard automatically on sign-in.",
+    "settings.autoLock.title": "Auto lockout",
+    "settings.autoLock.desc": "Automatically log out when idle.",
+    "settings.autoLockMinutes.title": "Auto lockout timer",
+    "settings.autoLockMinutes.desc": "Idle time before logging out.",
+    "settings.confirmDelete.title": "Delete confirmation",
+    "settings.confirmDelete.desc": "Show a dialog before deleting an entry.",
+    "settings.blockContext.title": "Block context menu",
+    "settings.blockContext.desc":
+      "Disables right-click menu inside the application.",
+    "weak.title": "Weak secrets",
+    "weak.defaultText": "Use this seed phrase/password anyway?",
+    "weak.passwordOnly": "Use this weak password anyway? Security may drop.",
+    "weak.seedOnly": "Use this weak seed phrase anyway? Security may drop.",
+    "weak.both":
+      "Use this weak password and seed phrase anyway? Security may drop.",
+    "weak.passwordTip":
+      "Password is easy to guess. Add length, digits, and symbols.",
+    "weak.seedTip": "Seed phrase is too simple. Use more unique words.",
+    "weak.use": "Use anyway",
+    "seedModal.title": "Enter seed phrase",
+    "seedModal.desc": "To decrypt and copy the password",
+    "seedModal.placeholder": "Your seed phrase",
+    "seedModal.copy": "Copy",
+    "deleteModal.title": "Delete entry?",
+    "deleteModal.desc": "This action cannot be undone",
+    "notify.sessionExpired": "Session closed due to inactivity",
+    "notify.screenshotGuardOn": "Screenshot Guard enabled",
+    "notify.screenshotGuardOff": "Screenshot Guard disabled",
+    "notify.startupOn": "Start with Windows enabled",
+    "notify.startupOff": "Start with Windows disabled",
+    "notify.deleted": "Deleted",
+    "notify.lightThemeOn": "Light theme enabled",
+    "notify.lightThemeOff": "Light theme disabled",
+    "notify.autoLockOn": "Auto lockout enabled",
+    "notify.autoLockOff": "Auto lockout disabled",
+    "notify.autoLockTimer": "Auto lockout timer: {minutes}.",
+    "notify.confirmDeleteOn": "Delete confirmation enabled",
+    "notify.confirmDeleteOff": "Delete confirmation disabled",
+    "notify.blockContextOn": "Context menu block enabled",
+    "notify.blockContextOff": "Context menu block disabled",
+    "notify.welcome": "Welcome!",
+    "notify.accountCreated": "Account created!",
+    "notify.accountCreatedLogin": "Account created! Sign in.",
+    "notify.loggedOut": "Logged out",
+    "notify.passwordSaved": "Password saved!",
+    "notify.passwordCopied": "Password copied! Clipboard clears in 30s",
+    "notify.copied": "Copied",
+    "notify.screenshotsBlocked": "Screenshots are blocked",
+    "notify.languageChanged": "Interface language changed",
+    "error.fillAllFields": "Fill in all fields",
+    "error.loginMin": "Username: minimum 3 characters",
+    "error.passwordMin": "Password: minimum 8 characters",
+    "error.passwordsMismatch": "Passwords do not match",
+    "error.seedMin": "Seed phrase: minimum 3 words",
+    "error.enterSeed": "Enter seed phrase",
+    "error.invalidSeed": "Invalid seed phrase",
+    "error.load": "Load error",
+    "error.delete": "Delete error",
+    "error.login": "Login error",
+    "error.register": "Registration error",
+    "error.save": "Save error",
+    "error.screenshotGuardChange": "Failed to update Screenshot Guard",
+    "error.startupChange": "Failed to update startup option",
+    "error.startupStatus": "Failed to get startup status",
+    "error.loginCredentialsRequired": "Enter username and password",
+    "error.invalidCredentials": "Invalid username or password",
+    "error.loginMinRaw": "Username must be at least 3 characters",
+    "error.passwordMinRaw": "Password must be at least 8 characters",
+    "error.seedMinRaw": "Seed phrase must be at least 3 words",
+    "error.userExists": "User already exists",
+    "error.notAuthenticated": "Not authenticated",
+    "error.entryNotFound": "Entry not found",
+    "error.commandUnavailable": "Command unavailable: {command}",
+  },
+};
+
+var MESSAGE_KEY_BY_TEXT = {
+  "������� ����� � ������": "error.loginCredentialsRequired",
+  "�������� ����� ��� ������": "error.invalidCredentials",
+  "����� ������� 3 �������": "error.loginMinRaw",
+  "������ ������� 8 ��������": "error.passwordMinRaw",
+  "���-����� ������� 3 �����": "error.seedMinRaw",
+  "������������ ��� ����������": "error.userExists",
+  "�� �����������": "error.notAuthenticated",
+  "��������� ��� ����": "error.fillAllFields",
+  "������ �� �������": "error.entryNotFound",
+  "�����������": "notify.copied",
+  Copied: "notify.copied",
+  "������� ������! �������.": "notify.accountCreatedLogin",
+  "Account created! Sign in.": "notify.accountCreatedLogin",
+};
 
 var SETTINGS_KEY = "secureguard.settings.v1";
 var DEFAULT_SETTINGS = {
@@ -11,6 +301,7 @@ var DEFAULT_SETTINGS = {
   autoLockMinutes: 5,
   confirmDelete: true,
   blockContextMenu: true,
+  language: "ru",
 };
 
 function bootstrapApp(retriesLeft) {
@@ -56,10 +347,10 @@ function createFallbackInvoke() {
       var loginUser = (args.username || "").trim();
       var loginPass = args.password || "";
       if (!loginUser || !loginPass) {
-        throw "Введите логин и пароль";
+        throw "������� ����� � ������";
       }
       if (!users[loginUser] || users[loginUser].password !== loginPass) {
-        throw "Неверный логин или пароль";
+        throw "�������� ����� ��� ������";
       }
       authenticated = true;
       return "OK";
@@ -70,19 +361,19 @@ function createFallbackInvoke() {
       var regPass = args.password || "";
       var regSeed = (args.seedPhrase || "").trim();
       if (!regUser || regUser.length < 3) {
-        throw "Логин минимум 3 символа";
+        throw "����� ������� 3 �������";
       }
       if (!regPass || regPass.length < 8) {
-        throw "Пароль минимум 8 символов";
+        throw "������ ������� 8 ��������";
       }
       if (regSeed.split(/\s+/).filter(Boolean).length < 3) {
-        throw "Сид-фраза минимум 3 слова";
+        throw "���-����� ������� 3 �����";
       }
       if (users[regUser]) {
-        throw "Пользователь уже существует";
+        throw "������������ ��� ����������";
       }
       users[regUser] = { password: regPass };
-      return "Аккаунт создан! Войдите.";
+      return "������� ������! �������.";
     }
 
     if (command === "logout") {
@@ -101,14 +392,14 @@ function createFallbackInvoke() {
 
     if (command === "get_startup_status") {
       if (!authenticated) {
-        throw "Не авторизован";
+        throw "�� �����������";
       }
       return startupEnabled;
     }
 
     if (command === "set_screenshot_guard_enabled") {
       if (!authenticated) {
-        throw "Не авторизован";
+        throw "�� �����������";
       }
       screenshotGuardEnabled = !!args.enabled;
       return screenshotGuardEnabled;
@@ -116,14 +407,14 @@ function createFallbackInvoke() {
 
     if (command === "set_startup_enabled") {
       if (!authenticated) {
-        throw "Не авторизован";
+        throw "�� �����������";
       }
       startupEnabled = !!args.enabled;
       return startupEnabled;
     }
 
     if (!authenticated) {
-      throw "Не авторизован";
+      throw "�� �����������";
     }
 
     if (command === "get_passwords") {
@@ -143,7 +434,7 @@ function createFallbackInvoke() {
       var password = args.password || "";
       var seed = (args.seedPhrase || "").trim();
       if (!title || !password || !seed) {
-        throw "Заполните все поля";
+        throw "��������� ��� ����";
       }
       var entry = {
         id: String(nextId++),
@@ -163,14 +454,14 @@ function createFallbackInvoke() {
         return item.id === copyId;
       });
       if (!copyEntry) {
-        throw "Запись не найдена";
+        throw "������ �� �������";
       }
       if (navigator.clipboard && navigator.clipboard.writeText) {
         try {
           await navigator.clipboard.writeText(copyEntry._plain || "");
         } catch (e) {}
       }
-      return "Скопировано";
+      return "�����������";
     }
 
     if (command === "delete_password") {
@@ -181,7 +472,7 @@ function createFallbackInvoke() {
       return;
     }
 
-    throw "Команда недоступна: " + command;
+    throw "������� ����������: " + command;
   };
 }
 
@@ -215,6 +506,7 @@ function initApp(invoke) {
     autoLockMinutes: document.getElementById("setting-auto-lock-minutes"),
     confirmDelete: document.getElementById("setting-confirm-delete"),
     blockContextMenu: document.getElementById("setting-block-context-menu"),
+    language: document.getElementById("setting-language"),
   };
 
   var modals = {
@@ -225,6 +517,214 @@ function initApp(invoke) {
 
   var currentPage = "login";
   var isAnimating = false;
+
+  function getLanguage() {
+    return appSettings.language === "en" ? "en" : "ru";
+  }
+
+  function t(key, params) {
+    var lang = getLanguage();
+    var dict = I18N[lang] || I18N.ru;
+    var template = dict[key];
+    if (template === undefined) {
+      template = I18N.ru[key];
+    }
+    if (template === undefined) {
+      return key;
+    }
+    var out = String(template);
+    if (params) {
+      Object.keys(params).forEach(function (paramKey) {
+        out = out.replace(
+          new RegExp("\\{" + paramKey + "\\}", "g"),
+          String(params[paramKey]),
+        );
+      });
+    }
+    return out;
+  }
+
+  function getMinuteLabel(minutes) {
+    if (getLanguage() === "en") {
+      return minutes + " " + (minutes === 1 ? "minute" : "minutes");
+    }
+
+    var rem10 = minutes % 10;
+    var rem100 = minutes % 100;
+    var word = "�����";
+
+    if (rem10 === 1 && rem100 !== 11) {
+      word = "������";
+    } else if (rem10 >= 2 && rem10 <= 4 && (rem100 < 12 || rem100 > 14)) {
+      word = "������";
+    }
+
+    return minutes + " " + word;
+  }
+
+  function localizeMessage(raw, fallbackKey) {
+    if (raw === undefined || raw === null || raw === "") {
+      return fallbackKey ? t(fallbackKey) : "";
+    }
+
+    var text = String(raw);
+    var knownKey = MESSAGE_KEY_BY_TEXT[text];
+    if (knownKey) {
+      return t(knownKey);
+    }
+
+    var unavailablePrefixRu = "������� ����������: ";
+    var unavailablePrefixEn = "Command unavailable: ";
+    if (text.indexOf(unavailablePrefixRu) === 0) {
+      return t("error.commandUnavailable", {
+        command: text.slice(unavailablePrefixRu.length),
+      });
+    }
+    if (text.indexOf(unavailablePrefixEn) === 0) {
+      return t("error.commandUnavailable", {
+        command: text.slice(unavailablePrefixEn.length),
+      });
+    }
+
+    return text;
+  }
+
+  function setText(selector, key) {
+    var el = document.querySelector(selector);
+    if (el) {
+      el.textContent = t(key);
+    }
+  }
+
+  function setTitle(selector, key) {
+    var el = document.querySelector(selector);
+    if (el) {
+      el.title = t(key);
+    }
+  }
+
+  function setPlaceholder(id, key) {
+    var el = document.getElementById(id);
+    if (el) {
+      el.setAttribute("placeholder", t(key));
+    }
+  }
+
+  function renderAutoLockMinuteOptions() {
+    var values = [1, 3, 5, 10];
+    if (values.indexOf(appSettings.autoLockMinutes) === -1) {
+      values.push(appSettings.autoLockMinutes);
+      values.sort(function (a, b) {
+        return a - b;
+      });
+    }
+
+    settingsControls.autoLockMinutes.innerHTML = "";
+
+    for (var i = 0; i < values.length; i++) {
+      var minutes = values[i];
+      var option = document.createElement("option");
+      option.value = String(minutes);
+      option.textContent = getMinuteLabel(minutes);
+      settingsControls.autoLockMinutes.appendChild(option);
+    }
+  }
+
+  function applyTranslations() {
+    document.documentElement.lang = getLanguage();
+
+    setText("#page-login .brand p", "login.brandSubtitle");
+    setText("#page-login h2", "login.title");
+    setText("#page-login .field:nth-of-type(1) label", "common.username");
+    setText("#page-login .field:nth-of-type(2) label", "common.password");
+    setText("#login-btn .btn-t", "login.submit");
+    setText("#page-login .link-row span", "login.noAccount");
+    setText("#go-register", "login.create");
+
+    setText("#page-register .brand p", "register.brandSubtitle");
+    setText("#page-register h2", "register.title");
+    setText("#page-register .field:nth-of-type(1) label", "common.username");
+    setText("#page-register .field:nth-of-type(2) label", "common.password");
+    setText(
+      "#page-register .field:nth-of-type(3) label",
+      "register.confirmPassword",
+    );
+    setText("#reg-seed-label-text", "common.seedPhrase");
+    setText("#reg-seed-info-tip", "register.seedInfo");
+    setText("#reg-seed-warn", "register.warn");
+    setText("#reg-btn .btn-t", "register.submit");
+    setText("#page-register .link-row span", "register.haveAccount");
+    setText("#go-login", "common.login");
+
+    setText("#page-dashboard .dash-brand h1", "dashboard.title");
+    setText("#settings-btn span", "common.settings");
+    setText("#logout-btn span", "common.logout");
+    setTitle("#settings-btn", "common.settings");
+    setTitle("#logout-btn", "common.logout");
+    setText("#empty-state p", "dashboard.emptyTitle");
+    setText("#empty-state span", "dashboard.emptySubtitle");
+    setText("#add-btn span", "dashboard.addPassword");
+
+    setText("#page-add .dash-brand h1", "add.title");
+    setText("#page-add .field:nth-of-type(1) label", "add.name");
+    setText("#page-add .field:nth-of-type(2) label", "common.password");
+    setText("#page-add .field:nth-of-type(3) label", "common.seedPhrase");
+    setText("#save-btn .btn-t", "add.save");
+
+    setText("#page-settings .dash-brand h1", "settings.title");
+    setText("#setting-language-title", "settings.language.title");
+    setText("#setting-language-desc", "settings.language.desc");
+    setText("#setting-sg-title", "settings.screenshotGuard.title");
+    setText("#setting-sg-desc", "settings.screenshotGuard.desc");
+    setText("#setting-light-theme-title", "settings.lightTheme.title");
+    setText("#setting-light-theme-desc", "settings.lightTheme.desc");
+    setText("#setting-startup-title", "settings.startup.title");
+    setText("#setting-startup-desc", "settings.startup.desc");
+    setText("#setting-auto-lock-title", "settings.autoLock.title");
+    setText("#setting-auto-lock-desc", "settings.autoLock.desc");
+    setText(
+      "#setting-auto-lock-minutes-title",
+      "settings.autoLockMinutes.title",
+    );
+    setText("#setting-auto-lock-minutes-desc", "settings.autoLockMinutes.desc");
+    setText("#setting-confirm-delete-title", "settings.confirmDelete.title");
+    setText("#setting-confirm-delete-desc", "settings.confirmDelete.desc");
+    setText("#setting-block-context-title", "settings.blockContext.title");
+    setText("#setting-block-context-desc", "settings.blockContext.desc");
+
+    if (
+      settingsControls.language &&
+      settingsControls.language.options.length >= 2
+    ) {
+      settingsControls.language.options[0].text = t("settings.language.ru");
+      settingsControls.language.options[1].text = t("settings.language.en");
+    }
+
+    setText("#weak-title", "weak.title");
+    setText("#weak-no", "common.cancel");
+    setText("#weak-yes", "weak.use");
+    setText("#seed-modal h2", "seedModal.title");
+    setText("#seed-modal p", "seedModal.desc");
+    setText("#modal-no", "common.cancel");
+    setText("#modal-yes .btn-t", "seedModal.copy");
+    setText("#del-modal h2", "deleteModal.title");
+    setText("#del-modal p", "deleteModal.desc");
+    setText("#del-no", "common.cancel");
+    setText("#del-yes", "common.delete");
+
+    setPlaceholder("login-user", "login.usernamePlaceholder");
+    setPlaceholder("login-pass", "login.passwordPlaceholder");
+    setPlaceholder("reg-user", "register.usernamePlaceholder");
+    setPlaceholder("reg-pass", "register.passwordPlaceholder");
+    setPlaceholder("reg-pass2", "register.passwordConfirmPlaceholder");
+    setPlaceholder("reg-seed", "register.seedPlaceholder");
+    setPlaceholder("add-title", "add.namePlaceholder");
+    setPlaceholder("add-pass", "add.passwordPlaceholder");
+    setPlaceholder("add-seed", "add.seedPlaceholder");
+    setPlaceholder("modal-seed", "seedModal.placeholder");
+
+    renderAutoLockMinuteOptions();
+  }
 
   function showPage(name) {
     if (isAnimating || name === currentPage) return;
@@ -273,8 +773,7 @@ function initApp(invoke) {
     if (name === "seed") document.getElementById("modal-seed").value = "";
     if (name === "weak") {
       document.getElementById("weak-list").innerHTML = "";
-      document.getElementById("weak-text").textContent =
-        "Точно использовать такую сид-фразу/пароль?";
+      document.getElementById("weak-text").textContent = t("weak.defaultText");
     }
   }
 
@@ -344,10 +843,10 @@ function initApp(invoke) {
   function getWeakSecrets(password, seedPhrase) {
     var weakSecrets = [];
     if (evaluatePasswordStrength(password).weak) {
-      weakSecrets.push("пароль");
+      weakSecrets.push("password");
     }
     if (evaluateSeedStrength(seedPhrase).weak) {
-      weakSecrets.push("сид-фразу");
+      weakSecrets.push("seedPhrase");
     }
     return weakSecrets;
   }
@@ -373,23 +872,20 @@ function initApp(invoke) {
       var weakList = document.getElementById("weak-list");
       weakList.innerHTML = "";
 
-      if (weakSecrets.length === 1 && weakSecrets[0] === "пароль") {
-        weakText.textContent =
-          "Точно использовать такой пароль? Это может снизить безопасность.";
-      } else if (weakSecrets.length === 1 && weakSecrets[0] === "сид-фразу") {
-        weakText.textContent =
-          "Точно использовать такую сид-фразу? Это может снизить безопасность.";
+      if (weakSecrets.length === 1 && weakSecrets[0] === "password") {
+        weakText.textContent = t("weak.passwordOnly");
+      } else if (weakSecrets.length === 1 && weakSecrets[0] === "seedPhrase") {
+        weakText.textContent = t("weak.seedOnly");
       } else {
-        weakText.textContent =
-          "Точно использовать такой пароль и такую сид-фразу? Это может снизить безопасность.";
+        weakText.textContent = t("weak.both");
       }
 
       for (var i = 0; i < weakSecrets.length; i++) {
         var li = document.createElement("li");
         li.textContent =
-          weakSecrets[i] === "пароль"
-            ? "Пароль легко подобрать. Добавьте длину, цифры и спецсимволы."
-            : "Сид-фраза слишком простая. Лучше использовать больше уникальных слов.";
+          weakSecrets[i] === "password"
+            ? t("weak.passwordTip")
+            : t("weak.seedTip");
         weakList.appendChild(li);
       }
 
@@ -406,6 +902,7 @@ function initApp(invoke) {
       autoLockMinutes: DEFAULT_SETTINGS.autoLockMinutes,
       confirmDelete: DEFAULT_SETTINGS.confirmDelete,
       blockContextMenu: DEFAULT_SETTINGS.blockContextMenu,
+      language: DEFAULT_SETTINGS.language,
     };
 
     if (!source || typeof source !== "object") {
@@ -418,6 +915,7 @@ function initApp(invoke) {
     out.autoLockEnabled = !!source.autoLockEnabled;
     out.confirmDelete = source.confirmDelete !== false;
     out.blockContextMenu = source.blockContextMenu !== false;
+    out.language = source.language === "en" ? "en" : "ru";
 
     var minutes = Number(source.autoLockMinutes);
     if (!isNaN(minutes) && minutes >= 1 && minutes <= 60) {
@@ -453,6 +951,7 @@ function initApp(invoke) {
   }
 
   function renderSettings() {
+    renderAutoLockMinuteOptions();
     settingsControls.screenshotGuard.checked =
       !!appSettings.screenshotGuardEnabled;
     settingsControls.lightThemeEnabled.checked =
@@ -464,6 +963,9 @@ function initApp(invoke) {
     );
     settingsControls.confirmDelete.checked = !!appSettings.confirmDelete;
     settingsControls.blockContextMenu.checked = !!appSettings.blockContextMenu;
+    if (settingsControls.language) {
+      settingsControls.language.value = getLanguage();
+    }
   }
 
   function applyTheme() {
@@ -509,7 +1011,7 @@ function initApp(invoke) {
 
     autoLockTimer = setTimeout(
       function () {
-        performLogout("Сессия закрыта из-за бездействия", "err");
+        performLogout(t("notify.sessionExpired"), "err");
       },
       appSettings.autoLockMinutes * 60 * 1000,
     );
@@ -551,13 +1053,13 @@ function initApp(invoke) {
       if (!silent) {
         notify(
           appSettings.screenshotGuardEnabled
-            ? "Screenshot Guard включён"
-            : "Screenshot Guard выключен",
+            ? t("notify.screenshotGuardOn")
+            : t("notify.screenshotGuardOff"),
         );
       }
     } catch (err) {
       renderSettings();
-      notify(String(err) || "Не удалось изменить Screenshot Guard", "err");
+      notify(localizeMessage(err, "error.screenshotGuardChange"), "err");
     }
 
     settingsControls.screenshotGuard.disabled = false;
@@ -610,13 +1112,13 @@ function initApp(invoke) {
       if (!silent) {
         notify(
           appSettings.startupEnabled
-            ? "Автозапуск с Windows включён"
-            : "Автозапуск с Windows выключен",
+            ? t("notify.startupOn")
+            : t("notify.startupOff"),
         );
       }
     } catch (err) {
       renderSettings();
-      notify(String(err) || "Не удалось изменить автозапуск", "err");
+      notify(localizeMessage(err, "error.startupChange"), "err");
     }
 
     settingsControls.startupEnabled.disabled = false;
@@ -634,7 +1136,7 @@ function initApp(invoke) {
       saveSettings();
       renderSettings();
     } catch (err) {
-      notify(String(err) || "Не удалось получить статус автозапуска", "err");
+      notify(localizeMessage(err, "error.startupStatus"), "err");
     }
   }
 
@@ -643,11 +1145,11 @@ function initApp(invoke) {
 
     try {
       await invoke("delete_password", { entryId: entryId });
-      notify("Удалено");
+      notify(t("notify.deleted"));
       hideModal("del");
       await loadPasswords();
     } catch (err) {
-      notify(String(err) || "Ошибка удаления", "err");
+      notify(localizeMessage(err, "error.delete"), "err");
     }
 
     deleteId = null;
@@ -684,8 +1186,12 @@ function initApp(invoke) {
         list.innerHTML =
           '<div class="empty">' +
           '<svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.8-2.2-5-5-5S7 3.2 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.7 1.4-3.1 3.1-3.1s3.1 1.4 3.1 3.1v2z"/></svg>' +
-          "<p>Паролей пока нет</p>" +
-          "<span>Добавьте первую запись</span>" +
+          "<p>" +
+          t("dashboard.emptyTitle") +
+          "</p>" +
+          "<span>" +
+          t("dashboard.emptySubtitle") +
+          "</span>" +
           "</div>";
         return;
       }
@@ -693,7 +1199,7 @@ function initApp(invoke) {
         list.appendChild(makeCard(entries[i], i));
       }
     } catch (err) {
-      notify(String(err) || "Ошибка загрузки", "err");
+      notify(localizeMessage(err, "error.load"), "err");
     }
   }
 
@@ -713,10 +1219,12 @@ function initApp(invoke) {
       esc(entry.title) +
       "</div>" +
       '<div class="card-date">' +
-      (entry.created_at || "Только что") +
+      (entry.created_at || t("common.justNow")) +
       "</div>" +
       "</div>" +
-      '<button class="card-del" title="Удалить">' +
+      '<button class="card-del" title="' +
+      t("common.delete") +
+      '">' +
       '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>' +
       "</button>";
 
@@ -779,6 +1287,7 @@ function initApp(invoke) {
 
   renderSettings();
   applyTheme();
+  applyTranslations();
 
   settingsControls.screenshotGuard.addEventListener(
     "change",
@@ -800,8 +1309,8 @@ function initApp(invoke) {
     applyTheme();
     notify(
       appSettings.lightThemeEnabled
-        ? "Белая тема включена"
-        : "Белая тема выключена",
+        ? t("notify.lightThemeOn")
+        : t("notify.lightThemeOff"),
     );
   });
 
@@ -812,8 +1321,8 @@ function initApp(invoke) {
     scheduleAutoLock();
     notify(
       appSettings.autoLockEnabled
-        ? "Авто-локаут включён"
-        : "Авто-локаут выключен",
+        ? t("notify.autoLockOn")
+        : t("notify.autoLockOff"),
     );
   });
 
@@ -824,8 +1333,13 @@ function initApp(invoke) {
     }
     appSettings.autoLockMinutes = minutes;
     saveSettings();
+    renderSettings();
     scheduleAutoLock();
-    notify("Таймер авто-локаута: " + minutes + " мин.");
+    notify(
+      t("notify.autoLockTimer", {
+        minutes: getMinuteLabel(minutes),
+      }),
+    );
   });
 
   settingsControls.confirmDelete.addEventListener("change", function () {
@@ -833,8 +1347,8 @@ function initApp(invoke) {
     saveSettings();
     notify(
       appSettings.confirmDelete
-        ? "Подтверждение удаления включено"
-        : "Подтверждение удаления выключено",
+        ? t("notify.confirmDeleteOn")
+        : t("notify.confirmDeleteOff"),
     );
   });
 
@@ -843,10 +1357,24 @@ function initApp(invoke) {
     saveSettings();
     notify(
       appSettings.blockContextMenu
-        ? "Блокировка контекстного меню включена"
-        : "Блокировка контекстного меню выключена",
+        ? t("notify.blockContextOn")
+        : t("notify.blockContextOff"),
     );
   });
+
+  if (settingsControls.language) {
+    settingsControls.language.addEventListener("change", function () {
+      appSettings.language =
+        settingsControls.language.value === "en" ? "en" : "ru";
+      saveSettings();
+      applyTranslations();
+      renderSettings();
+      notify(t("notify.languageChanged"));
+      if (authenticated) {
+        loadPasswords();
+      }
+    });
+  }
 
   document
     .getElementById("login-btn")
@@ -855,7 +1383,7 @@ function initApp(invoke) {
       var p = document.getElementById("login-pass").value;
 
       if (!u || !p) {
-        notify("Заполните все поля", "err");
+        notify(t("error.fillAllFields"), "err");
         return;
       }
 
@@ -866,12 +1394,12 @@ function initApp(invoke) {
         setAuthenticated(true);
         await syncScreenshotGuardOnStart();
         await syncStartupOnStart();
-        notify("Добро пожаловать!");
+        notify(t("notify.welcome"));
         document.getElementById("login-form").reset();
         showPage("dashboard");
         await loadPasswords();
       } catch (err) {
-        notify(String(err) || "Ошибка входа", "err");
+        notify(localizeMessage(err, "error.login"), "err");
       }
 
       setLoad("login-btn", false);
@@ -895,23 +1423,23 @@ function initApp(invoke) {
       var s = document.getElementById("reg-seed").value;
 
       if (!u || !p || !p2 || !s) {
-        notify("Заполните все поля", "err");
+        notify(t("error.fillAllFields"), "err");
         return;
       }
       if (u.length < 3) {
-        notify("Логин: минимум 3 символа", "err");
+        notify(t("error.loginMin"), "err");
         return;
       }
       if (p.length < 8) {
-        notify("Пароль: минимум 8 символов", "err");
+        notify(t("error.passwordMin"), "err");
         return;
       }
       if (p !== p2) {
-        notify("Пароли не совпадают", "err");
+        notify(t("error.passwordsMismatch"), "err");
         return;
       }
       if (s.trim().split(/\s+/).length < 3) {
-        notify("Сид-фраза: минимум 3 слова", "err");
+        notify(t("error.seedMin"), "err");
         return;
       }
 
@@ -931,12 +1459,12 @@ function initApp(invoke) {
           password: p,
           seedPhrase: s,
         });
-        notify(msg || "Аккаунт создан!");
+        notify(localizeMessage(msg, "notify.accountCreated"));
         document.getElementById("register-form").reset();
         document.getElementById("str-bar").className = "str-fill";
         showPage("login");
       } catch (err) {
-        notify(String(err) || "Ошибка регистрации", "err");
+        notify(localizeMessage(err, "error.register"), "err");
       }
 
       setLoad("reg-btn", false);
@@ -981,7 +1509,7 @@ function initApp(invoke) {
   document
     .getElementById("logout-btn")
     .addEventListener("click", async function () {
-      await performLogout("Вы вышли");
+      await performLogout(t("notify.loggedOut"));
     });
 
   document
@@ -992,7 +1520,7 @@ function initApp(invoke) {
       var s = document.getElementById("add-seed").value;
 
       if (!t || !p || !s) {
-        notify("Заполните все поля", "err");
+        notify(t("error.fillAllFields"), "err");
         return;
       }
 
@@ -1008,12 +1536,12 @@ function initApp(invoke) {
 
       try {
         await invoke("add_password", { title: t, password: p, seedPhrase: s });
-        notify("Пароль сохранён!");
+        notify(t("notify.passwordSaved"));
         document.getElementById("add-form").reset();
         showPage("dashboard");
         await loadPasswords();
       } catch (err) {
-        notify(String(err) || "Ошибка сохранения", "err");
+        notify(localizeMessage(err, "error.save"), "err");
       }
 
       setLoad("save-btn", false);
@@ -1032,7 +1560,7 @@ function initApp(invoke) {
     .addEventListener("click", async function () {
       var seed = document.getElementById("modal-seed").value;
       if (!seed) {
-        notify("Введите сид-фразу", "err");
+        notify(t("error.enterSeed"), "err");
         return;
       }
       if (!currentId) {
@@ -1045,9 +1573,9 @@ function initApp(invoke) {
       try {
         await invoke("copy_password", { entryId: currentId, seedPhrase: seed });
         hideModal("seed");
-        notify("Пароль скопирован! Очистка через 30с");
+        notify(t("notify.passwordCopied"));
       } catch (err) {
-        notify(String(err) || "Неверная сид-фраза", "err");
+        notify(localizeMessage(err, "error.invalidSeed"), "err");
       }
 
       setLoad("modal-yes", false);
@@ -1107,7 +1635,7 @@ function initApp(invoke) {
 
     if (e.key === "PrintScreen" && appSettings.screenshotGuardEnabled) {
       e.preventDefault();
-      notify("Скриншоты заблокированы", "err");
+      notify(t("notify.screenshotsBlocked"), "err");
     }
 
     if (e.key === "Escape") {
