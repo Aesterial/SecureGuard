@@ -337,6 +337,7 @@ fn chrono_now() -> String {
 }
 
 fn main() {
+    #[cfg(all(target_os = "windows", not(debug_assertions)))]
     protection::init_protection();
 
     tauri::Builder::default()
