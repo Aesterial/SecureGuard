@@ -94,10 +94,7 @@ pub mod login_service_client {
         pub async fn register(
             &mut self,
             request: impl tonic::IntoRequest<super::RegisterRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::RegisterResponse>,
-            tonic::Status,
-        > {
+        ) -> std::result::Result<tonic::Response<super::LoginResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -124,10 +121,7 @@ pub mod login_service_client {
         pub async fn authorize(
             &mut self,
             request: impl tonic::IntoRequest<super::AuthorizeRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::AuthorizeResponse>,
-            tonic::Status,
-        > {
+        ) -> std::result::Result<tonic::Response<super::LoginResponse>, tonic::Status> {
             self.inner
                 .ready()
                 .await
@@ -169,18 +163,12 @@ pub mod login_service_server {
         async fn register(
             &self,
             request: tonic::Request<super::RegisterRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::RegisterResponse>,
-            tonic::Status,
-        >;
+        ) -> std::result::Result<tonic::Response<super::LoginResponse>, tonic::Status>;
         ///
         async fn authorize(
             &self,
             request: tonic::Request<super::AuthorizeRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::AuthorizeResponse>,
-            tonic::Status,
-        >;
+        ) -> std::result::Result<tonic::Response<super::LoginResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct LoginServiceServer<T> {
@@ -265,7 +253,7 @@ pub mod login_service_server {
                         T: LoginService,
                     > tonic::server::UnaryService<super::RegisterRequest>
                     for RegisterSvc<T> {
-                        type Response = super::RegisterResponse;
+                        type Response = super::LoginResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -310,7 +298,7 @@ pub mod login_service_server {
                         T: LoginService,
                     > tonic::server::UnaryService<super::AuthorizeRequest>
                     for AuthorizeSvc<T> {
-                        type Response = super::AuthorizeResponse;
+                        type Response = super::LoginResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,

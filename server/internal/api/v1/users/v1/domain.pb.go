@@ -9,6 +9,7 @@ package users
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -22,30 +23,176 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type User struct {
+type Theme int32
+
+const (
+	Theme_THEME_UNSPECIFIED Theme = 0
+	Theme_THEME_WHITE       Theme = 1
+	Theme_THEME_BLACK       Theme = 2
+)
+
+// Enum value maps for Theme.
+var (
+	Theme_name = map[int32]string{
+		0: "THEME_UNSPECIFIED",
+		1: "THEME_WHITE",
+		2: "THEME_BLACK",
+	}
+	Theme_value = map[string]int32{
+		"THEME_UNSPECIFIED": 0,
+		"THEME_WHITE":       1,
+		"THEME_BLACK":       2,
+	}
+)
+
+func (x Theme) Enum() *Theme {
+	p := new(Theme)
+	*p = x
+	return p
+}
+
+func (x Theme) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Theme) Descriptor() protoreflect.EnumDescriptor {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_enumTypes[0].Descriptor()
+}
+
+func (Theme) Type() protoreflect.EnumType {
+	return &file_xyz_secureguard_v1_users_v1_domain_proto_enumTypes[0]
+}
+
+func (x Theme) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Theme.Descriptor instead.
+func (Theme) EnumDescriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{0}
+}
+
+type Language int32
+
+const (
+	Language_LANGUAGE_UNSPECIFIED Language = 0
+	Language_LANGUAGE_RU          Language = 1
+	Language_LANGUAGE_EN          Language = 2
+)
+
+// Enum value maps for Language.
+var (
+	Language_name = map[int32]string{
+		0: "LANGUAGE_UNSPECIFIED",
+		1: "LANGUAGE_RU",
+		2: "LANGUAGE_EN",
+	}
+	Language_value = map[string]int32{
+		"LANGUAGE_UNSPECIFIED": 0,
+		"LANGUAGE_RU":          1,
+		"LANGUAGE_EN":          2,
+	}
+)
+
+func (x Language) Enum() *Language {
+	p := new(Language)
+	*p = x
+	return p
+}
+
+func (x Language) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Language) Descriptor() protoreflect.EnumDescriptor {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_enumTypes[1].Descriptor()
+}
+
+func (Language) Type() protoreflect.EnumType {
+	return &file_xyz_secureguard_v1_users_v1_domain_proto_enumTypes[1]
+}
+
+func (x Language) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Language.Descriptor instead.
+func (Language) EnumDescriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{1}
+}
+
+type Crypt int32
+
+const (
+	Crypt_CRYPT_UNSPECIFIED Crypt = 0
+	Crypt_CRYPT_ARGON2ID    Crypt = 1
+	Crypt_CRYPT_SHA256      Crypt = 2
+)
+
+// Enum value maps for Crypt.
+var (
+	Crypt_name = map[int32]string{
+		0: "CRYPT_UNSPECIFIED",
+		1: "CRYPT_ARGON2ID",
+		2: "CRYPT_SHA256",
+	}
+	Crypt_value = map[string]int32{
+		"CRYPT_UNSPECIFIED": 0,
+		"CRYPT_ARGON2ID":    1,
+		"CRYPT_SHA256":      2,
+	}
+)
+
+func (x Crypt) Enum() *Crypt {
+	p := new(Crypt)
+	*p = x
+	return p
+}
+
+func (x Crypt) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Crypt) Descriptor() protoreflect.EnumDescriptor {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_enumTypes[2].Descriptor()
+}
+
+func (Crypt) Type() protoreflect.EnumType {
+	return &file_xyz_secureguard_v1_users_v1_domain_proto_enumTypes[2]
+}
+
+func (x Crypt) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Crypt.Descriptor instead.
+func (Crypt) EnumDescriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{2}
+}
+
+type Preferences struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	PhraseSetted  bool                   `protobuf:"varint,3,opt,name=phrase_setted,json=phraseSetted,proto3" json:"phrase_setted,omitempty"`
-	Joined        *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=joined,proto3" json:"joined,omitempty"`
+	Theme         Theme                  `protobuf:"varint,1,opt,name=theme,proto3,enum=xyz.secureguard.v1.users.v1.Theme" json:"theme,omitempty"`
+	Lang          Language               `protobuf:"varint,2,opt,name=lang,proto3,enum=xyz.secureguard.v1.users.v1.Language" json:"lang,omitempty"`
+	Crypto        Crypt                  `protobuf:"varint,3,opt,name=crypto,proto3,enum=xyz.secureguard.v1.users.v1.Crypt" json:"crypto,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *User) Reset() {
-	*x = User{}
+func (x *Preferences) Reset() {
+	*x = Preferences{}
 	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *User) String() string {
+func (x *Preferences) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*User) ProtoMessage() {}
+func (*Preferences) ProtoMessage() {}
 
-func (x *User) ProtoReflect() protoreflect.Message {
+func (x *Preferences) ProtoReflect() protoreflect.Message {
 	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -57,35 +204,312 @@ func (x *User) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use User.ProtoReflect.Descriptor instead.
-func (*User) Descriptor() ([]byte, []int) {
+// Deprecated: Use Preferences.ProtoReflect.Descriptor instead.
+func (*Preferences) Descriptor() ([]byte, []int) {
 	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *User) GetId() string {
+func (x *Preferences) GetTheme() Theme {
+	if x != nil {
+		return x.Theme
+	}
+	return Theme_THEME_UNSPECIFIED
+}
+
+func (x *Preferences) GetLang() Language {
+	if x != nil {
+		return x.Lang
+	}
+	return Language_LANGUAGE_UNSPECIFIED
+}
+
+func (x *Preferences) GetCrypto() Crypt {
+	if x != nil {
+		return x.Crypto
+	}
+	return Crypt_CRYPT_UNSPECIFIED
+}
+
+type UserSelf struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Joined        *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=joined,proto3" json:"joined,omitempty"`
+	Phrase        *string                `protobuf:"bytes,4,opt,name=phrase,proto3,oneof" json:"phrase,omitempty"`
+	Preferences   *Preferences           `protobuf:"bytes,5,opt,name=preferences,proto3" json:"preferences,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserSelf) Reset() {
+	*x = UserSelf{}
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserSelf) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserSelf) ProtoMessage() {}
+
+func (x *UserSelf) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserSelf.ProtoReflect.Descriptor instead.
+func (*UserSelf) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UserSelf) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *User) GetUsername() string {
+func (x *UserSelf) GetUsername() string {
 	if x != nil {
 		return x.Username
 	}
 	return ""
 }
 
-func (x *User) GetPhraseSetted() bool {
+func (x *UserSelf) GetJoined() *timestamppb.Timestamp {
 	if x != nil {
-		return x.PhraseSetted
+		return x.Joined
+	}
+	return nil
+}
+
+func (x *UserSelf) GetPhrase() string {
+	if x != nil && x.Phrase != nil {
+		return *x.Phrase
+	}
+	return ""
+}
+
+func (x *UserSelf) GetPreferences() *Preferences {
+	if x != nil {
+		return x.Preferences
+	}
+	return nil
+}
+
+type UserPublic struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Lang          Language               `protobuf:"varint,3,opt,name=lang,proto3,enum=xyz.secureguard.v1.users.v1.Language" json:"lang,omitempty"`
+	Crypt         Crypt                  `protobuf:"varint,4,opt,name=crypt,proto3,enum=xyz.secureguard.v1.users.v1.Crypt" json:"crypt,omitempty"`
+	PhraseSet     bool                   `protobuf:"varint,5,opt,name=phrase_set,json=phraseSet,proto3" json:"phrase_set,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserPublic) Reset() {
+	*x = UserPublic{}
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserPublic) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserPublic) ProtoMessage() {}
+
+func (x *UserPublic) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserPublic.ProtoReflect.Descriptor instead.
+func (*UserPublic) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *UserPublic) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UserPublic) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *UserPublic) GetLang() Language {
+	if x != nil {
+		return x.Lang
+	}
+	return Language_LANGUAGE_UNSPECIFIED
+}
+
+func (x *UserPublic) GetCrypt() Crypt {
+	if x != nil {
+		return x.Crypt
+	}
+	return Crypt_CRYPT_UNSPECIFIED
+}
+
+func (x *UserPublic) GetPhraseSet() bool {
+	if x != nil {
+		return x.PhraseSet
 	}
 	return false
 }
 
-func (x *User) GetJoined() *timestamppb.Timestamp {
+type UserResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Info          *UserSelf              `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserResponse) Reset() {
+	*x = UserResponse{}
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserResponse) ProtoMessage() {}
+
+func (x *UserResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[3]
 	if x != nil {
-		return x.Joined
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserResponse.ProtoReflect.Descriptor instead.
+func (*UserResponse) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UserResponse) GetInfo() *UserSelf {
+	if x != nil {
+		return x.Info
+	}
+	return nil
+}
+
+type ListResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	List          []*UserPublic          `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListResponse) Reset() {
+	*x = ListResponse{}
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListResponse) ProtoMessage() {}
+
+func (x *ListResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListResponse.ProtoReflect.Descriptor instead.
+func (*ListResponse) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ListResponse) GetList() []*UserPublic {
+	if x != nil {
+		return x.List
+	}
+	return nil
+}
+
+type ValueChangeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        *anypb.Any             `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValueChangeResponse) Reset() {
+	*x = ValueChangeResponse{}
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValueChangeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValueChangeResponse) ProtoMessage() {}
+
+func (x *ValueChangeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValueChangeResponse.ProtoReflect.Descriptor instead.
+func (*ValueChangeResponse) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ValueChangeResponse) GetResult() *anypb.Any {
+	if x != nil {
+		return x.Result
 	}
 	return nil
 }
@@ -94,12 +518,44 @@ var File_xyz_secureguard_v1_users_v1_domain_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_users_v1_domain_proto_rawDesc = "" +
 	"\n" +
-	"(xyz/secureguard/v1/users/v1/domain.proto\x12\x1bxyz.secureguard.v1.users.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8b\x01\n" +
-	"\x04User\x12\x0e\n" +
+	"(xyz/secureguard/v1/users/v1/domain.proto\x12\x1bxyz.secureguard.v1.users.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19google/protobuf/any.proto\"\xbe\x01\n" +
+	"\vPreferences\x128\n" +
+	"\x05theme\x18\x01 \x01(\x0e2\".xyz.secureguard.v1.users.v1.ThemeR\x05theme\x129\n" +
+	"\x04lang\x18\x02 \x01(\x0e2%.xyz.secureguard.v1.users.v1.LanguageR\x04lang\x12:\n" +
+	"\x06crypto\x18\x03 \x01(\x0e2\".xyz.secureguard.v1.users.v1.CryptR\x06crypto\"\xde\x01\n" +
+	"\bUserSelf\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\x12#\n" +
-	"\rphrase_setted\x18\x03 \x01(\bR\fphraseSetted\x122\n" +
-	"\x06joined\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x06joinedBAZ?github.com/aesterial/secureguard/internal/api/v1/users/v1;usersb\x06proto3"
+	"\busername\x18\x02 \x01(\tR\busername\x122\n" +
+	"\x06joined\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x06joined\x12\x1b\n" +
+	"\x06phrase\x18\x04 \x01(\tH\x00R\x06phrase\x88\x01\x01\x12J\n" +
+	"\vpreferences\x18\x05 \x01(\v2(.xyz.secureguard.v1.users.v1.PreferencesR\vpreferencesB\t\n" +
+	"\a_phrase\"\xcc\x01\n" +
+	"\n" +
+	"UserPublic\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x129\n" +
+	"\x04lang\x18\x03 \x01(\x0e2%.xyz.secureguard.v1.users.v1.LanguageR\x04lang\x128\n" +
+	"\x05crypt\x18\x04 \x01(\x0e2\".xyz.secureguard.v1.users.v1.CryptR\x05crypt\x12\x1d\n" +
+	"\n" +
+	"phrase_set\x18\x05 \x01(\bR\tphraseSet\"I\n" +
+	"\fUserResponse\x129\n" +
+	"\x04info\x18\x01 \x01(\v2%.xyz.secureguard.v1.users.v1.UserSelfR\x04info\"K\n" +
+	"\fListResponse\x12;\n" +
+	"\x04list\x18\x01 \x03(\v2'.xyz.secureguard.v1.users.v1.UserPublicR\x04list\"C\n" +
+	"\x13ValueChangeResponse\x12,\n" +
+	"\x06result\x18\x01 \x01(\v2\x14.google.protobuf.AnyR\x06result*@\n" +
+	"\x05Theme\x12\x15\n" +
+	"\x11THEME_UNSPECIFIED\x10\x00\x12\x0f\n" +
+	"\vTHEME_WHITE\x10\x01\x12\x0f\n" +
+	"\vTHEME_BLACK\x10\x02*F\n" +
+	"\bLanguage\x12\x18\n" +
+	"\x14LANGUAGE_UNSPECIFIED\x10\x00\x12\x0f\n" +
+	"\vLANGUAGE_RU\x10\x01\x12\x0f\n" +
+	"\vLANGUAGE_EN\x10\x02*D\n" +
+	"\x05Crypt\x12\x15\n" +
+	"\x11CRYPT_UNSPECIFIED\x10\x00\x12\x12\n" +
+	"\x0eCRYPT_ARGON2ID\x10\x01\x12\x10\n" +
+	"\fCRYPT_SHA256\x10\x02BAZ?github.com/aesterial/secureguard/internal/api/v1/users/v1;usersb\x06proto3"
 
 var (
 	file_xyz_secureguard_v1_users_v1_domain_proto_rawDescOnce sync.Once
@@ -113,18 +569,37 @@ func file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP() []byte {
 	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescData
 }
 
-var file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_xyz_secureguard_v1_users_v1_domain_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_xyz_secureguard_v1_users_v1_domain_proto_goTypes = []any{
-	(*User)(nil),                  // 0: xyz.secureguard.v1.users.v1.User
-	(*timestamppb.Timestamp)(nil), // 1: google.protobuf.Timestamp
+	(Theme)(0),                    // 0: xyz.secureguard.v1.users.v1.Theme
+	(Language)(0),                 // 1: xyz.secureguard.v1.users.v1.Language
+	(Crypt)(0),                    // 2: xyz.secureguard.v1.users.v1.Crypt
+	(*Preferences)(nil),           // 3: xyz.secureguard.v1.users.v1.Preferences
+	(*UserSelf)(nil),              // 4: xyz.secureguard.v1.users.v1.UserSelf
+	(*UserPublic)(nil),            // 5: xyz.secureguard.v1.users.v1.UserPublic
+	(*UserResponse)(nil),          // 6: xyz.secureguard.v1.users.v1.UserResponse
+	(*ListResponse)(nil),          // 7: xyz.secureguard.v1.users.v1.ListResponse
+	(*ValueChangeResponse)(nil),   // 8: xyz.secureguard.v1.users.v1.ValueChangeResponse
+	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(*anypb.Any)(nil),             // 10: google.protobuf.Any
 }
 var file_xyz_secureguard_v1_users_v1_domain_proto_depIdxs = []int32{
-	1, // 0: xyz.secureguard.v1.users.v1.User.joined:type_name -> google.protobuf.Timestamp
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0,  // 0: xyz.secureguard.v1.users.v1.Preferences.theme:type_name -> xyz.secureguard.v1.users.v1.Theme
+	1,  // 1: xyz.secureguard.v1.users.v1.Preferences.lang:type_name -> xyz.secureguard.v1.users.v1.Language
+	2,  // 2: xyz.secureguard.v1.users.v1.Preferences.crypto:type_name -> xyz.secureguard.v1.users.v1.Crypt
+	9,  // 3: xyz.secureguard.v1.users.v1.UserSelf.joined:type_name -> google.protobuf.Timestamp
+	3,  // 4: xyz.secureguard.v1.users.v1.UserSelf.preferences:type_name -> xyz.secureguard.v1.users.v1.Preferences
+	1,  // 5: xyz.secureguard.v1.users.v1.UserPublic.lang:type_name -> xyz.secureguard.v1.users.v1.Language
+	2,  // 6: xyz.secureguard.v1.users.v1.UserPublic.crypt:type_name -> xyz.secureguard.v1.users.v1.Crypt
+	4,  // 7: xyz.secureguard.v1.users.v1.UserResponse.info:type_name -> xyz.secureguard.v1.users.v1.UserSelf
+	5,  // 8: xyz.secureguard.v1.users.v1.ListResponse.list:type_name -> xyz.secureguard.v1.users.v1.UserPublic
+	10, // 9: xyz.secureguard.v1.users.v1.ValueChangeResponse.result:type_name -> google.protobuf.Any
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_xyz_secureguard_v1_users_v1_domain_proto_init() }
@@ -132,18 +607,20 @@ func file_xyz_secureguard_v1_users_v1_domain_proto_init() {
 	if File_xyz_secureguard_v1_users_v1_domain_proto != nil {
 		return
 	}
+	file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_xyz_secureguard_v1_users_v1_domain_proto_rawDesc), len(file_xyz_secureguard_v1_users_v1_domain_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   1,
+			NumEnums:      3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_xyz_secureguard_v1_users_v1_domain_proto_goTypes,
 		DependencyIndexes: file_xyz_secureguard_v1_users_v1_domain_proto_depIdxs,
+		EnumInfos:         file_xyz_secureguard_v1_users_v1_domain_proto_enumTypes,
 		MessageInfos:      file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes,
 	}.Build()
 	File_xyz_secureguard_v1_users_v1_domain_proto = out.File

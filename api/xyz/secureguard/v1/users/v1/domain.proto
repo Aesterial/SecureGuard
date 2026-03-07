@@ -5,10 +5,56 @@ package xyz.secureguard.v1.users.v1;
 option go_package = "github.com/aesterial/secureguard/internal/api/v1/users/v1;users";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
 
-message User {
+enum Theme {
+    THEME_UNSPECIFIED = 0;
+    THEME_WHITE = 1;
+    THEME_BLACK = 2;
+}
+
+enum Language {
+    LANGUAGE_UNSPECIFIED = 0;
+    LANGUAGE_RU = 1;
+    LANGUAGE_EN = 2;
+}
+
+enum Crypt {
+    CRYPT_UNSPECIFIED = 0;
+    CRYPT_ARGON2ID = 1;
+    CRYPT_SHA256 = 2;
+}
+
+message Preferences {
+    Theme theme = 1;
+    Language lang = 2;
+    Crypt crypto = 3;
+}
+
+message UserSelf {
   string id = 1;
   string username = 2;
-  bool phrase_setted = 3;
-  google.protobuf.Timestamp joined = 4;
+  google.protobuf.Timestamp joined = 3;
+  optional string phrase = 4;
+  Preferences preferences = 5;
+}
+
+message UserPublic {
+    string id = 1;
+    string username = 2;
+    Language lang = 3;
+    Crypt crypt = 4;
+    bool phrase_set = 5;
+}
+
+message UserResponse {
+  UserSelf info = 1;
+}
+
+message ListResponse {
+    repeated UserPublic list = 1;
+}
+
+message ValueChangeResponse {
+    google.protobuf.Any result = 1;
 }

@@ -7,6 +7,6 @@ option go_package = "github.com/aesterial/secureguard/internal/api/v1/login/v1;l
 import "xyz/secureguard/v1/login/v1/domain.proto";
 
 service LoginService {
-  rpc Register(RegisterRequest) returns (RegisterResponse);
-  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+  rpc Register(RegisterRequest) returns (LoginResponse);
+  rpc Authorize(AuthorizeRequest) returns (LoginResponse);
 }

@@ -24,22 +24,21 @@ var File_xyz_secureguard_v1_login_v1_service_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_login_v1_service_proto_rawDesc = "" +
 	"\n" +
-	")xyz/secureguard/v1/login/v1/service.proto\x12\x1bxyz.secureguard.v1.login.v1\x1a(xyz/secureguard/v1/login/v1/domain.proto2\xe3\x01\n" +
-	"\fLoginService\x12g\n" +
-	"\bRegister\x12,.xyz.secureguard.v1.login.v1.RegisterRequest\x1a-.xyz.secureguard.v1.login.v1.RegisterResponse\x12j\n" +
-	"\tAuthorize\x12-.xyz.secureguard.v1.login.v1.AuthorizeRequest\x1a..xyz.secureguard.v1.login.v1.AuthorizeResponseBAZ?github.com/aesterial/secureguard/internal/api/v1/login/v1;loginb\x06proto3"
+	")xyz/secureguard/v1/login/v1/service.proto\x12\x1bxyz.secureguard.v1.login.v1\x1a(xyz/secureguard/v1/login/v1/domain.proto2\xdc\x01\n" +
+	"\fLoginService\x12d\n" +
+	"\bRegister\x12,.xyz.secureguard.v1.login.v1.RegisterRequest\x1a*.xyz.secureguard.v1.login.v1.LoginResponse\x12f\n" +
+	"\tAuthorize\x12-.xyz.secureguard.v1.login.v1.AuthorizeRequest\x1a*.xyz.secureguard.v1.login.v1.LoginResponseBAZ?github.com/aesterial/secureguard/internal/api/v1/login/v1;loginb\x06proto3"
 
 var file_xyz_secureguard_v1_login_v1_service_proto_goTypes = []any{
-	(*RegisterRequest)(nil),   // 0: xyz.secureguard.v1.login.v1.RegisterRequest
-	(*AuthorizeRequest)(nil),  // 1: xyz.secureguard.v1.login.v1.AuthorizeRequest
-	(*RegisterResponse)(nil),  // 2: xyz.secureguard.v1.login.v1.RegisterResponse
-	(*AuthorizeResponse)(nil), // 3: xyz.secureguard.v1.login.v1.AuthorizeResponse
+	(*RegisterRequest)(nil),  // 0: xyz.secureguard.v1.login.v1.RegisterRequest
+	(*AuthorizeRequest)(nil), // 1: xyz.secureguard.v1.login.v1.AuthorizeRequest
+	(*LoginResponse)(nil),    // 2: xyz.secureguard.v1.login.v1.LoginResponse
 }
 var file_xyz_secureguard_v1_login_v1_service_proto_depIdxs = []int32{
 	0, // 0: xyz.secureguard.v1.login.v1.LoginService.Register:input_type -> xyz.secureguard.v1.login.v1.RegisterRequest
 	1, // 1: xyz.secureguard.v1.login.v1.LoginService.Authorize:input_type -> xyz.secureguard.v1.login.v1.AuthorizeRequest
-	2, // 2: xyz.secureguard.v1.login.v1.LoginService.Register:output_type -> xyz.secureguard.v1.login.v1.RegisterResponse
-	3, // 3: xyz.secureguard.v1.login.v1.LoginService.Authorize:output_type -> xyz.secureguard.v1.login.v1.AuthorizeResponse
+	2, // 2: xyz.secureguard.v1.login.v1.LoginService.Register:output_type -> xyz.secureguard.v1.login.v1.LoginResponse
+	2, // 3: xyz.secureguard.v1.login.v1.LoginService.Authorize:output_type -> xyz.secureguard.v1.login.v1.LoginResponse
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

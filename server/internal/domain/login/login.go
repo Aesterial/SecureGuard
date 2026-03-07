@@ -6,12 +6,12 @@ import (
 	"strings"
 )
 
-type require struct {
+type Require struct {
 	Username string
 	Password string
 }
 
-func (r require) IsCredentialsValid() bool {
+func (r Require) IsCredentialsValid() bool {
 	return r.Username != "" && r.Password != ""
 }
 
@@ -20,7 +20,7 @@ const (
 	maxUsernameLen = 20
 )
 
-func (r require) Normalize() require {
+func (r Require) Normalize() Require {
 	raw := strings.TrimSpace(r.Username)
 	raw = strings.ToLower(raw)
 
@@ -38,7 +38,7 @@ func (r require) Normalize() require {
 	return r
 }
 
-func (r require) sanitizeUsername() string {
+func (r Require) sanitizeUsername() string {
 	b := make([]byte, 0, len(r.Username))
 
 	for i := 0; i < len(r.Username); i++ {
@@ -54,7 +54,7 @@ func (r require) sanitizeUsername() string {
 	return string(b)
 }
 
-func (r require) generateUsername(minLen, maxLen int) string {
+func (r Require) generateUsername(minLen, maxLen int) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 	const prefix = "user"
 
@@ -85,12 +85,12 @@ func randInt(n int) int {
 }
 
 type RegisterRequire struct {
-	require
+	Require
 	Phrase string
 }
 
 type AuthorizeRequire struct {
-	require
+	Require
 }
 
 func (r RegisterRequire) IsValid() bool {

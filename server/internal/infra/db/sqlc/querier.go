@@ -11,19 +11,24 @@ import (
 )
 
 type Querier interface {
-	CreatePassword(ctx context.Context, arg CreatePasswordParams) (Password, error)
-	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
+	CreatePassword(ctx context.Context, arg CreatePasswordParams) (CreatePasswordRow, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (CreateSessionRow, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeletePassword(ctx context.Context, arg DeletePasswordParams) error
-	DeleteSession(ctx context.Context, arg DeleteSessionParams) error
-	DeleteUser(ctx context.Context, id pgtype.UUID) error
-	GetPasswordByID(ctx context.Context, id pgtype.UUID) (Password, error)
-	GetSessionByID(ctx context.Context, id pgtype.UUID) (Session, error)
+	GetIsUserExists(ctx context.Context, id pgtype.UUID) (bool, error)
+	GetIsUsernameExists(ctx context.Context, username string) (bool, error)
+	GetListUsers(ctx context.Context, arg GetListUsersParams) ([]User, error)
+	GetPasswordByID(ctx context.Context, id pgtype.UUID) (GetPasswordByIDRow, error)
+	GetSessionByID(ctx context.Context, id pgtype.UUID) (GetSessionByIDRow, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
-	ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]Password, error)
-	ListSessionsByOwner(ctx context.Context, arg ListSessionsByOwnerParams) ([]Session, error)
-	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
+	GetUserPassword(ctx context.Context, id pgtype.UUID) (string, error)
+	GetUserPreferences(ctx context.Context, owner pgtype.UUID) (GetUserPreferencesRow, error)
+	ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]ListPasswordsByOwnerRow, error)
+	ListSessionsByOwner(ctx context.Context, arg ListSessionsByOwnerParams) ([]ListSessionsByOwnerRow, error)
+	UpdatePreferenceCrypt(ctx context.Context, arg UpdatePreferenceCryptParams) error
+	UpdatePreferenceLanguage(ctx context.Context, arg UpdatePreferenceLanguageParams) error
+	UpdatePreferenceTheme(ctx context.Context, arg UpdatePreferenceThemeParams) error
+	UpdateSeedPhrase(ctx context.Context, arg UpdateSeedPhraseParams) error
 }
 
 var _ Querier = (*Queries)(nil)

@@ -1,4 +1,4 @@
-package dbrepo
+package dbclient
 
 import (
 	"context"

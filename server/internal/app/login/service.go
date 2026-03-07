@@ -1,12 +1,18 @@
 package loginapp
 
 import (
-	dbrepo "github.com/aesterial/secureguard/internal/infra/db"
+	sessionsapp "github.com/aesterial/secureguard/internal/app/sessions"
+	usersdomain "github.com/aesterial/secureguard/internal/domain/users"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	client dbrepo.Client
+	usr usersdomain.Repository
+	ses *sessionsapp.Service
+}
+
+func NewLoginService(usr usersdomain.Repository, ses *sessionsapp.Service) *Service {
+	return &Service{usr: usr, ses: ses}
 }
 
 func (s *Service) generatePassword(raw string) (string, error) {
