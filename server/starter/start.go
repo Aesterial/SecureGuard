@@ -68,15 +68,15 @@ func main() {
 		srvErr <- server.Serve(listener)
 	}()
 	select {
-	case <- ctx.Done():
+	case <-ctx.Done():
 		done := make(chan struct{})
-		go func () {
+		go func() {
 			server.GracefulStop()
 			close(done)
 		}()
-		
+
 		select {
-		case <- done:
+		case <-done:
 		case <-time.After(10 * time.Second):
 			server.Stop()
 		}

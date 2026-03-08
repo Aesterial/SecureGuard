@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aesterial/secureguard/internal/domain"
-	"github.com/aesterial/secureguard/internal/domain/sessions"
+	sessionsdomain "github.com/aesterial/secureguard/internal/domain/sessions"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
 )
 
