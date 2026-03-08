@@ -18,6 +18,13 @@ func NewSessionService(ses sessionsdomain.Repository) *Service {
 }
 
 func (s *Service) IsValid(ctx context.Context, id domain.UUID) (bool, error) {
+	exists, err := s.ses.IsExists(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	if !exists {
+		return false, apperrors.NotFound
+	}
 	session, err := s.ses.GetInfo(ctx, id)
 	if err != nil {
 		return false, err

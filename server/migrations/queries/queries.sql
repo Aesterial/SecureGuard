@@ -60,14 +60,6 @@ order by created_at desc
 limit $2
 offset $3;
 
--- name: CreateSession :one
-insert into sessions (
-    owner,
-    client_hash
-)
-values ($1, $2)
-returning id, owner, client_hash, created;
-
 -- name: GetSessionByID :one
 select id, owner, client_hash, created, revoked
 from sessions
@@ -93,3 +85,18 @@ update preferences set theme = $1 where owner = $2;
 
 -- name: UpdateSeedPhrase :exec
 update users set seed_phrase = $1 where id = $2;
+
+-- name: GetSessionOwner :one
+select owner from sessions where id = $1 limit 1;
+
+-- name: GetSessionInfo :one
+select owner, client_hash, revoked, created, expires from sessions where id = $1 limit 1;
+
+-- name: CreateSession :one
+insert into sessions (owner, client_hash) values ($1, $2) returning id;
+
+-- name: RevokeSession :exec
+update sessions set revoked = true where id = $1;
+
+-- name: IsSessionExists :one
+select exists (select 1 from sessions where id = $1);

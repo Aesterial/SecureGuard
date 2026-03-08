@@ -20,6 +20,10 @@ func New() (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open database connection: %w", err)
 	}
+	err = dbconnection.RunTest(pool)
+	if err != nil {
+		return nil, err
+	}
 	return NewWithPool(pool), nil
 }
 

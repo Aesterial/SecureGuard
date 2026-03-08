@@ -45,12 +45,7 @@ func (q *Queries) CreatePassword(ctx context.Context, arg CreatePasswordParams) 
 }
 
 const createSession = `-- name: CreateSession :one
-insert into sessions (
-    owner,
-    client_hash
-)
-values ($1, $2)
-returning id, owner, client_hash, created
+insert into sessions (owner, client_hash) values ($1, $2) returning id
 `
 
 type CreateSessionParams struct {
@@ -58,23 +53,11 @@ type CreateSessionParams struct {
 	ClientHash string      `json:"client_hash"`
 }
 
-type CreateSessionRow struct {
-	ID         pgtype.UUID        `json:"id"`
-	Owner      pgtype.UUID        `json:"owner"`
-	ClientHash string             `json:"client_hash"`
-	Created    pgtype.Timestamptz `json:"created"`
-}
-
-func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (CreateSessionRow, error) {
+func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, createSession, arg.Owner, arg.ClientHash)
-	var i CreateSessionRow
-	err := row.Scan(
-		&i.ID,
-		&i.Owner,
-		&i.ClientHash,
-		&i.Created,
-	)
-	return i, err
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const createUser = `-- name: CreateUser :one
@@ -221,6 +204,42 @@ func (q *Queries) GetSessionByID(ctx context.Context, id pgtype.UUID) (GetSessio
 	return i, err
 }
 
+const getSessionInfo = `-- name: GetSessionInfo :one
+select owner, client_hash, revoked, created, expires from sessions where id = $1 limit 1
+`
+
+type GetSessionInfoRow struct {
+	Owner      pgtype.UUID        `json:"owner"`
+	ClientHash string             `json:"client_hash"`
+	Revoked    bool               `json:"revoked"`
+	Created    pgtype.Timestamptz `json:"created"`
+	Expires    pgtype.Timestamptz `json:"expires"`
+}
+
+func (q *Queries) GetSessionInfo(ctx context.Context, id pgtype.UUID) (GetSessionInfoRow, error) {
+	row := q.db.QueryRow(ctx, getSessionInfo, id)
+	var i GetSessionInfoRow
+	err := row.Scan(
+		&i.Owner,
+		&i.ClientHash,
+		&i.Revoked,
+		&i.Created,
+		&i.Expires,
+	)
+	return i, err
+}
+
+const getSessionOwner = `-- name: GetSessionOwner :one
+select owner from sessions where id = $1 limit 1
+`
+
+func (q *Queries) GetSessionOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getSessionOwner, id)
+	var owner pgtype.UUID
+	err := row.Scan(&owner)
+	return owner, err
+}
+
 const getUserByID = `-- name: GetUserByID :one
 select id, username, password, seed_phrase, joined
 from users
@@ -286,6 +305,17 @@ func (q *Queries) GetUserPreferences(ctx context.Context, owner pgtype.UUID) (Ge
 	var i GetUserPreferencesRow
 	err := row.Scan(&i.Theme, &i.Lang)
 	return i, err
+}
+
+const isSessionExists = `-- name: IsSessionExists :one
+select exists (select 1 from sessions where id = $1)
+`
+
+func (q *Queries) IsSessionExists(ctx context.Context, id pgtype.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, isSessionExists, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
 }
 
 const listPasswordsByOwner = `-- name: ListPasswordsByOwner :many
@@ -382,6 +412,15 @@ func (q *Queries) ListSessionsByOwner(ctx context.Context, arg ListSessionsByOwn
 		return nil, err
 	}
 	return items, nil
+}
+
+const revokeSession = `-- name: RevokeSession :exec
+update sessions set revoked = true where id = $1
+`
+
+func (q *Queries) RevokeSession(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, revokeSession, id)
+	return err
 }
 
 const updatePreferenceCrypt = `-- name: UpdatePreferenceCrypt :exec

@@ -12,19 +12,23 @@ import (
 
 type Querier interface {
 	CreatePassword(ctx context.Context, arg CreatePasswordParams) (CreatePasswordRow, error)
-	CreateSession(ctx context.Context, arg CreateSessionParams) (CreateSessionRow, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (pgtype.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	GetIsUserExists(ctx context.Context, id pgtype.UUID) (bool, error)
 	GetIsUsernameExists(ctx context.Context, username string) (bool, error)
 	GetListUsers(ctx context.Context, arg GetListUsersParams) ([]User, error)
 	GetPasswordByID(ctx context.Context, id pgtype.UUID) (GetPasswordByIDRow, error)
 	GetSessionByID(ctx context.Context, id pgtype.UUID) (GetSessionByIDRow, error)
+	GetSessionInfo(ctx context.Context, id pgtype.UUID) (GetSessionInfoRow, error)
+	GetSessionOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserPassword(ctx context.Context, id pgtype.UUID) (string, error)
 	GetUserPreferences(ctx context.Context, owner pgtype.UUID) (GetUserPreferencesRow, error)
+	IsSessionExists(ctx context.Context, id pgtype.UUID) (bool, error)
 	ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]ListPasswordsByOwnerRow, error)
 	ListSessionsByOwner(ctx context.Context, arg ListSessionsByOwnerParams) ([]ListSessionsByOwnerRow, error)
+	RevokeSession(ctx context.Context, id pgtype.UUID) error
 	UpdatePreferenceCrypt(ctx context.Context, arg UpdatePreferenceCryptParams) error
 	UpdatePreferenceLanguage(ctx context.Context, arg UpdatePreferenceLanguageParams) error
 	UpdatePreferenceTheme(ctx context.Context, arg UpdatePreferenceThemeParams) error
