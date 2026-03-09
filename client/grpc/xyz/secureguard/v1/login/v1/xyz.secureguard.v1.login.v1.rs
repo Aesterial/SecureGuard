@@ -17,14 +17,9 @@ pub struct RegisterRequest {
     pub phraze: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct AuthorizeResponse {
-    #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
-}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct RegisterResponse {
-    #[prost(string, tag = "1")]
-    pub id: ::prost::alloc::string::String,
+pub struct LoginResponse {
+    #[prost(message, optional, tag = "1")]
+    pub info: ::core::option::Option<super::super::users::v1::UserSelf>,
 }
 include!("xyz.secureguard.v1.login.v1.tonic.rs");
 // @@protoc_insertion_point(module)

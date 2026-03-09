@@ -27,8 +27,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LoginServiceClient interface {
-	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
-	Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*AuthorizeResponse, error)
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 }
 
 type loginServiceClient struct {
@@ -39,9 +39,9 @@ func NewLoginServiceClient(cc grpc.ClientConnInterface) LoginServiceClient {
 	return &loginServiceClient{cc}
 }
 
-func (c *loginServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+func (c *loginServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RegisterResponse)
+	out := new(LoginResponse)
 	err := c.cc.Invoke(ctx, LoginService_Register_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -49,9 +49,9 @@ func (c *loginServiceClient) Register(ctx context.Context, in *RegisterRequest, 
 	return out, nil
 }
 
-func (c *loginServiceClient) Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*AuthorizeResponse, error) {
+func (c *loginServiceClient) Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AuthorizeResponse)
+	out := new(LoginResponse)
 	err := c.cc.Invoke(ctx, LoginService_Authorize_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -63,8 +63,8 @@ func (c *loginServiceClient) Authorize(ctx context.Context, in *AuthorizeRequest
 // All implementations should embed UnimplementedLoginServiceServer
 // for forward compatibility.
 type LoginServiceServer interface {
-	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
-	Authorize(context.Context, *AuthorizeRequest) (*AuthorizeResponse, error)
+	Register(context.Context, *RegisterRequest) (*LoginResponse, error)
+	Authorize(context.Context, *AuthorizeRequest) (*LoginResponse, error)
 }
 
 // UnimplementedLoginServiceServer should be embedded to have
@@ -74,10 +74,10 @@ type LoginServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedLoginServiceServer struct{}
 
-func (UnimplementedLoginServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
+func (UnimplementedLoginServiceServer) Register(context.Context, *RegisterRequest) (*LoginResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedLoginServiceServer) Authorize(context.Context, *AuthorizeRequest) (*AuthorizeResponse, error) {
+func (UnimplementedLoginServiceServer) Authorize(context.Context, *AuthorizeRequest) (*LoginResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Authorize not implemented")
 }
 func (UnimplementedLoginServiceServer) testEmbeddedByValue() {}

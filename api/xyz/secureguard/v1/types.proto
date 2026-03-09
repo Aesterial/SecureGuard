@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package xyz.secureguard.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1";
+
+message RequestWithID {
+    string id = 1;
+};
+
+message RequestWithIdAndValue {
+    string id = 1;
+    string value = 2;
+};
+
+message RequestWithValue {
+    string value = 1;
+}
+
+message RequestWithLimit {
+    int32 limit = 1;
+}
+
+message RequestWithOffset {
+    int32 offset = 1;
+}
+
+message RequestWithLimitAndOffset {
+    int32 limit = 1;
+    int32 offset = 2;
+}

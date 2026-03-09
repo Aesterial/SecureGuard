@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package xyz.secureguard.v1.passwords.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1/passwords/v1;passwords";
+
+import "xyz/secureguard/v1/types.proto";
+import "xyz/secureguard/v1/passwords/v1/domain.proto";
+import "google/protobuf/empty.proto";
+
+service PasswordService {
+    rpc List(google.protobuf.Empty) returns (ListResponse);
+    rpc Create(CreateRequest) returns (PassDataResponse);
+    rpc Update(UpdateRequest) returns (PassDataResponse);
+    rpc Delete(xyz.secureguard.v1.RequestWithID) returns (DeleteResponse);
+};

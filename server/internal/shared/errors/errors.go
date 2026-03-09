@@ -71,7 +71,7 @@ func Wrap(err error) error {
 }
 
 var (
-	RecordNotFound      = ErrorST{st: status.New(codes.NotFound, "record not found"), content: "requested record not found"}
+	NotFound            = ErrorST{st: status.New(codes.NotFound, "record not found"), content: "requested record not found"}
 	ParamsNotMatch      = ErrorST{st: status.New(codes.InvalidArgument, "arguments not equals with ")}
 	InvalidArguments    = ErrorST{st: status.New(codes.InvalidArgument, "invalid arguments"), content: "some argument missing"}
 	RequiredDataMissing = ErrorST{st: status.New(codes.InvalidArgument, "required data missing"), content: "some of transferred data is missing"}

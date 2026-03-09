@@ -7,8 +7,10 @@
 package users
 
 import (
+	v1 "github.com/aesterial/secureguard/internal/api/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -24,12 +26,35 @@ var File_xyz_secureguard_v1_users_v1_service_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_users_v1_service_proto_rawDesc = "" +
 	"\n" +
-	")xyz/secureguard/v1/users/v1/service.proto\x12\x1bxyz.secureguard.v1.users.v1BAZ?github.com/aesterial/secureguard/internal/api/v1/users/v1;usersb\x06proto3"
+	")xyz/secureguard/v1/users/v1/service.proto\x12\x1bxyz.secureguard.v1.users.v1\x1a\x1exyz/secureguard/v1/types.proto\x1a(xyz/secureguard/v1/users/v1/domain.proto\x1a\x1bgoogle/protobuf/empty.proto2\xf2\x03\n" +
+	"\vUserService\x12I\n" +
+	"\x04Info\x12\x16.google.protobuf.Empty\x1a).xyz.secureguard.v1.users.v1.UserResponse\x12`\n" +
+	"\x04List\x12-.xyz.secureguard.v1.RequestWithLimitAndOffset\x1a).xyz.secureguard.v1.users.v1.ListResponse\x12e\n" +
+	"\vChangeTheme\x12$.xyz.secureguard.v1.RequestWithValue\x1a0.xyz.secureguard.v1.users.v1.ValueChangeResponse\x12h\n" +
+	"\x0eChangeLanguage\x12$.xyz.secureguard.v1.RequestWithValue\x1a0.xyz.secureguard.v1.users.v1.ValueChangeResponse\x12e\n" +
+	"\vChangeCrypt\x12$.xyz.secureguard.v1.RequestWithValue\x1a0.xyz.secureguard.v1.users.v1.ValueChangeResponseBAZ?github.com/aesterial/secureguard/internal/api/v1/users/v1;usersb\x06proto3"
 
-var file_xyz_secureguard_v1_users_v1_service_proto_goTypes = []any{}
+var file_xyz_secureguard_v1_users_v1_service_proto_goTypes = []any{
+	(*emptypb.Empty)(nil),                // 0: google.protobuf.Empty
+	(*v1.RequestWithLimitAndOffset)(nil), // 1: xyz.secureguard.v1.RequestWithLimitAndOffset
+	(*v1.RequestWithValue)(nil),          // 2: xyz.secureguard.v1.RequestWithValue
+	(*UserResponse)(nil),                 // 3: xyz.secureguard.v1.users.v1.UserResponse
+	(*ListResponse)(nil),                 // 4: xyz.secureguard.v1.users.v1.ListResponse
+	(*ValueChangeResponse)(nil),          // 5: xyz.secureguard.v1.users.v1.ValueChangeResponse
+}
 var file_xyz_secureguard_v1_users_v1_service_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
+	0, // 0: xyz.secureguard.v1.users.v1.UserService.Info:input_type -> google.protobuf.Empty
+	1, // 1: xyz.secureguard.v1.users.v1.UserService.List:input_type -> xyz.secureguard.v1.RequestWithLimitAndOffset
+	2, // 2: xyz.secureguard.v1.users.v1.UserService.ChangeTheme:input_type -> xyz.secureguard.v1.RequestWithValue
+	2, // 3: xyz.secureguard.v1.users.v1.UserService.ChangeLanguage:input_type -> xyz.secureguard.v1.RequestWithValue
+	2, // 4: xyz.secureguard.v1.users.v1.UserService.ChangeCrypt:input_type -> xyz.secureguard.v1.RequestWithValue
+	3, // 5: xyz.secureguard.v1.users.v1.UserService.Info:output_type -> xyz.secureguard.v1.users.v1.UserResponse
+	4, // 6: xyz.secureguard.v1.users.v1.UserService.List:output_type -> xyz.secureguard.v1.users.v1.ListResponse
+	5, // 7: xyz.secureguard.v1.users.v1.UserService.ChangeTheme:output_type -> xyz.secureguard.v1.users.v1.ValueChangeResponse
+	5, // 8: xyz.secureguard.v1.users.v1.UserService.ChangeLanguage:output_type -> xyz.secureguard.v1.users.v1.ValueChangeResponse
+	5, // 9: xyz.secureguard.v1.users.v1.UserService.ChangeCrypt:output_type -> xyz.secureguard.v1.users.v1.ValueChangeResponse
+	5, // [5:10] is the sub-list for method output_type
+	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -40,6 +65,7 @@ func file_xyz_secureguard_v1_users_v1_service_proto_init() {
 	if File_xyz_secureguard_v1_users_v1_service_proto != nil {
 		return
 	}
+	file_xyz_secureguard_v1_users_v1_domain_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
@@ -48,7 +74,7 @@ func file_xyz_secureguard_v1_users_v1_service_proto_init() {
 			NumEnums:      0,
 			NumMessages:   0,
 			NumExtensions: 0,
-			NumServices:   0,
+			NumServices:   1,
 		},
 		GoTypes:           file_xyz_secureguard_v1_users_v1_service_proto_goTypes,
 		DependencyIndexes: file_xyz_secureguard_v1_users_v1_service_proto_depIdxs,

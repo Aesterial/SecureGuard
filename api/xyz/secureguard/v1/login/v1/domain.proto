@@ -4,6 +4,8 @@ package xyz.secureguard.v1.login.v1;
 
 option go_package = "github.com/aesterial/secureguard/internal/api/v1/login/v1;login";
 
+import "xyz/secureguard/v1/users/v1/domain.proto";
+
 message AuthorizeRequest {
     string username = 1;
     string password = 2;
@@ -15,10 +17,7 @@ message RegisterRequest {
     string phraze = 3;
 }
 
-message AuthorizeResponse {
-    string id = 1;
-}
-
-message RegisterResponse {
-    string id = 1;
+message LoginResponse {
+    xyz.secureguard.v1.users.v1.UserSelf info = 1;
+    string session = 2;
 }

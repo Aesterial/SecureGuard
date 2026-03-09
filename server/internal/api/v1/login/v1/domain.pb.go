@@ -7,6 +7,7 @@
 package login
 
 import (
+	v1 "github.com/aesterial/secureguard/internal/api/v1/users/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -133,27 +134,27 @@ func (x *RegisterRequest) GetPhraze() string {
 	return ""
 }
 
-type AuthorizeResponse struct {
+type LoginResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Info          *v1.UserSelf           `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AuthorizeResponse) Reset() {
-	*x = AuthorizeResponse{}
+func (x *LoginResponse) Reset() {
+	*x = LoginResponse{}
 	mi := &file_xyz_secureguard_v1_login_v1_domain_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AuthorizeResponse) String() string {
+func (x *LoginResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AuthorizeResponse) ProtoMessage() {}
+func (*LoginResponse) ProtoMessage() {}
 
-func (x *AuthorizeResponse) ProtoReflect() protoreflect.Message {
+func (x *LoginResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_xyz_secureguard_v1_login_v1_domain_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -165,78 +166,32 @@ func (x *AuthorizeResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AuthorizeResponse.ProtoReflect.Descriptor instead.
-func (*AuthorizeResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
+func (*LoginResponse) Descriptor() ([]byte, []int) {
 	return file_xyz_secureguard_v1_login_v1_domain_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *AuthorizeResponse) GetId() string {
+func (x *LoginResponse) GetInfo() *v1.UserSelf {
 	if x != nil {
-		return x.Id
+		return x.Info
 	}
-	return ""
-}
-
-type RegisterResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *RegisterResponse) Reset() {
-	*x = RegisterResponse{}
-	mi := &file_xyz_secureguard_v1_login_v1_domain_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RegisterResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RegisterResponse) ProtoMessage() {}
-
-func (x *RegisterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_xyz_secureguard_v1_login_v1_domain_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RegisterResponse.ProtoReflect.Descriptor instead.
-func (*RegisterResponse) Descriptor() ([]byte, []int) {
-	return file_xyz_secureguard_v1_login_v1_domain_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *RegisterResponse) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
+	return nil
 }
 
 var File_xyz_secureguard_v1_login_v1_domain_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_login_v1_domain_proto_rawDesc = "" +
 	"\n" +
-	"(xyz/secureguard/v1/login/v1/domain.proto\x12\x1bxyz.secureguard.v1.login.v1\"J\n" +
+	"(xyz/secureguard/v1/login/v1/domain.proto\x12\x1bxyz.secureguard.v1.login.v1\x1a(xyz/secureguard/v1/users/v1/domain.proto\"J\n" +
 	"\x10AuthorizeRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"a\n" +
 	"\x0fRegisterRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x16\n" +
-	"\x06phraze\x18\x03 \x01(\tR\x06phraze\"#\n" +
-	"\x11AuthorizeResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"\"\n" +
-	"\x10RegisterResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02idBAZ?github.com/aesterial/secureguard/internal/api/v1/login/v1;loginb\x06proto3"
+	"\x06phraze\x18\x03 \x01(\tR\x06phraze\"J\n" +
+	"\rLoginResponse\x129\n" +
+	"\x04info\x18\x01 \x01(\v2%.xyz.secureguard.v1.users.v1.UserSelfR\x04infoBAZ?github.com/aesterial/secureguard/internal/api/v1/login/v1;loginb\x06proto3"
 
 var (
 	file_xyz_secureguard_v1_login_v1_domain_proto_rawDescOnce sync.Once
@@ -250,19 +205,20 @@ func file_xyz_secureguard_v1_login_v1_domain_proto_rawDescGZIP() []byte {
 	return file_xyz_secureguard_v1_login_v1_domain_proto_rawDescData
 }
 
-var file_xyz_secureguard_v1_login_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_xyz_secureguard_v1_login_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_xyz_secureguard_v1_login_v1_domain_proto_goTypes = []any{
-	(*AuthorizeRequest)(nil),  // 0: xyz.secureguard.v1.login.v1.AuthorizeRequest
-	(*RegisterRequest)(nil),   // 1: xyz.secureguard.v1.login.v1.RegisterRequest
-	(*AuthorizeResponse)(nil), // 2: xyz.secureguard.v1.login.v1.AuthorizeResponse
-	(*RegisterResponse)(nil),  // 3: xyz.secureguard.v1.login.v1.RegisterResponse
+	(*AuthorizeRequest)(nil), // 0: xyz.secureguard.v1.login.v1.AuthorizeRequest
+	(*RegisterRequest)(nil),  // 1: xyz.secureguard.v1.login.v1.RegisterRequest
+	(*LoginResponse)(nil),    // 2: xyz.secureguard.v1.login.v1.LoginResponse
+	(*v1.UserSelf)(nil),      // 3: xyz.secureguard.v1.users.v1.UserSelf
 }
 var file_xyz_secureguard_v1_login_v1_domain_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	3, // 0: xyz.secureguard.v1.login.v1.LoginResponse.info:type_name -> xyz.secureguard.v1.users.v1.UserSelf
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_xyz_secureguard_v1_login_v1_domain_proto_init() }
@@ -276,7 +232,7 @@ func file_xyz_secureguard_v1_login_v1_domain_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_xyz_secureguard_v1_login_v1_domain_proto_rawDesc), len(file_xyz_secureguard_v1_login_v1_domain_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -3,37 +3,26 @@ package loginapp
 import (
 	"context"
 
-	"fmt"
-
+	"github.com/aesterial/secureguard/internal/domain"
 	logindomain "github.com/aesterial/secureguard/internal/domain/login"
-	"github.com/aesterial/secureguard/internal/infra/db/sqlc"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (s *Service) Register(ctx context.Context, require logindomain.RegisterRequire) (*uuid.UUID, error) {
+func (s *Service) Register(ctx context.Context, require logindomain.RegisterRequire) (*domain.UUID, *domain.UUID, error) {
 	if !require.IsValid() {
-		return nil, apperrors.InvalidArguments
+		return nil, nil, apperrors.InvalidArguments
 	}
 	normal := require.Normalize()
 	pass, err := s.generatePassword(normal.Password)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	usr, err := s.client.Queries.CreateUser(ctx, dbsqlc.CreateUserParams{
-		Username:   normal.Username,
-		Password:   pass,
-		SeedPhrase: pgtype.Text{String: require.Phrase, Valid: true},
-	})
+	usr, err := s.usr.Create(ctx, require.Username, require.Password, pass)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
-	if !usr.ID.Valid {
-		return nil, fmt.Errorf("id is NULL")
+	if usr == nil {
+		return nil, nil, apperrors.InvalidArguments
 	}
-
-	uid := uuid.UUID(usr.ID.Bytes)
-	return &uid, nil
+	return &usr.ID, nil, nil
 }

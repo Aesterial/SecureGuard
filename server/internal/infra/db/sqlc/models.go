@@ -9,24 +9,34 @@ import (
 )
 
 type Password struct {
-	ID        pgtype.UUID        `json:"id"`
-	Owner     pgtype.UUID        `json:"owner"`
-	Pass      string             `json:"pass"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ID         pgtype.UUID        `json:"id"`
+	Owner      pgtype.UUID        `json:"owner"`
+	ServiceUrl string             `json:"service_url"`
+	Login      string             `json:"login"`
+	Pass       string             `json:"pass"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type Preference struct {
+	Owner pgtype.UUID `json:"owner"`
+	Theme string      `json:"theme"`
+	Lang  string      `json:"lang"`
+	Crypt string      `json:"crypt"`
 }
 
 type Session struct {
 	ID         pgtype.UUID        `json:"id"`
 	Owner      pgtype.UUID        `json:"owner"`
-	PhrasePass bool               `json:"phrase_pass"`
 	ClientHash string             `json:"client_hash"`
+	Revoked    bool               `json:"revoked"`
 	Created    pgtype.Timestamptz `json:"created"`
+	Expires    pgtype.Timestamptz `json:"expires"`
 }
 
 type User struct {
 	ID         pgtype.UUID        `json:"id"`
 	Username   string             `json:"username"`
 	Password   string             `json:"password"`
-	SeedPhrase pgtype.Text        `json:"seed_phrase"`
+	SeedPhrase string             `json:"seed_phrase"`
 	Joined     pgtype.Timestamptz `json:"joined"`
 }

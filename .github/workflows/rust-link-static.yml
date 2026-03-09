@@ -1,0 +1,44 @@
+name: Rust Link + Static Analysis
+
+on:
+  pull_request:
+    paths:
+      - "client/src-tauri/**"
+      - "client/grpc/**"
+      - ".github/workflows/rust-link-static.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "client/src-tauri/**"
+      - "client/grpc/**"
+  workflow_dispatch:
+
+jobs:
+  rust:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: client/src-tauri
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            client/src-tauri -> target
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Link check
+        run: cargo build --all-targets --all-features --locked

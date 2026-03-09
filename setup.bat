@@ -9,7 +9,6 @@ echo   SECURE GUARD - PROJECT SETUP
 echo  ══════════════════════════════════════════
 echo.
 
-:: Проверка Rust
 echo [1/6] Checking Rust...
 where rustc >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
@@ -29,7 +28,6 @@ if %ERRORLEVEL% NEQ 0 (
     for /f "tokens=*" %%i in ('rustc --version') do echo [+] %%i
 )
 
-:: Проверка Node.js
 echo [2/6] Checking Node.js...
 where node >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
@@ -40,7 +38,6 @@ if %ERRORLEVEL% NEQ 0 (
     for /f "tokens=*" %%i in ('node --version') do echo [+] Node %%i
 )
 
-:: Создание структуры
 echo [3/6] Creating project structure...
 
 set "P=password-manager"
@@ -60,7 +57,6 @@ mkdir %P%\src-tauri\icons
 
 echo [+] Folders created
 
-:: Создание пустых файлов
 echo [4/6] Creating empty files...
 
 type nul > %P%\package.json
@@ -97,7 +93,6 @@ echo             ├── protection.rs
 echo             └── screenshot_guard.rs
 echo.
 
-:: Иконка-заглушка
 echo [5/6] Creating placeholder icon...
 powershell -Command "Add-Type -AssemblyName System.Drawing; $b=New-Object System.Drawing.Bitmap(32,32); for($x=0;$x-lt32;$x++){for($y=0;$y-lt32;$y++){$b.SetPixel($x,$y,[System.Drawing.Color]::FromArgb(99,102,241))}}; $b.Save('password-manager\src-tauri\icons\icon.png'); $b.Dispose()" 2>nul
 if not exist %P%\src-tauri\icons\icon.png (
@@ -105,7 +100,6 @@ if not exist %P%\src-tauri\icons\icon.png (
 )
 echo [+] Icon ready
 
-:: Инструкция
 echo [6/6] Done!
 echo.
 echo  ══════════════════════════════════════════

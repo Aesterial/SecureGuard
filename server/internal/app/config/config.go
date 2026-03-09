@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aesterial/secureguard/internal/domain/config"
+	cfgdomain "github.com/aesterial/secureguard/internal/domain/config"
 
 	"github.com/joho/godotenv"
 )
@@ -76,6 +76,7 @@ func ensure() {
 		Boot: cfgdomain.Boot{
 			Port: parseType("BOOT_PORT", 50051),
 		},
+		Debug: parseType("DEBUG_MODE", false),
 	}
 }
 

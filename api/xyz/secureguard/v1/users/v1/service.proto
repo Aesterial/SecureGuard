@@ -3,3 +3,15 @@ syntax = "proto3";
 package xyz.secureguard.v1.users.v1;
 
 option go_package = "github.com/aesterial/secureguard/internal/api/v1/users/v1;users";
+
+import "xyz/secureguard/v1/types.proto";
+import "xyz/secureguard/v1/users/v1/domain.proto";
+import "google/protobuf/empty.proto";
+
+service UserService {
+    rpc Info(google.protobuf.Empty) returns (UserResponse);
+    rpc List(xyz.secureguard.v1.RequestWithLimitAndOffset) returns (ListResponse);
+    rpc ChangeTheme(xyz.secureguard.v1.RequestWithValue) returns (ValueChangeResponse);
+    rpc ChangeLanguage(xyz.secureguard.v1.RequestWithValue) returns (ValueChangeResponse);
+    rpc ChangeCrypt(xyz.secureguard.v1.RequestWithValue) returns (ValueChangeResponse);
+}

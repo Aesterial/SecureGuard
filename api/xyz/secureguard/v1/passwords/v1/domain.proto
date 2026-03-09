@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package xyz.secureguard.v1.passwords.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1/passwords/v1;passwords";
+
+import "google/protobuf/timestamp.proto";
+
+message ServiceInfo {
+    string url = 1;
+    string name = 2;
+};
+
+message Password {
+    ServiceInfo serv = 1;
+    string login = 2;
+    string pass = 3;
+    google.protobuf.Timestamp created_at = 4;
+};
+
+message ListResponse {
+    repeated Password list = 1;
+    int32 count = 2;
+};
+
+message CreateRequest {
+    string service_url = 1;
+    string login = 2;
+    string pass = 3;
+};
+
+message PassDataResponse {
+    Password info = 1;
+    google.protobuf.Timestamp at = 2;
+};
+
+message UpdateRequest {
+    optional string service_url = 1;
+    optional string login = 2;
+    optional string pass = 3;
+};
+
+message DeleteResponse {};
