@@ -206,37 +206,39 @@ var I18N = {
     "settings.encryption.sha256": "AES-256-GCM + SHA-256 (fast)",
     "settings.screenshotGuard.title": "Screenshot Guard",
     "settings.screenshotGuard.desc":
-      "Blocks screenshots and screen capture tools.",
+      "Blocks taking screenshots of the app window.",
     "settings.lightTheme.title": "Light theme",
     "settings.lightTheme.desc": "Use a light interface appearance.",
     "settings.startup.title": "Start with Windows",
     "settings.startup.desc": "Launch SecureGuard automatically on sign-in.",
-    "settings.autoLock.title": "Auto lockout",
-    "settings.autoLock.desc": "Automatically log out when idle.",
-    "settings.autoLockMinutes.title": "Auto lockout timer",
-    "settings.autoLockMinutes.desc": "Idle time before logging out.",
+    "settings.autoLock.title": "Auto-lock",
+    "settings.autoLock.desc": "Automatically lock the app after inactivity.",
+    "settings.autoLockMinutes.title": "Auto-lock timer",
+    "settings.autoLockMinutes.desc": "Inactivity time before the app is locked.",
     "settings.confirmDelete.title": "Delete confirmation",
     "settings.confirmDelete.desc": "Show a dialog before deleting an entry.",
     "settings.blockContext.title": "Block context menu",
     "settings.blockContext.desc":
       "Disables right-click menu inside the application.",
     "weak.title": "Weak secrets",
-    "weak.defaultText": "Use this seed phrase/password anyway?",
-    "weak.passwordOnly": "Use this weak password anyway? Security may drop.",
-    "weak.seedOnly": "Use this weak seed phrase anyway? Security may drop.",
+    "weak.defaultText": "Use this weak password/seed phrase anyway?",
+    "weak.passwordOnly":
+      "Use this weak password anyway? This may be insecure.",
+    "weak.seedOnly":
+      "Use this weak seed phrase anyway? This may be insecure.",
     "weak.both":
-      "Use this weak password and seed phrase anyway? Security may drop.",
+      "Use this weak password and seed phrase anyway? This may be insecure.",
     "weak.passwordTip":
       "Password is easy to guess. Add length, digits, and symbols.",
     "weak.seedTip": "Seed phrase is too simple. Use more unique words.",
     "weak.use": "Use anyway",
     "seedModal.title": "Enter seed phrase",
-    "seedModal.desc": "To decrypt and copy the password",
+    "seedModal.desc": "Required to reveal this entry",
     "seedModal.placeholder": "Your seed phrase",
     "seedModal.copy": "Copy",
     "deleteModal.title": "Delete entry?",
     "deleteModal.desc": "This action cannot be undone",
-    "notify.sessionExpired": "Session closed due to inactivity",
+    "notify.sessionExpired": "Session expired due to inactivity",
     "notify.screenshotGuardOn": "Screenshot Guard enabled",
     "notify.screenshotGuardOff": "Screenshot Guard disabled",
     "notify.startupOn": "Start with Windows enabled",
@@ -244,13 +246,13 @@ var I18N = {
     "notify.deleted": "Deleted",
     "notify.lightThemeOn": "Light theme enabled",
     "notify.lightThemeOff": "Light theme disabled",
-    "notify.autoLockOn": "Auto lockout enabled",
-    "notify.autoLockOff": "Auto lockout disabled",
-    "notify.autoLockTimer": "Auto lockout timer: {minutes}.",
+    "notify.autoLockOn": "Auto-lock enabled",
+    "notify.autoLockOff": "Auto-lock disabled",
+    "notify.autoLockTimer": "Auto-lock timer: {minutes}.",
     "notify.confirmDeleteOn": "Delete confirmation enabled",
     "notify.confirmDeleteOff": "Delete confirmation disabled",
-    "notify.blockContextOn": "Context menu block enabled",
-    "notify.blockContextOff": "Context menu block disabled",
+    "notify.blockContextOn": "Context menu blocked",
+    "notify.blockContextOff": "Context menu unblocked",
     "notify.welcome": "Welcome!",
     "notify.accountCreated": "Account created!",
     "notify.accountCreatedLogin": "Account created! Sign in.",
@@ -289,18 +291,18 @@ var I18N = {
 };
 
 var MESSAGE_KEY_BY_TEXT = {
-  "������� ����� � ������": "error.loginCredentialsRequired",
-  "�������� ����� ��� ������": "error.invalidCredentials",
-  "����� ������� 3 �������": "error.loginMinRaw",
-  "������ ������� 8 ��������": "error.passwordMinRaw",
-  "���-����� ������� 3 �����": "error.seedMinRaw",
-  "������������ ��� ����������": "error.userExists",
-  "�� �����������": "error.notAuthenticated",
-  "��������� ��� ����": "error.fillAllFields",
-  "������ �� �������": "error.entryNotFound",
-  "�����������": "notify.copied",
+  "Введите логин и пароль": "error.loginCredentialsRequired",
+  "Неверный логин или пароль": "error.invalidCredentials",
+  "Логин должен быть минимум 3 символа": "error.loginMinRaw",
+  "Пароль должен быть минимум 8 символов": "error.passwordMinRaw",
+  "Сид-фраза должна быть минимум 3 слова": "error.seedMinRaw",
+  "Пользователь уже существует": "error.userExists",
+  "Вы не авторизованы": "error.notAuthenticated",
+  "Заполните все поля": "error.fillAllFields",
+  "Запись не найдена": "error.entryNotFound",
+  "Скопировано": "notify.copied",
   Copied: "notify.copied",
-  "������� ������! �������.": "notify.accountCreatedLogin",
+  "Аккаунт создан! Теперь войдите.": "notify.accountCreatedLogin",
   "Account created! Sign in.": "notify.accountCreatedLogin",
 };
 
@@ -363,10 +365,10 @@ function createFallbackInvoke() {
       var loginUser = (args.username || "").trim();
       var loginPass = args.password || "";
       if (!loginUser || !loginPass) {
-        throw "������� ����� � ������";
+        throw "Введите логин и пароль";
       }
       if (!users[loginUser] || users[loginUser].password !== loginPass) {
-        throw "�������� ����� ��� ������";
+        throw "Неверный логин или пароль";
       }
       authenticated = true;
       return "OK";
@@ -377,19 +379,19 @@ function createFallbackInvoke() {
       var regPass = args.password || "";
       var regSeed = (args.seedPhrase || "").trim();
       if (!regUser || regUser.length < 3) {
-        throw "����� ������� 3 �������";
+        throw "Логин должен быть минимум 3 символа";
       }
       if (!regPass || regPass.length < 8) {
-        throw "������ ������� 8 ��������";
+        throw "Пароль должен быть минимум 8 символов";
       }
       if (regSeed.split(/\s+/).filter(Boolean).length < 3) {
-        throw "���-����� ������� 3 �����";
+        throw "Сид-фраза должна быть минимум 3 слова";
       }
       if (users[regUser]) {
-        throw "������������ ��� ����������";
+        throw "Пользователь уже существует";
       }
       users[regUser] = { password: regPass };
-      return "������� ������! �������.";
+      return "Аккаунт создан! Теперь войдите.";
     }
 
     if (command === "logout") {
@@ -408,14 +410,14 @@ function createFallbackInvoke() {
 
     if (command === "get_startup_status") {
       if (!authenticated) {
-        throw "�� �����������";
+        throw "Вы не авторизованы";
       }
       return startupEnabled;
     }
 
     if (command === "set_screenshot_guard_enabled") {
       if (!authenticated) {
-        throw "�� �����������";
+        throw "Вы не авторизованы";
       }
       screenshotGuardEnabled = !!args.enabled;
       return screenshotGuardEnabled;
@@ -423,14 +425,14 @@ function createFallbackInvoke() {
 
     if (command === "set_startup_enabled") {
       if (!authenticated) {
-        throw "�� �����������";
+        throw "Вы не авторизованы";
       }
       startupEnabled = !!args.enabled;
       return startupEnabled;
     }
 
     if (!authenticated) {
-      throw "�� �����������";
+      throw "Вы не авторизованы";
     }
 
     if (command === "get_passwords") {
@@ -456,7 +458,7 @@ function createFallbackInvoke() {
         args.encryptionAlgorithm,
       );
       if (!title || !password || !seed) {
-        throw "��������� ��� ����";
+        throw "Заполните все поля";
       }
       var entry = {
         id: String(nextId++),
@@ -477,14 +479,14 @@ function createFallbackInvoke() {
         return item.id === copyId;
       });
       if (!copyEntry) {
-        throw "������ �� �������";
+        throw "Запись не найдена";
       }
       if (navigator.clipboard && navigator.clipboard.writeText) {
         try {
           await navigator.clipboard.writeText(copyEntry._plain || "");
         } catch (e) {}
       }
-      return "�����������";
+      return "Скопировано";
     }
 
     if (command === "delete_password") {
@@ -495,7 +497,7 @@ function createFallbackInvoke() {
       return;
     }
 
-    throw "������� ����������: " + command;
+    throw "Команда недоступна: " + command;
   };
 }
 
@@ -577,12 +579,12 @@ function initApp(invoke) {
 
     var rem10 = minutes % 10;
     var rem100 = minutes % 100;
-    var word = "�����";
+    var word = "минут";
 
     if (rem10 === 1 && rem100 !== 11) {
-      word = "������";
+      word = "минута";
     } else if (rem10 >= 2 && rem10 <= 4 && (rem100 < 12 || rem100 > 14)) {
-      word = "������";
+      word = "минуты";
     }
 
     return minutes + " " + word;
@@ -599,7 +601,7 @@ function initApp(invoke) {
       return t(knownKey);
     }
 
-    var unavailablePrefixRu = "������� ����������: ";
+    var unavailablePrefixRu = "Команда недоступна: ";
     var unavailablePrefixEn = "Command unavailable: ";
     if (text.indexOf(unavailablePrefixRu) === 0) {
       return t("error.commandUnavailable", {
