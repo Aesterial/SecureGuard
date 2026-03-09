@@ -20,6 +20,8 @@ pub struct RegisterRequest {
 pub struct LoginResponse {
     #[prost(message, optional, tag = "1")]
     pub info: ::core::option::Option<super::super::users::v1::UserSelf>,
+    #[prost(string, tag = "2")]
+    pub session: ::prost::alloc::string::String,
 }
 include!("xyz.secureguard.v1.login.v1.tonic.rs");
 // @@protoc_insertion_point(module)

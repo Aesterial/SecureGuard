@@ -8,21 +8,27 @@ import (
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
 )
 
-func (s *Service) Register(ctx context.Context, require logindomain.RegisterRequire) (*domain.UUID, *domain.UUID, error) {
+func (s *Service) Register(ctx context.Context, require logindomain.RegisterRequire, hash string) (*domain.UUID, *domain.UUID, error) {
 	if !require.IsValid() {
 		return nil, nil, apperrors.InvalidArguments
 	}
 	normal := require.Normalize()
 	pass, err := s.generatePassword(normal.Password)
 	if err != nil {
+		println("failed to generate password: " + err.Error())
 		return nil, nil, err
 	}
-	usr, err := s.usr.Create(ctx, require.Username, require.Password, pass)
+	usr, err := s.usr.Create(ctx, require.Username, pass, require.Phrase)
 	if err != nil {
+		println("failed to create user: " + err.Error())
 		return nil, nil, err
 	}
 	if usr == nil {
 		return nil, nil, apperrors.InvalidArguments
 	}
-	return &usr.ID, nil, nil
+	session, err := s.ses.Create(ctx, usr.ID, hash)
+	if err != nil {
+		return nil, nil, err
+	}
+	return &usr.ID, session, nil
 }

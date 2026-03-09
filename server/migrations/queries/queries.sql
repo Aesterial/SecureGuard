@@ -74,6 +74,12 @@ order by created desc
 limit $2
 offset $3;
 
+-- name: InitPreferences :exec
+insert into preferences (owner) values ($1);
+
+-- name: IsPreferencesExists :one
+select exists (select 1 from preferences where owner = $1);
+
 -- name: UpdatePreferenceCrypt :exec
 update preferences set crypt = $1 where owner = $2;
 

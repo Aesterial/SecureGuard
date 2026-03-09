@@ -25,6 +25,8 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserPassword(ctx context.Context, id pgtype.UUID) (string, error)
 	GetUserPreferences(ctx context.Context, owner pgtype.UUID) (GetUserPreferencesRow, error)
+	InitPreferences(ctx context.Context, owner pgtype.UUID) error
+	IsPreferencesExists(ctx context.Context, owner pgtype.UUID) (bool, error)
 	IsSessionExists(ctx context.Context, id pgtype.UUID) (bool, error)
 	ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]ListPasswordsByOwnerRow, error)
 	ListSessionsByOwner(ctx context.Context, arg ListSessionsByOwnerParams) ([]ListSessionsByOwnerRow, error)

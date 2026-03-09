@@ -10,6 +10,7 @@ import (
 	v1 "github.com/aesterial/secureguard/internal/api/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -25,30 +26,31 @@ var File_xyz_secureguard_v1_passwords_v1_service_proto protoreflect.FileDescript
 
 const file_xyz_secureguard_v1_passwords_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"-xyz/secureguard/v1/passwords/v1/service.proto\x12\x1fxyz.secureguard.v1.passwords.v1\x1a\x1exyz/secureguard/v1/types.proto\x1a,xyz/secureguard/v1/passwords/v1/domain.proto2\xa3\x03\n" +
-	"\x0fPasswordService\x12X\n" +
-	"\x04List\x12!.xyz.secureguard.v1.RequestWithID\x1a-.xyz.secureguard.v1.passwords.v1.ListResponse\x12k\n" +
+	"-xyz/secureguard/v1/passwords/v1/service.proto\x12\x1fxyz.secureguard.v1.passwords.v1\x1a\x1exyz/secureguard/v1/types.proto\x1a,xyz/secureguard/v1/passwords/v1/domain.proto\x1a\x1bgoogle/protobuf/empty.proto2\x98\x03\n" +
+	"\x0fPasswordService\x12M\n" +
+	"\x04List\x12\x16.google.protobuf.Empty\x1a-.xyz.secureguard.v1.passwords.v1.ListResponse\x12k\n" +
 	"\x06Create\x12..xyz.secureguard.v1.passwords.v1.CreateRequest\x1a1.xyz.secureguard.v1.passwords.v1.PassDataResponse\x12k\n" +
 	"\x06Update\x12..xyz.secureguard.v1.passwords.v1.UpdateRequest\x1a1.xyz.secureguard.v1.passwords.v1.PassDataResponse\x12\\\n" +
 	"\x06Delete\x12!.xyz.secureguard.v1.RequestWithID\x1a/.xyz.secureguard.v1.passwords.v1.DeleteResponseBIZGgithub.com/aesterial/secureguard/internal/api/v1/passwords/v1;passwordsb\x06proto3"
 
 var file_xyz_secureguard_v1_passwords_v1_service_proto_goTypes = []any{
-	(*v1.RequestWithID)(nil), // 0: xyz.secureguard.v1.RequestWithID
+	(*emptypb.Empty)(nil),    // 0: google.protobuf.Empty
 	(*CreateRequest)(nil),    // 1: xyz.secureguard.v1.passwords.v1.CreateRequest
 	(*UpdateRequest)(nil),    // 2: xyz.secureguard.v1.passwords.v1.UpdateRequest
-	(*ListResponse)(nil),     // 3: xyz.secureguard.v1.passwords.v1.ListResponse
-	(*PassDataResponse)(nil), // 4: xyz.secureguard.v1.passwords.v1.PassDataResponse
-	(*DeleteResponse)(nil),   // 5: xyz.secureguard.v1.passwords.v1.DeleteResponse
+	(*v1.RequestWithID)(nil), // 3: xyz.secureguard.v1.RequestWithID
+	(*ListResponse)(nil),     // 4: xyz.secureguard.v1.passwords.v1.ListResponse
+	(*PassDataResponse)(nil), // 5: xyz.secureguard.v1.passwords.v1.PassDataResponse
+	(*DeleteResponse)(nil),   // 6: xyz.secureguard.v1.passwords.v1.DeleteResponse
 }
 var file_xyz_secureguard_v1_passwords_v1_service_proto_depIdxs = []int32{
-	0, // 0: xyz.secureguard.v1.passwords.v1.PasswordService.List:input_type -> xyz.secureguard.v1.RequestWithID
+	0, // 0: xyz.secureguard.v1.passwords.v1.PasswordService.List:input_type -> google.protobuf.Empty
 	1, // 1: xyz.secureguard.v1.passwords.v1.PasswordService.Create:input_type -> xyz.secureguard.v1.passwords.v1.CreateRequest
 	2, // 2: xyz.secureguard.v1.passwords.v1.PasswordService.Update:input_type -> xyz.secureguard.v1.passwords.v1.UpdateRequest
-	0, // 3: xyz.secureguard.v1.passwords.v1.PasswordService.Delete:input_type -> xyz.secureguard.v1.RequestWithID
-	3, // 4: xyz.secureguard.v1.passwords.v1.PasswordService.List:output_type -> xyz.secureguard.v1.passwords.v1.ListResponse
-	4, // 5: xyz.secureguard.v1.passwords.v1.PasswordService.Create:output_type -> xyz.secureguard.v1.passwords.v1.PassDataResponse
-	4, // 6: xyz.secureguard.v1.passwords.v1.PasswordService.Update:output_type -> xyz.secureguard.v1.passwords.v1.PassDataResponse
-	5, // 7: xyz.secureguard.v1.passwords.v1.PasswordService.Delete:output_type -> xyz.secureguard.v1.passwords.v1.DeleteResponse
+	3, // 3: xyz.secureguard.v1.passwords.v1.PasswordService.Delete:input_type -> xyz.secureguard.v1.RequestWithID
+	4, // 4: xyz.secureguard.v1.passwords.v1.PasswordService.List:output_type -> xyz.secureguard.v1.passwords.v1.ListResponse
+	5, // 5: xyz.secureguard.v1.passwords.v1.PasswordService.Create:output_type -> xyz.secureguard.v1.passwords.v1.PassDataResponse
+	5, // 6: xyz.secureguard.v1.passwords.v1.PasswordService.Update:output_type -> xyz.secureguard.v1.passwords.v1.PassDataResponse
+	6, // 7: xyz.secureguard.v1.passwords.v1.PasswordService.Delete:output_type -> xyz.secureguard.v1.passwords.v1.DeleteResponse
 	4, // [4:8] is the sub-list for method output_type
 	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

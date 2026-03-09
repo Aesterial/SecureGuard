@@ -12,6 +12,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -30,7 +31,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PasswordServiceClient interface {
-	List(ctx context.Context, in *v1.RequestWithID, opts ...grpc.CallOption) (*ListResponse, error)
+	List(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListResponse, error)
 	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*PassDataResponse, error)
 	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*PassDataResponse, error)
 	Delete(ctx context.Context, in *v1.RequestWithID, opts ...grpc.CallOption) (*DeleteResponse, error)
@@ -44,7 +45,7 @@ func NewPasswordServiceClient(cc grpc.ClientConnInterface) PasswordServiceClient
 	return &passwordServiceClient{cc}
 }
 
-func (c *passwordServiceClient) List(ctx context.Context, in *v1.RequestWithID, opts ...grpc.CallOption) (*ListResponse, error) {
+func (c *passwordServiceClient) List(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListResponse)
 	err := c.cc.Invoke(ctx, PasswordService_List_FullMethodName, in, out, cOpts...)
@@ -88,7 +89,7 @@ func (c *passwordServiceClient) Delete(ctx context.Context, in *v1.RequestWithID
 // All implementations should embed UnimplementedPasswordServiceServer
 // for forward compatibility.
 type PasswordServiceServer interface {
-	List(context.Context, *v1.RequestWithID) (*ListResponse, error)
+	List(context.Context, *emptypb.Empty) (*ListResponse, error)
 	Create(context.Context, *CreateRequest) (*PassDataResponse, error)
 	Update(context.Context, *UpdateRequest) (*PassDataResponse, error)
 	Delete(context.Context, *v1.RequestWithID) (*DeleteResponse, error)
@@ -101,7 +102,7 @@ type PasswordServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedPasswordServiceServer struct{}
 
-func (UnimplementedPasswordServiceServer) List(context.Context, *v1.RequestWithID) (*ListResponse, error) {
+func (UnimplementedPasswordServiceServer) List(context.Context, *emptypb.Empty) (*ListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedPasswordServiceServer) Create(context.Context, *CreateRequest) (*PassDataResponse, error) {
@@ -134,7 +135,7 @@ func RegisterPasswordServiceServer(s grpc.ServiceRegistrar, srv PasswordServiceS
 }
 
 func _PasswordService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.RequestWithID)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -146,7 +147,7 @@ func _PasswordService_List_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: PasswordService_List_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PasswordServiceServer).List(ctx, req.(*v1.RequestWithID))
+		return srv.(PasswordServiceServer).List(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

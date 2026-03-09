@@ -62,3 +62,14 @@ func (s *Service) GetOwner(ctx context.Context, id domain.UUID) (*domain.UUID, e
 	}
 	return owner, nil
 }
+
+func (s *Service) Create(ctx context.Context, id domain.UUID, hash string) (*domain.UUID, error) {
+	session, err := s.ses.Create(ctx, id, hash)
+	if err != nil {
+		return nil, err
+	}
+	if session == nil {
+		return nil, apperrors.NotFound
+	}
+	return session, nil
+}

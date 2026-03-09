@@ -307,6 +307,26 @@ func (q *Queries) GetUserPreferences(ctx context.Context, owner pgtype.UUID) (Ge
 	return i, err
 }
 
+const initPreferences = `-- name: InitPreferences :exec
+insert into preferences (owner) values ($1)
+`
+
+func (q *Queries) InitPreferences(ctx context.Context, owner pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, initPreferences, owner)
+	return err
+}
+
+const isPreferencesExists = `-- name: IsPreferencesExists :one
+select exists (select 1 from preferences where owner = $1)
+`
+
+func (q *Queries) IsPreferencesExists(ctx context.Context, owner pgtype.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, isPreferencesExists, owner)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const isSessionExists = `-- name: IsSessionExists :one
 select exists (select 1 from sessions where id = $1)
 `

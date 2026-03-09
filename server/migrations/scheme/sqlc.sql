@@ -25,9 +25,9 @@ as $$
 begin
     insert into preferences (owner)
     values (NEW.id)
-    on conflict (owner) do nothing
+    on conflict (owner) do nothing;
     
-    return NEW;
+    RETURN NEW;
 END;
 $$;
 

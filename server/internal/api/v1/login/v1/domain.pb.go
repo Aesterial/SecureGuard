@@ -137,6 +137,7 @@ func (x *RegisterRequest) GetPhraze() string {
 type LoginResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Info          *v1.UserSelf           `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
+	Session       string                 `protobuf:"bytes,2,opt,name=session,proto3" json:"session,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -178,6 +179,13 @@ func (x *LoginResponse) GetInfo() *v1.UserSelf {
 	return nil
 }
 
+func (x *LoginResponse) GetSession() string {
+	if x != nil {
+		return x.Session
+	}
+	return ""
+}
+
 var File_xyz_secureguard_v1_login_v1_domain_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_login_v1_domain_proto_rawDesc = "" +
@@ -189,9 +197,10 @@ const file_xyz_secureguard_v1_login_v1_domain_proto_rawDesc = "" +
 	"\x0fRegisterRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x16\n" +
-	"\x06phraze\x18\x03 \x01(\tR\x06phraze\"J\n" +
+	"\x06phraze\x18\x03 \x01(\tR\x06phraze\"d\n" +
 	"\rLoginResponse\x129\n" +
-	"\x04info\x18\x01 \x01(\v2%.xyz.secureguard.v1.users.v1.UserSelfR\x04infoBAZ?github.com/aesterial/secureguard/internal/api/v1/login/v1;loginb\x06proto3"
+	"\x04info\x18\x01 \x01(\v2%.xyz.secureguard.v1.users.v1.UserSelfR\x04info\x12\x18\n" +
+	"\asession\x18\x02 \x01(\tR\asessionBAZ?github.com/aesterial/secureguard/internal/api/v1/login/v1;loginb\x06proto3"
 
 var (
 	file_xyz_secureguard_v1_login_v1_domain_proto_rawDescOnce sync.Once

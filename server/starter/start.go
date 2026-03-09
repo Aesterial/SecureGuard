@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -34,6 +35,7 @@ func main() {
 	// db connection
 	conn, err := dbclient.New()
 	if err != nil {
+		println("failed to connect to db: " + err.Error())
 		return
 	}
 	defer conn.Pool.Close()
@@ -60,11 +62,13 @@ func main() {
 	userpb.RegisterUserServiceServer(server, usrServer)
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", cfg.Boot.Port))
 	if err != nil {
+		println("failed to listen: " + err.Error())
 		return
 	}
 	srvErr := make(chan error, 1)
 	go func() {
 		// log start serving
+		println("started on: " + strconv.Itoa(cfg.Boot.Port))
 		srvErr <- server.Serve(listener)
 	}()
 	select {

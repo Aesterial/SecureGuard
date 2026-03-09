@@ -30,6 +30,7 @@ func (u *UserRepository) compileUser(usr dbsqlc.User, prefs dbsqlc.GetUserPrefer
 		Preferences: usersdomain.Preferences{
 			Theme: usersdomain.ParseThemeSTR(prefs.Theme),
 			Lang:  usersdomain.ParseLanguageSTR(prefs.Lang),
+			Phrase: &usr.SeedPhrase,
 		},
 	}
 }
@@ -145,12 +146,40 @@ func (u *UserRepository) ChangePhrase(ctx context.Context, target domain.UUID, s
 	return u.querier.UpdateSeedPhrase(ctx, dbsqlc.UpdateSeedPhraseParams{SeedPhrase: set, ID: target.PG()})
 }
 
+func (u *UserRepository) initPreferences(ctx context.Context, owner domain.UUID) error {
+	exists, err := u.IsPreferencesExists(ctx, owner)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return apperrors.NotFound
+	}
+	if err := u.querier.InitPreferences(ctx, owner.PG()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserRepository) IsPreferencesExists(ctx context.Context, owner domain.UUID) (bool, error) {
+	exists, err := u.querier.IsPreferencesExists(ctx, owner.PG())
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+	return exists, nil
+}
+
 func (u *UserRepository) Create(ctx context.Context, username string, passwordHash, seedHash string) (*usersdomain.User, error) {
 	if len(username) < 3 || len(passwordHash) < 3 || len(seedHash) < 3 {
 		return nil, apperrors.InvalidArguments
 	}
 	usr, err := u.querier.CreateUser(ctx, dbsqlc.CreateUserParams{Username: username, Password: passwordHash, SeedPhrase: seedHash})
 	if err != nil {
+		return nil, err
+	}
+	if err := u.initPreferences(ctx, domain.ParseUUID(usr.ID.Bytes)); err != nil {
 		return nil, err
 	}
 	prefs, err := u.querier.GetUserPreferences(ctx, usr.ID)

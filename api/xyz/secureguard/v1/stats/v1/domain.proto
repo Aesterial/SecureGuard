@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package stats.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1/stats/v1;stats";
+
+import "google/protobuf/timestamp.proto";
+
+enum Fields {
+    FIELDS_UNSPECIFIED = 0;
+    FIELDS_ALL = 1;
+    FIELDS_USERS = 2;
+    FIELDS_PASSWORDS = 3;
+    FIELDS_CRYPT = 4;
+}
+
+message TodayRequest {
+    repeated Fields fields = 1;
+}
+
+message ByDateRequest {
+    repeated Fields fields = 1;
+    google.protobuf.Timestamp day = 2;
+}
+
+message StatValue {
+    map<string, int64> elements = 1;
+}
+
+message StatsResponse {
+    map<string, StatValue> info = 1;
+}
