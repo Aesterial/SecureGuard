@@ -12,6 +12,7 @@ type Repository interface {
 	GetByIDs(ctx context.Context, limit int32, targets ...domain.UUID) (Users, error)
 	GetList(ctx context.Context, limit, offset int32) (Users, error)
 	GetPassword(ctx context.Context, target domain.UUID) (string, error)
+	GetPasswordByUsername(ctx context.Context, username string) (string, error)
 	IsExists(ctx context.Context, target domain.UUID) (bool, error)
 	IsUsernameExists(ctx context.Context, username string) (bool, error)
 	ChangeCrypt(ctx context.Context, target domain.UUID, set Crypt) error

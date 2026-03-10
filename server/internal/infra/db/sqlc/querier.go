@@ -24,6 +24,7 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserPassword(ctx context.Context, id pgtype.UUID) (string, error)
+	GetUserPasswordByUsername(ctx context.Context, username string) (string, error)
 	GetUserPreferences(ctx context.Context, owner pgtype.UUID) (GetUserPreferencesRow, error)
 	InitPreferences(ctx context.Context, owner pgtype.UUID) error
 	IsPreferencesExists(ctx context.Context, owner pgtype.UUID) (bool, error)

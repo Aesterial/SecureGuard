@@ -17,7 +17,7 @@ func NewSessionService(ses sessionsdomain.Repository) *Service {
 	return &Service{ses: ses}
 }
 
-func (s *Service) IsValid(ctx context.Context, id domain.UUID) (bool, error) {
+func (s *Service) IsValid(ctx context.Context, id domain.UUID, hash string) (bool, error) {
 	exists, err := s.ses.IsExists(ctx, id)
 	if err != nil {
 		return false, err
@@ -37,6 +37,9 @@ func (s *Service) IsValid(ctx context.Context, id domain.UUID) (bool, error) {
 	}
 	if time.Now().After(session.Expires) {
 		return false, nil
+	}
+	if session.Hash != hash {
+	  return false, apperrors.Unauthenticated
 	}
 	return true, nil
 }

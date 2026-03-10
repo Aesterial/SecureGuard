@@ -25,6 +25,27 @@ func envValue(keys ...string) string {
 	return ""
 }
 
+func parseList(key string, defaults []string) []string {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return defaults
+	}
+
+	values := strings.Split(raw, ",")
+	parsed := make([]string, 0, len(values))
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		parsed = append(parsed, value)
+	}
+	if len(parsed) == 0 {
+		return defaults
+	}
+	return parsed
+}
+
 func parseType[T any](key string, def T) T {
 	raw := strings.TrimSpace(os.Getenv(key))
 	if raw == "" {
@@ -76,8 +97,19 @@ func ensure() {
 		Boot: cfgdomain.Boot{
 			Port: parseType("BOOT_PORT", 50051),
 		},
+		Logging: cfgdomain.Logging{
+			Service: envValue("LOG_SERVICE"),
+			Level:   parseType("LOG_LEVEL", "info"),
+		},
+		Kafka: cfgdomain.Kafka{
+			Enabled:  parseType("KAFKA_ENABLED", false),
+			Brokers:  parseList("KAFKA_BROKERS", []string{"127.0.0.1:9092"}),
+			Topic:    parseType("KAFKA_TOPIC", "secureguard.logs"),
+			ClientID: parseType("KAFKA_CLIENT_ID", "sg"),
+		},
 		Debug: parseType("DEBUG_MODE", false),
 	}
+	env.MarkLoaded()
 }
 
 func Get() cfgdomain.Config {

@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -21,6 +20,7 @@ import (
 	dbclient "github.com/aesterial/secureguard/internal/infra/db"
 	"github.com/aesterial/secureguard/internal/infra/db/repos"
 	"github.com/aesterial/secureguard/internal/infra/server"
+	"github.com/aesterial/secureguard/internal/shared/logging"
 
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
 	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
@@ -32,10 +32,27 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	// db connection
+	logger, err := logging.New(logging.Config{
+		Service: cfg.Logging.Service,
+		Level:   cfg.Logging.Level,
+		Kafka: logging.KafkaConfig{
+			Enabled:  cfg.Kafka.Enabled,
+			Brokers:  cfg.Kafka.Brokers,
+			Topic:    cfg.Kafka.Topic,
+			ClientID: cfg.Kafka.ClientID,
+		},
+	})
+	if err != nil {
+		println("failed to initialize logger: " + err.Error())
+		return
+	}
+	defer logger.Close()
+	logging.SetDefault(logger)
+	logging.Info("logger initialized", logging.F("kafka_enabled", cfg.Kafka.Enabled), logging.F("log_level", cfg.Logging.Level))
+
 	conn, err := dbclient.New()
 	if err != nil {
-		println("failed to connect to db: " + err.Error())
+		logging.Critical("failed to connect to db", logging.F("error", err.Error()))
 		return
 	}
 	defer conn.Pool.Close()
@@ -51,10 +68,9 @@ func main() {
 	usrServer := server.NewUserService(usrService, authentificator)
 	loginServer := server.NewLoginService(usrService, loginService, authentificator)
 
-	var opts []grpc.ServerOption
-	opts = append(opts)
-
-	server := grpc.NewServer(opts...)
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(logging.UnaryServerInterceptor()),
+	)
 	if cfg.IsDebug() {
 		reflection.Register(server)
 	}
@@ -62,17 +78,17 @@ func main() {
 	userpb.RegisterUserServiceServer(server, usrServer)
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", cfg.Boot.Port))
 	if err != nil {
-		println("failed to listen: " + err.Error())
+		logging.Critical("failed to listen", logging.F("error", err.Error()))
 		return
 	}
 	srvErr := make(chan error, 1)
 	go func() {
-		// log start serving
-		println("started on: " + strconv.Itoa(cfg.Boot.Port))
+		logging.Info("grpc server started", logging.F("port", cfg.Boot.Port))
 		srvErr <- server.Serve(listener)
 	}()
 	select {
 	case <-ctx.Done():
+		logging.Warn("shutdown signal received", logging.F("signal", ctx.Err().Error()))
 		done := make(chan struct{})
 		go func() {
 			server.GracefulStop()
@@ -81,13 +97,14 @@ func main() {
 
 		select {
 		case <-done:
+			logging.Info("grpc server stopped gracefully")
 		case <-time.After(10 * time.Second):
 			server.Stop()
+			logging.Warn("graceful shutdown timeout exceeded, forcing stop")
 		}
-		// log stop
 	case err = <-srvErr:
 		if err != nil && !errors.Is(err, grpc.ErrServerStopped) {
-			// crash
+			logging.Critical("grpc server crashed", logging.F("error", err.Error()))
 		}
 	}
 }

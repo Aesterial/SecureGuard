@@ -2,7 +2,7 @@ create extension if not exists "pgcrypto";
 
 create table if not exists users (
     id uuid primary key default pg_catalog.gen_random_uuid(),
-    username varchar(16) not null,
+    username varchar(32) not null,
     password varchar(255) not null,
     seed_phrase varchar(255) not null,
     joined timestamptz not null default now()

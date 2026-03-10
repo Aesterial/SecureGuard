@@ -291,6 +291,17 @@ func (q *Queries) GetUserPassword(ctx context.Context, id pgtype.UUID) (string, 
 	return password, err
 }
 
+const getUserPasswordByUsername = `-- name: GetUserPasswordByUsername :one
+select password from users where username = $1 limit 1
+`
+
+func (q *Queries) GetUserPasswordByUsername(ctx context.Context, username string) (string, error) {
+	row := q.db.QueryRow(ctx, getUserPasswordByUsername, username)
+	var password string
+	err := row.Scan(&password)
+	return password, err
+}
+
 const getUserPreferences = `-- name: GetUserPreferences :one
 select theme, lang from preferences where owner = $1 limit 1
 `

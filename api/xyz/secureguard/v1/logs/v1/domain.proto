@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package xyz.secureguard.v1.logs.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1/logs/v1;logs";
+
+import "google/protobuf/timestamp.proto";
+
+message KafkaLogEntry {
+  google.protobuf.Timestamp timestamp = 1;
+  string service = 2;
+  string level = 3;
+  string message = 4;
+  map<string, string> fields = 5;
+}

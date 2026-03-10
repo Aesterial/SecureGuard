@@ -28,8 +28,8 @@ func (u *UserRepository) compileUser(usr dbsqlc.User, prefs dbsqlc.GetUserPrefer
 		Username: usr.Username,
 		Joined:   usr.Joined.Time,
 		Preferences: usersdomain.Preferences{
-			Theme: usersdomain.ParseThemeSTR(prefs.Theme),
-			Lang:  usersdomain.ParseLanguageSTR(prefs.Lang),
+			Theme:  usersdomain.ParseThemeSTR(prefs.Theme),
+			Lang:   usersdomain.ParseLanguageSTR(prefs.Lang),
 			Phrase: &usr.SeedPhrase,
 		},
 	}
@@ -115,7 +115,34 @@ func (u *UserRepository) GetList(ctx context.Context, limit, offset int32) (user
 }
 
 func (u *UserRepository) GetPassword(ctx context.Context, id domain.UUID) (string, error) {
-	return u.querier.GetUserPassword(ctx, id.PG())
+	password, err := u.querier.GetUserPassword(ctx, id.PG())
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", apperrors.NotFound
+		}
+		return "", err
+	}
+	if password == "" {
+		return "", apperrors.InvalidArguments
+	}
+	return password, nil
+}
+
+func (u *UserRepository) GetPasswordByUsername(ctx context.Context, username string) (string, error) {
+	if username == "" {
+		return "", errors.New("username is empty")
+	}
+	password, err := u.querier.GetUserPasswordByUsername(ctx, username)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", apperrors.NotFound
+		}
+		return "", err
+	}
+	if password == "" {
+		return "", apperrors.InvalidArguments
+	}
+	return password, nil
 }
 
 func (u *UserRepository) ChangeCrypt(ctx context.Context, target domain.UUID, set usersdomain.Crypt) error {

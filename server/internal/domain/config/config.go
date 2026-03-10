@@ -10,6 +10,18 @@ type Database struct {
 	Password string
 }
 
+type Logging struct {
+	Service string
+	Level   string
+}
+
+type Kafka struct {
+	Enabled  bool
+	Brokers  []string
+	Topic    string
+	ClientID string
+}
+
 type Boot struct {
 	Port int
 }
@@ -17,6 +29,8 @@ type Boot struct {
 type Config struct {
 	Database Database
 	Boot     Boot
+	Logging  Logging
+	Kafka    Kafka
 
 	Debug  bool
 	loaded bool

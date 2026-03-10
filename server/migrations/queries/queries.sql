@@ -38,6 +38,9 @@ select theme, lang from preferences where owner = $1 limit 1;
 -- name: GetUserPassword :one
 select password from users where id = $1 limit 1;
 
+-- name: GetUserPasswordByUsername :one
+select password from users where username = $1 limit 1;
+
 -- name: CreatePassword :one
 insert into passwords (
     owner,
