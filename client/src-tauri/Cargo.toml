@@ -19,6 +19,11 @@ bcrypt = "0.15"
 aes-gcm = "0.10"
 argon2 = "0.5"
 rand = "0.8"
+tonic = { version = "0.14", features = ["transport"] }
+tonic-prost = "0.14"
+prost = "0.14"
+prost-types = "0.14"
+uuid = { version = "1", features = ["v4"] }
 base64 = "0.21"
 sha2 = "0.10"
 hex = "0.4"
@@ -30,6 +35,7 @@ parking_lot = "0.12"
 winapi = { version = "0.3", features = [
     "winuser", "wingdi", "libloaderapi", "processthreadsapi",
     "memoryapi", "handleapi", "errhandlingapi", "debugapi",
+    "shellapi",
     "tlhelp32", "psapi", "securitybaseapi", "wow64apiset",
     "winnt", "impl-default"
 ] }

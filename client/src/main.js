@@ -965,7 +965,9 @@ function initApp(invoke) {
       return out;
     }
 
-    out.screenshotGuardEnabled = !!source.screenshotGuardEnabled;
+    if (typeof source.screenshotGuardEnabled === "boolean") {
+      out.screenshotGuardEnabled = source.screenshotGuardEnabled;
+    }
     out.lightThemeEnabled = !!source.lightThemeEnabled;
     out.startupEnabled = !!source.startupEnabled;
     out.autoLockEnabled = !!source.autoLockEnabled;

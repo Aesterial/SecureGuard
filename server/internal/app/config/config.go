@@ -25,6 +25,13 @@ func envValue(keys ...string) string {
 	return ""
 }
 
+func envValueDefault(def string, keys ...string) string {
+	if value := envValue(keys...); strings.TrimSpace(value) != "" {
+		return value
+	}
+	return def
+}
+
 func parseList(key string, defaults []string) []string {
 	raw := strings.TrimSpace(os.Getenv(key))
 	if raw == "" {
@@ -86,13 +93,13 @@ func ensure() {
 	_ = godotenv.Load(".env")
 	env = cfgdomain.Config{
 		Database: cfgdomain.Database{
-			URL:      envValue("POSTGRES_URL"),
-			Name:     envValue("POSTGRES_NAME"),
-			Host:     envValue("POSTGRES_HOST"),
-			Port:     envValue("POSTGRES_PORT"),
+			URL:      envValue("POSTGRES_URL", "DATABASE_URL"),
+			Name:     envValueDefault("secureguard", "POSTGRES_NAME", "POSTGRES_DB", "DB_NAME"),
+			Host:     envValueDefault("127.0.0.1", "POSTGRES_HOST", "DB_HOST"),
+			Port:     envValueDefault("5432", "POSTGRES_PORT", "DB_PORT"),
 			Tls:      parseType("POSTGRES_TLS", false),
-			User:     envValue("POSTGRES_USER"),
-			Password: envValue("POSTGRES_PASSWORD"),
+			User:     envValueDefault("postgres", "POSTGRES_USER", "DB_USER"),
+			Password: envValue("POSTGRES_PASSWORD", "DB_PASSWORD"),
 		},
 		Boot: cfgdomain.Boot{
 			Port: parseType("BOOT_PORT", 50051),

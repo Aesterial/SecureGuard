@@ -3,45 +3,42 @@
     windows_subsystem = "windows"
 )]
 
+mod api;
 mod crypto;
 mod protection;
 mod screenshot_guard;
 
+use api::{ApiClient, PasswordEntry};
 use crypto::{
-    decrypt_password, default_encryption_algorithm, encrypt_password, hash_account_password,
-    hash_seed_phrase, resolve_encryption_algorithm, verify_account_password,
+    decrypt_password, default_encryption_algorithm, encrypt_password, resolve_encryption_algorithm,
 };
-use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::Mutex;
 use tauri::{ClipboardManager, Manager, State};
+#[cfg(target_os = "windows")]
+use std::ffi::OsStr;
+#[cfg(target_os = "windows")]
+use std::os::windows::ffi::OsStrExt;
+#[cfg(target_os = "windows")]
+use std::ptr;
+#[cfg(target_os = "windows")]
+use winapi::um::securitybaseapi::{AllocateAndInitializeSid, CheckTokenMembership, FreeSid};
+#[cfg(target_os = "windows")]
+use winapi::um::shellapi::ShellExecuteW;
+#[cfg(target_os = "windows")]
+use winapi::um::winuser::SW_SHOWNORMAL;
+#[cfg(target_os = "windows")]
+use winapi::um::winnt::{
+    DOMAIN_ALIAS_RID_ADMINS, PSID, SECURITY_BUILTIN_DOMAIN_RID, SID_IDENTIFIER_AUTHORITY,
+};
 #[cfg(target_os = "windows")]
 use winreg::enums::HKEY_CURRENT_USER;
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PasswordEntry {
-    pub id: String,
-    pub title: String,
-    pub encrypted_password: String,
-    pub salt: String,
-    pub encryption_algorithm: String,
-    pub created_at: String,
-}
-
-#[derive(Clone, Debug)]
-struct UserAccount {
-    username: String,
-    password_hash: String,
-    seed_hash: String,
-}
-
 struct AppState {
     authenticated: AtomicBool,
-    passwords: Mutex<Vec<PasswordEntry>>,
-    next_id: Mutex<u64>,
-    account: Mutex<Option<UserAccount>>,
+    api: Mutex<ApiClient>,
 }
 
 #[cfg(target_os = "windows")]
@@ -60,15 +57,9 @@ async fn login(
         return Err("Введите логин и пароль".into());
     }
 
-    let account = state.account.lock().await;
-    let account = account.as_ref().ok_or("Сначала зарегистрируйтесь")?;
-    if account.username != username {
-        return Err("Неверный логин или пароль".into());
-    }
-
-    let valid = verify_account_password(&password, &account.password_hash)?;
-    if !valid {
-        return Err("Неверный логин или пароль".into());
+    {
+        let mut api = state.api.lock().await;
+        api.authorize(username, &password).await?;
     }
 
     state.authenticated.store(true, Ordering::SeqCst);
@@ -95,29 +86,21 @@ async fn register(
         return Err("Сид-фраза минимум 3 слова".into());
     }
 
-    let password_hash = hash_account_password(&password)?;
-    let seed_hash = hash_seed_phrase(seed_phrase);
-
     {
-        let mut account = state.account.lock().await;
-        *account = Some(UserAccount {
-            username: username.to_string(),
-            password_hash,
-            seed_hash,
-        });
+        let mut api = state.api.lock().await;
+        api.register(username, &password, seed_phrase).await?;
+        api.clear_session();
     }
 
     state.authenticated.store(false, Ordering::SeqCst);
-    state.passwords.lock().await.clear();
-    *state.next_id.lock().await = 0;
-
     Ok("Аккаунт создан! Войдите.".into())
 }
 
 #[tauri::command]
 async fn logout(state: State<'_, AppState>) -> Result<(), String> {
     state.authenticated.store(false, Ordering::SeqCst);
-    state.passwords.lock().await.clear();
+    let mut api = state.api.lock().await;
+    api.clear_session();
     Ok(())
 }
 
@@ -126,8 +109,8 @@ async fn get_passwords(state: State<'_, AppState>) -> Result<Vec<PasswordEntry>,
     if !state.authenticated.load(Ordering::SeqCst) {
         return Err("Не авторизован".into());
     }
-    let list = state.passwords.lock().await;
-    Ok(list.clone())
+    let api = state.api.lock().await;
+    api.list_passwords().await
 }
 
 #[tauri::command]
@@ -152,24 +135,12 @@ async fn add_password(
         return Err("Введите сид-фразу".into());
     }
 
-    {
-        let account = state.account.lock().await;
-        let account = account.as_ref().ok_or("Сначала зарегистрируйтесь")?;
-        if !account.seed_hash.is_empty() && hash_seed_phrase(seed_phrase) != account.seed_hash {
-            return Err("Неверная сид-фраза".into());
-        }
-    }
-
     let algorithm = resolve_encryption_algorithm(&encryption_algorithm)
         .ok_or("Неподдерживаемый алгоритм шифрования")?;
     let (encrypted, salt) = encrypt_password(&password, seed_phrase, algorithm)?;
 
-    let mut id_counter = state.next_id.lock().await;
-    *id_counter += 1;
-    let id = format!("{}", *id_counter);
-
     let entry = PasswordEntry {
-        id: id.clone(),
+        id: String::new(),
         title: title.trim().to_string(),
         encrypted_password: encrypted,
         salt,
@@ -177,9 +148,8 @@ async fn add_password(
         created_at: chrono_now(),
     };
 
-    state.passwords.lock().await.push(entry.clone());
-
-    Ok(entry)
+    let api = state.api.lock().await;
+    api.add_password(entry).await
 }
 
 #[tauri::command]
@@ -194,7 +164,8 @@ async fn copy_password(
     }
 
     let entry = {
-        let list = state.passwords.lock().await;
+        let api = state.api.lock().await;
+        let list = api.list_passwords().await?;
         list.iter()
             .find(|e| e.id == entry_id)
             .cloned()
@@ -204,14 +175,6 @@ async fn copy_password(
     let seed_phrase = seed_phrase.trim();
     if seed_phrase.is_empty() {
         return Err("Введите сид-фразу".into());
-    }
-
-    {
-        let account = state.account.lock().await;
-        let account = account.as_ref().ok_or("Сначала зарегистрируйтесь")?;
-        if !account.seed_hash.is_empty() && hash_seed_phrase(seed_phrase) != account.seed_hash {
-            return Err("Неверная сид-фраза".into());
-        }
     }
 
     let algorithm = if entry.encryption_algorithm.trim().is_empty() {
@@ -247,14 +210,17 @@ async fn delete_password(state: State<'_, AppState>, entry_id: String) -> Result
     if !state.authenticated.load(Ordering::SeqCst) {
         return Err("Не авторизован".into());
     }
-    let mut list = state.passwords.lock().await;
-    list.retain(|e| e.id != entry_id);
-    Ok(())
+    let api = state.api.lock().await;
+    api.delete_password(&entry_id).await
 }
 
 #[tauri::command]
 async fn is_authenticated(state: State<'_, AppState>) -> Result<bool, String> {
-    Ok(state.authenticated.load(Ordering::SeqCst))
+    if state.authenticated.load(Ordering::SeqCst) {
+        return Ok(true);
+    }
+    let api = state.api.lock().await;
+    Ok(api.is_authenticated())
 }
 
 #[tauri::command]
@@ -345,6 +311,142 @@ fn set_windows_startup_enabled(_enabled: bool) -> Result<bool, String> {
     Err("Автозапуск поддерживается только на Windows".into())
 }
 
+#[cfg(target_os = "windows")]
+fn ensure_elevated_or_relaunch() {
+    if is_running_as_admin() {
+        return;
+    }
+
+    let exe = match std::env::current_exe() {
+        Ok(path) => path,
+        Err(err) => {
+            eprintln!("SecureGuard UAC: current_exe failed: {}", err);
+            std::process::exit(1);
+        }
+    };
+
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let params = quote_windows_args(&args);
+
+    let verb = to_wide("runas");
+    let file = to_wide_os(exe.as_os_str());
+    let params_wide = to_wide(&params);
+
+    let result = unsafe {
+        ShellExecuteW(
+            ptr::null_mut(),
+            verb.as_ptr(),
+            file.as_ptr(),
+            if params.is_empty() {
+                ptr::null()
+            } else {
+                params_wide.as_ptr()
+            },
+            ptr::null(),
+            SW_SHOWNORMAL,
+        ) as isize
+    };
+
+    if result <= 32 {
+        eprintln!("SecureGuard UAC: elevation failed (ShellExecuteW={})", result);
+        std::process::exit(1);
+    }
+
+    std::process::exit(0);
+}
+
+#[cfg(target_os = "windows")]
+fn is_running_as_admin() -> bool {
+    unsafe {
+        let mut admin_group: PSID = ptr::null_mut();
+        let nt_authority = SID_IDENTIFIER_AUTHORITY {
+            Value: [0, 0, 0, 0, 0, 5],
+        };
+
+        let sid_ok = AllocateAndInitializeSid(
+            &nt_authority as *const _ as *mut _,
+            2,
+            SECURITY_BUILTIN_DOMAIN_RID,
+            DOMAIN_ALIAS_RID_ADMINS,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            &mut admin_group,
+        );
+
+        if sid_ok == 0 || admin_group.is_null() {
+            return false;
+        }
+
+        let mut is_member = 0;
+        let token_ok = CheckTokenMembership(ptr::null_mut(), admin_group, &mut is_member);
+        FreeSid(admin_group);
+
+        token_ok != 0 && is_member != 0
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn quote_windows_args(args: &[String]) -> String {
+    args.iter()
+        .map(|arg| quote_windows_arg(arg))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+#[cfg(target_os = "windows")]
+fn quote_windows_arg(value: &str) -> String {
+    if value.is_empty() {
+        return "\"\"".to_string();
+    }
+
+    if !value
+        .chars()
+        .any(|ch| ch.is_whitespace() || ch == '"' || ch == '\\')
+    {
+        return value.to_string();
+    }
+
+    let mut quoted = String::from("\"");
+    let mut backslashes = 0usize;
+
+    for ch in value.chars() {
+        match ch {
+            '\\' => backslashes += 1,
+            '"' => {
+                quoted.push_str(&"\\".repeat(backslashes * 2 + 1));
+                quoted.push('"');
+                backslashes = 0;
+            }
+            _ => {
+                quoted.push_str(&"\\".repeat(backslashes));
+                backslashes = 0;
+                quoted.push(ch);
+            }
+        }
+    }
+
+    quoted.push_str(&"\\".repeat(backslashes * 2));
+    quoted.push('"');
+    quoted
+}
+
+#[cfg(target_os = "windows")]
+fn to_wide(value: &str) -> Vec<u16> {
+    OsStr::new(value)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect()
+}
+
+#[cfg(target_os = "windows")]
+fn to_wide_os(value: &OsStr) -> Vec<u16> {
+    value.encode_wide().chain(std::iter::once(0)).collect()
+}
+
 fn chrono_now() -> String {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -354,15 +456,16 @@ fn chrono_now() -> String {
 }
 
 fn main() {
+    #[cfg(target_os = "windows")]
+    ensure_elevated_or_relaunch();
+
     #[cfg(all(target_os = "windows", not(debug_assertions)))]
     protection::init_protection();
 
     tauri::Builder::default()
         .manage(AppState {
             authenticated: AtomicBool::new(false),
-            passwords: Mutex::new(Vec::new()),
-            next_id: Mutex::new(0),
-            account: Mutex::new(Some(default_account())),
+            api: Mutex::new(ApiClient::new()),
         })
         .setup(|app| {
             let window = app.get_window("main").unwrap();
@@ -385,12 +488,4 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("Ошибка запуска приложения");
-}
-
-fn default_account() -> UserAccount {
-    UserAccount {
-        username: "test".to_string(),
-        password_hash: hash_account_password("test").expect("failed to hash default password"),
-        seed_hash: String::new(),
-    }
 }

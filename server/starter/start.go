@@ -23,6 +23,7 @@ import (
 	"github.com/aesterial/secureguard/internal/shared/logging"
 
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
+	passwordpb "github.com/aesterial/secureguard/internal/api/v1/passwords/v1"
 	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
 )
 
@@ -67,6 +68,7 @@ func main() {
 	authentificator := server.NewAuthentificator(sesService, usrService)
 	usrServer := server.NewUserService(usrService, authentificator)
 	loginServer := server.NewLoginService(usrService, loginService, authentificator)
+	passServer := server.NewPasswordService(conn.Querier(), conn.Pool, authentificator)
 
 	server := grpc.NewServer(
 		grpc.UnaryInterceptor(logging.UnaryServerInterceptor()),
@@ -76,6 +78,7 @@ func main() {
 	}
 	loginpb.RegisterLoginServiceServer(server, loginServer)
 	userpb.RegisterUserServiceServer(server, usrServer)
+	passwordpb.RegisterPasswordServiceServer(server, passServer)
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", cfg.Boot.Port))
 	if err != nil {
 		logging.Critical("failed to listen", logging.F("error", err.Error()))

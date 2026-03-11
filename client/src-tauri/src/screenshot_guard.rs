@@ -3,23 +3,37 @@ use winapi::shared::minwindef::*;
 #[cfg(target_os = "windows")]
 use winapi::shared::windef::*;
 #[cfg(target_os = "windows")]
+use winapi::um::errhandlingapi::*;
+#[cfg(target_os = "windows")]
 use winapi::um::handleapi::*;
 #[cfg(target_os = "windows")]
 use winapi::um::libloaderapi::*;
 #[cfg(target_os = "windows")]
+use winapi::um::processthreadsapi::*;
+#[cfg(target_os = "windows")]
 use winapi::um::tlhelp32::*;
+#[cfg(target_os = "windows")]
+use winapi::um::winnt::PROCESS_TERMINATE;
 #[cfg(target_os = "windows")]
 use winapi::um::winuser::*;
 
 use once_cell::sync::OnceCell;
 use std::ptr;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::thread;
 use std::time::Duration;
 use tauri::Window;
 
 static WINDOW_HWND: OnceCell<isize> = OnceCell::new();
 static PROTECTION_ON: AtomicBool = AtomicBool::new(false);
+static LAST_AFFINITY_ERROR: AtomicU32 = AtomicU32::new(0);
+
+#[cfg(target_os = "windows")]
+const WDA_NONE: DWORD = 0x00000000;
+#[cfg(target_os = "windows")]
+const WDA_MONITOR: DWORD = 0x00000001;
+#[cfg(target_os = "windows")]
+const WDA_EXCLUDEFROMCAPTURE: DWORD = 0x00000011;
 
 #[cfg(target_os = "windows")]
 fn spawn_guard_thread<F>(name: &str, f: F)
@@ -56,7 +70,9 @@ pub fn init_screenshot_protection(window: Window) {
         let hwnd = window.hwnd().unwrap().0 as isize;
         let _ = WINDOW_HWND.set(hwnd);
         PROTECTION_ON.store(true, Ordering::SeqCst);
-        apply_display_affinity(hwnd as HWND);
+        spawn_guard_thread("sg-affinity-keepalive", move || {
+            monitor_affinity(hwnd as HWND);
+        });
         spawn_guard_thread("sg-kb-hook", || {
             install_keyboard_hook();
         });
@@ -69,22 +85,100 @@ pub fn init_screenshot_protection(window: Window) {
     }
 }
 #[cfg(target_os = "windows")]
-fn apply_display_affinity(hwnd: HWND) {
+fn apply_display_affinity(hwnd: HWND) -> bool {
     unsafe {
-        let result = SetWindowDisplayAffinity(hwnd, 0x00000011);
-
-        if result == 0 {
-            SetWindowDisplayAffinity(hwnd, 0x00000001);
+        if set_display_affinity(hwnd, WDA_EXCLUDEFROMCAPTURE) {
+            LAST_AFFINITY_ERROR.store(0, Ordering::SeqCst);
+            return true;
         }
+
+        if set_display_affinity(hwnd, WDA_MONITOR) {
+            LAST_AFFINITY_ERROR.store(0, Ordering::SeqCst);
+            return true;
+        }
+
+        let code = GetLastError();
+        if code == 0 || code == 8 || code == 1400 {
+            return false;
+        }
+
+        let prev = LAST_AFFINITY_ERROR.swap(code, Ordering::SeqCst);
+        if prev != code {
+            eprintln!(
+                "SecureGuard screenshot affinity failed (hwnd={:?}, err={})",
+                hwnd, code
+            );
+        }
+        false
     }
 }
 
 #[cfg(target_os = "windows")]
 fn disable_display_affinity(hwnd: HWND) {
     unsafe {
-        let _ = SetWindowDisplayAffinity(hwnd, 0x00000000);
+        let _ = set_display_affinity(hwnd, WDA_NONE);
     }
 }
+
+#[cfg(target_os = "windows")]
+fn monitor_affinity(hwnd: HWND) {
+    thread::sleep(Duration::from_millis(1200));
+    loop {
+        if PROTECTION_ON.load(Ordering::SeqCst) {
+            apply_display_affinity(hwnd);
+            thread::sleep(Duration::from_millis(1500));
+        } else {
+            thread::sleep(Duration::from_secs(3));
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+unsafe fn set_display_affinity(hwnd: HWND, affinity: DWORD) -> bool {
+    if hwnd.is_null() || IsWindow(hwnd) == 0 {
+        return false;
+    }
+
+    let root = GetAncestor(hwnd, GA_ROOT);
+    if !root.is_null()
+        && SetWindowDisplayAffinity(root, affinity) != 0
+        && window_affinity_matches(root, affinity)
+    {
+        return true;
+    }
+
+    SetWindowDisplayAffinity(hwnd, affinity) != 0 && window_affinity_matches(hwnd, affinity)
+}
+
+#[cfg(target_os = "windows")]
+unsafe fn window_affinity_matches(hwnd: HWND, expected: DWORD) -> bool {
+    let mut current: DWORD = 0;
+    if GetWindowDisplayAffinity(hwnd, &mut current) == 0 {
+        return false;
+    }
+
+    if expected == WDA_EXCLUDEFROMCAPTURE {
+        current == WDA_EXCLUDEFROMCAPTURE || current == WDA_MONITOR
+    } else {
+        current == expected
+    }
+}
+
+#[cfg(target_os = "windows")]
+unsafe fn terminate_process(pid: u32) {
+    if pid == 0 {
+        return;
+    }
+
+    let handle = OpenProcess(PROCESS_TERMINATE, 0, pid);
+    if handle.is_null() {
+        return;
+    }
+
+    let _ = TerminateProcess(handle, 1);
+    CloseHandle(handle);
+}
+
 #[cfg(target_os = "windows")]
 fn install_keyboard_hook() {
     unsafe {
@@ -222,6 +316,8 @@ fn monitor_capture_tools() {
                                 if let Some(&hwnd) = WINDOW_HWND.get() {
                                     apply_display_affinity(hwnd as HWND);
                                 }
+                                terminate_process(entry.th32ProcessID);
+                                clear_clipboard();
                                 break;
                             }
                         }
@@ -241,7 +337,7 @@ fn monitor_capture_tools() {
 }
 
 #[cfg(target_os = "windows")]
-fn monitor_clipboard(hwnd: HWND) {
+fn monitor_clipboard(_hwnd: HWND) {
     loop {
         if !PROTECTION_ON.load(Ordering::SeqCst) {
             thread::sleep(Duration::from_secs(2));
@@ -253,10 +349,7 @@ fn monitor_clipboard(hwnd: HWND) {
                 || IsClipboardFormatAvailable(8) != 0
                 || IsClipboardFormatAvailable(17) != 0
             {
-                let fg = GetForegroundWindow();
-                if fg == hwnd as HWND {
-                    clear_clipboard();
-                }
+                clear_clipboard();
             }
         }
 
