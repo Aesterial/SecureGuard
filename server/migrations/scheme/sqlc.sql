@@ -18,19 +18,6 @@ create table if not exists preferences (
 create unique index if not exists users_username_idx on users (username);
 create unique index if not exists users_preferences_owner_idx on preferences (owner);
 
-create or replace function preferences_autoset()
-returns trigger
-language plpgsql
-as $$
-begin
-    insert into preferences (owner)
-    values (NEW.id)
-    on conflict (owner) do nothing;
-    
-    RETURN NEW;
-END;
-$$;
-
 create table if not exists passwords (
     id uuid primary key default pg_catalog.gen_random_uuid(),
     owner uuid not null references users (id) on delete cascade,

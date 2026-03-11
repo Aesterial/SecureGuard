@@ -45,6 +45,21 @@ pub struct ListResponse {
     #[prost(message, repeated, tag = "1")]
     pub list: ::prost::alloc::vec::Vec<UserPublic>,
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ChangeThemeRequest {
+    #[prost(enumeration = "Theme", tag = "1")]
+    pub value: i32,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ChangeLanguageRequest {
+    #[prost(enumeration = "Language", tag = "1")]
+    pub value: i32,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ChangeCryptRequest {
+    #[prost(enumeration = "Crypt", tag = "1")]
+    pub value: i32,
+}
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ValueChangeResponse {
     #[prost(message, optional, tag = "1")]

@@ -36,6 +36,16 @@ func (u *UserRepository) compileUser(usr dbsqlc.User, prefs dbsqlc.GetUserPrefer
 }
 
 func (u *UserRepository) GetByID(ctx context.Context, id domain.UUID) (*usersdomain.User, error) {
+	exists, err := u.querier.GetIsUserExists(ctx, id.PG())
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apperrors.NotFound
+		}
+		return nil, err
+	}
+	if !exists {
+		return nil, apperrors.NotFound
+	}
 	usr, err := u.querier.GetUserByID(ctx, id.PG())
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

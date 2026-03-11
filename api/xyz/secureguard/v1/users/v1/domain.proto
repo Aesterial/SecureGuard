@@ -55,6 +55,18 @@ message ListResponse {
     repeated UserPublic list = 1;
 }
 
+message ChangeThemeRequest {
+  Theme value = 1;
+}
+
+message ChangeLanguageRequest {
+  Language value = 1;
+}
+
+message ChangeCryptRequest {
+  Crypt value = 1;
+}
+
 message ValueChangeResponse {
-    google.protobuf.Any result = 1;
+  google.protobuf.Any result = 1;
 }

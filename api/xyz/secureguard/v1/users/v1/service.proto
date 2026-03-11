@@ -11,7 +11,7 @@ import "google/protobuf/empty.proto";
 service UserService {
     rpc Info(google.protobuf.Empty) returns (UserResponse);
     rpc List(xyz.secureguard.v1.RequestWithLimitAndOffset) returns (ListResponse);
-    rpc ChangeTheme(xyz.secureguard.v1.RequestWithValue) returns (ValueChangeResponse);
-    rpc ChangeLanguage(xyz.secureguard.v1.RequestWithValue) returns (ValueChangeResponse);
-    rpc ChangeCrypt(xyz.secureguard.v1.RequestWithValue) returns (ValueChangeResponse);
+    rpc ChangeTheme(ChangeThemeRequest) returns (ValueChangeResponse);
+    rpc ChangeLanguage(ChangeLanguageRequest) returns (ValueChangeResponse);
+    rpc ChangeCrypt(ChangeCryptRequest) returns (ValueChangeResponse);
 }

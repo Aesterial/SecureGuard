@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 
+	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
 	domain "github.com/aesterial/secureguard/internal/domain"
 	usersdomain "github.com/aesterial/secureguard/internal/domain/users"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
@@ -66,4 +67,46 @@ func (s *Service) IsUsernameExists(ctx context.Context, username string) (bool, 
 		return false, err
 	}
 	return exists, nil
+}
+
+func (s *Service) ChangeCrypt(ctx context.Context, target domain.UUID, set userpb.Crypt) error {
+	if set == userpb.Crypt_CRYPT_UNSPECIFIED {
+		return apperrors.InvalidArguments
+	}
+	err := s.usr.ChangeCrypt(ctx, target, usersdomain.ParseCryptPB(set))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apperrors.NotFound
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *Service) ChangeLanguage(ctx context.Context, target domain.UUID, set userpb.Language) error {
+	if set == userpb.Language_LANGUAGE_UNSPECIFIED {
+		return apperrors.InvalidArguments
+	}
+	err := s.usr.ChangeLanguage(ctx, target, usersdomain.ParseLanguagePB(set))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apperrors.NotFound
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *Service) ChangeTheme(ctx context.Context, target domain.UUID, set userpb.Theme) error {
+	if set == userpb.Theme_THEME_UNSPECIFIED {
+		return apperrors.InvalidArguments
+	}
+	err := s.usr.ChangeTheme(ctx, target, usersdomain.ParseThemePB(set))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apperrors.InvalidArguments
+		}
+		return err
+	}
+	return nil
 }
