@@ -21,7 +21,7 @@ create unique index if not exists users_preferences_owner_idx on preferences (ow
 create table if not exists passwords (
     id uuid primary key default pg_catalog.gen_random_uuid(),
     owner uuid not null references users (id) on delete cascade,
-    service_url varchar(64) not null,
+    service varchar(64) not null,
     login text not null,
     pass text not null,
     created_at timestamptz not null default now()

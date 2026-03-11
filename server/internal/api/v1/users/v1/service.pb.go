@@ -26,13 +26,13 @@ var File_xyz_secureguard_v1_users_v1_service_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_users_v1_service_proto_rawDesc = "" +
 	"\n" +
-	")xyz/secureguard/v1/users/v1/service.proto\x12\x1bxyz.secureguard.v1.users.v1\x1a\x1exyz/secureguard/v1/types.proto\x1a(xyz/secureguard/v1/users/v1/domain.proto\x1a\x1bgoogle/protobuf/empty.proto2\x96\x04\n" +
+	")xyz/secureguard/v1/users/v1/service.proto\x12\x1bxyz.secureguard.v1.users.v1\x1a\x1exyz/secureguard/v1/types.proto\x1a(xyz/secureguard/v1/users/v1/domain.proto\x1a\x1bgoogle/protobuf/empty.proto2\x99\x04\n" +
 	"\vUserService\x12I\n" +
 	"\x04Info\x12\x16.google.protobuf.Empty\x1a).xyz.secureguard.v1.users.v1.UserResponse\x12`\n" +
 	"\x04List\x12-.xyz.secureguard.v1.RequestWithLimitAndOffset\x1a).xyz.secureguard.v1.users.v1.ListResponse\x12p\n" +
-	"\vChangeTheme\x12/.xyz.secureguard.v1.users.v1.ChangeThemeRequest\x1a0.xyz.secureguard.v1.users.v1.ValueChangeResponse\x12v\n" +
-	"\x0eChangeLanguage\x122.xyz.secureguard.v1.users.v1.ChangeLanguageRequest\x1a0.xyz.secureguard.v1.users.v1.ValueChangeResponse\x12p\n" +
-	"\vChangeCrypt\x12/.xyz.secureguard.v1.users.v1.ChangeCryptRequest\x1a0.xyz.secureguard.v1.users.v1.ValueChangeResponseBAZ?github.com/aesterial/secureguard/internal/api/v1/users/v1;usersb\x06proto3"
+	"\vChangeTheme\x12/.xyz.secureguard.v1.users.v1.ChangeThemeRequest\x1a0.xyz.secureguard.v1.users.v1.ChangeThemeResponse\x12y\n" +
+	"\x0eChangeLanguage\x122.xyz.secureguard.v1.users.v1.ChangeLanguageRequest\x1a3.xyz.secureguard.v1.users.v1.ChangeLanguageResponse\x12p\n" +
+	"\vChangeCrypt\x12/.xyz.secureguard.v1.users.v1.ChangeCryptRequest\x1a0.xyz.secureguard.v1.users.v1.ChangeCryptResponseBAZ?github.com/aesterial/secureguard/internal/api/v1/users/v1;usersb\x06proto3"
 
 var file_xyz_secureguard_v1_users_v1_service_proto_goTypes = []any{
 	(*emptypb.Empty)(nil),                // 0: google.protobuf.Empty
@@ -42,7 +42,9 @@ var file_xyz_secureguard_v1_users_v1_service_proto_goTypes = []any{
 	(*ChangeCryptRequest)(nil),           // 4: xyz.secureguard.v1.users.v1.ChangeCryptRequest
 	(*UserResponse)(nil),                 // 5: xyz.secureguard.v1.users.v1.UserResponse
 	(*ListResponse)(nil),                 // 6: xyz.secureguard.v1.users.v1.ListResponse
-	(*ValueChangeResponse)(nil),          // 7: xyz.secureguard.v1.users.v1.ValueChangeResponse
+	(*ChangeThemeResponse)(nil),          // 7: xyz.secureguard.v1.users.v1.ChangeThemeResponse
+	(*ChangeLanguageResponse)(nil),       // 8: xyz.secureguard.v1.users.v1.ChangeLanguageResponse
+	(*ChangeCryptResponse)(nil),          // 9: xyz.secureguard.v1.users.v1.ChangeCryptResponse
 }
 var file_xyz_secureguard_v1_users_v1_service_proto_depIdxs = []int32{
 	0, // 0: xyz.secureguard.v1.users.v1.UserService.Info:input_type -> google.protobuf.Empty
@@ -52,9 +54,9 @@ var file_xyz_secureguard_v1_users_v1_service_proto_depIdxs = []int32{
 	4, // 4: xyz.secureguard.v1.users.v1.UserService.ChangeCrypt:input_type -> xyz.secureguard.v1.users.v1.ChangeCryptRequest
 	5, // 5: xyz.secureguard.v1.users.v1.UserService.Info:output_type -> xyz.secureguard.v1.users.v1.UserResponse
 	6, // 6: xyz.secureguard.v1.users.v1.UserService.List:output_type -> xyz.secureguard.v1.users.v1.ListResponse
-	7, // 7: xyz.secureguard.v1.users.v1.UserService.ChangeTheme:output_type -> xyz.secureguard.v1.users.v1.ValueChangeResponse
-	7, // 8: xyz.secureguard.v1.users.v1.UserService.ChangeLanguage:output_type -> xyz.secureguard.v1.users.v1.ValueChangeResponse
-	7, // 9: xyz.secureguard.v1.users.v1.UserService.ChangeCrypt:output_type -> xyz.secureguard.v1.users.v1.ValueChangeResponse
+	7, // 7: xyz.secureguard.v1.users.v1.UserService.ChangeTheme:output_type -> xyz.secureguard.v1.users.v1.ChangeThemeResponse
+	8, // 8: xyz.secureguard.v1.users.v1.UserService.ChangeLanguage:output_type -> xyz.secureguard.v1.users.v1.ChangeLanguageResponse
+	9, // 9: xyz.secureguard.v1.users.v1.UserService.ChangeCrypt:output_type -> xyz.secureguard.v1.users.v1.ChangeCryptResponse
 	5, // [5:10] is the sub-list for method output_type
 	0, // [0:5] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

@@ -60,6 +60,21 @@ pub struct ChangeCryptRequest {
     #[prost(enumeration = "Crypt", tag = "1")]
     pub value: i32,
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ChangeThemeResponse {
+    #[prost(enumeration = "Theme", tag = "1")]
+    pub result: i32,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ChangeLanguageResponse {
+    #[prost(enumeration = "Language", tag = "1")]
+    pub result: i32,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ChangeCryptResponse {
+    #[prost(enumeration = "Crypt", tag = "1")]
+    pub result: i32,
+}
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ValueChangeResponse {
     #[prost(message, optional, tag = "1")]

@@ -21,28 +21,7 @@ func Connect() (*pgxpool.Pool, error) {
 		return pgxpool.New(context.Background(), dsn)
 	}
 
-	host := strings.TrimSpace(cfg.Host)
-	port := strings.TrimSpace(cfg.Port)
-	user := strings.TrimSpace(cfg.User)
-	name := strings.TrimSpace(cfg.Name)
-	if host == "" || port == "" || user == "" || name == "" {
-		return nil, errors.New("database config is incomplete: set POSTGRES_URL or POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_NAME")
-	}
-
-	sslmode := "disable"
-	if cfg.Tls {
-		sslmode = "require"
-	}
-	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		host,
-		port,
-		user,
-		cfg.Password,
-		name,
-		sslmode,
-	)
-	return pgxpool.New(context.Background(), dsn)
+	return pgxpool.New(context.Background(), fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name))
 }
 
 func normalize(raw string) (string, error) {

@@ -56,12 +56,15 @@ where id = $1
 limit 1;
 
 -- name: ListPasswordsByOwner :many
-select id, owner, pass, created_at
+select id, owner, service, login, pass, created_at
 from passwords
 where owner = $1
 order by created_at desc
 limit $2
 offset $3;
+
+-- name: GetPasswordOwner :one
+select owner from passwords where id = $1 limit 1;
 
 -- name: GetSessionByID :one
 select id, owner, client_hash, created, revoked

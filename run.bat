@@ -26,8 +26,8 @@ taskkill /F /IM SecureGuard.exe        >nul 2>&1
 taskkill /F /IM secureguard.exe        >nul 2>&1
 taskkill /F /IM password-manager.exe   >nul 2>&1
 
-echo [*] Checking backend (gRPC :50051)...
-set "BACKEND_PORT=50051"
+echo [*] Checking backend (gRPC :8080)...
+set "BACKEND_PORT=8080"
 set "BACKEND_RUNNING="
 for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":%BACKEND_PORT% .*LISTENING"') do (
     set "BACKEND_RUNNING=1"
@@ -60,7 +60,7 @@ if not exist "..\server\starter\.env" (
             echo POSTGRES_PASSWORD=postgres
             echo POSTGRES_NAME=secureguard
             echo POSTGRES_TLS=false
-            echo BOOT_PORT=50051
+            echo BOOT_PORT=8080
             echo LOG_SERVICE=secureguard
             echo LOG_LEVEL=info
             echo KAFKA_ENABLED=false

@@ -176,6 +176,17 @@ func (q *Queries) GetPasswordByID(ctx context.Context, id pgtype.UUID) (GetPassw
 	return i, err
 }
 
+const getPasswordOwner = `-- name: GetPasswordOwner :one
+select owner from passwords where id = $1 limit 1
+`
+
+func (q *Queries) GetPasswordOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getPasswordOwner, id)
+	var owner pgtype.UUID
+	err := row.Scan(&owner)
+	return owner, err
+}
+
 const getSessionByID = `-- name: GetSessionByID :one
 select id, owner, client_hash, created, revoked
 from sessions
@@ -350,7 +361,7 @@ func (q *Queries) IsSessionExists(ctx context.Context, id pgtype.UUID) (bool, er
 }
 
 const listPasswordsByOwner = `-- name: ListPasswordsByOwner :many
-select id, owner, pass, created_at
+select id, owner, service, login, pass, created_at
 from passwords
 where owner = $1
 order by created_at desc
@@ -364,25 +375,20 @@ type ListPasswordsByOwnerParams struct {
 	Offset int32       `json:"offset"`
 }
 
-type ListPasswordsByOwnerRow struct {
-	ID        pgtype.UUID        `json:"id"`
-	Owner     pgtype.UUID        `json:"owner"`
-	Pass      string             `json:"pass"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-}
-
-func (q *Queries) ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]ListPasswordsByOwnerRow, error) {
+func (q *Queries) ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]Password, error) {
 	rows, err := q.db.Query(ctx, listPasswordsByOwner, arg.Owner, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListPasswordsByOwnerRow{}
+	items := []Password{}
 	for rows.Next() {
-		var i ListPasswordsByOwnerRow
+		var i Password
 		if err := rows.Scan(
 			&i.ID,
 			&i.Owner,
+			&i.Service,
+			&i.Login,
 			&i.Pass,
 			&i.CreatedAt,
 		); err != nil {

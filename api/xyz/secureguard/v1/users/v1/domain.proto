@@ -67,6 +67,18 @@ message ChangeCryptRequest {
   Crypt value = 1;
 }
 
+message ChangeThemeResponse {
+  Theme result = 1;
+}
+
+message ChangeLanguageResponse {
+  Language result = 1;
+}
+
+message ChangeCryptResponse {
+  Crypt result = 1;
+}
+
 message ValueChangeResponse {
   google.protobuf.Any result = 1;
 }

@@ -7,9 +7,7 @@ import (
 	userapp "github.com/aesterial/secureguard/internal/app/users"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
 	"github.com/aesterial/secureguard/internal/shared/logging"
-	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 type UserService struct {
@@ -36,7 +34,7 @@ func (u *UserService) Info(ctx context.Context, _ *emptypb.Empty) (*userpb.UserR
 	return &userpb.UserResponse{Info: usr.ProtobufSelf()}, nil
 }
 
-func (u *UserService) ChangeCrypt(ctx context.Context, req *userpb.ChangeCryptRequest) (*userpb.ValueChangeResponse, error) {
+func (u *UserService) ChangeCrypt(ctx context.Context, req *userpb.ChangeCryptRequest) (*userpb.ChangeCryptResponse, error) {
 	auth, err := u.auth.User(ctx)
 	if err != nil {
 		return nil, apperrors.Wrap(err)
@@ -48,53 +46,41 @@ func (u *UserService) ChangeCrypt(ctx context.Context, req *userpb.ChangeCryptRe
 	if err != nil {
 		return nil, apperrors.Wrap(err)
 	}
-	result, err := anypb.New(wrapperspb.Int32(int32(req.Value)))
+	return &userpb.ChangeCryptResponse{Result: req.Value}, nil
+}
+
+func (u *UserService) ChangeTheme(ctx context.Context, req *userpb.ChangeThemeRequest) (*userpb.ChangeThemeResponse, error) {
+	if req == nil {
+		return nil, apperrors.InvalidArguments
+	}
+	auth, err := u.auth.User(ctx)
 	if err != nil {
 		return nil, apperrors.Wrap(err)
 	}
-	return &userpb.ValueChangeResponse{Result: result}, nil
+	if req.Value == userpb.Theme_THEME_UNSPECIFIED {
+		return nil, apperrors.InvalidArguments
+	}
+	err = u.usr.ChangeTheme(ctx, *auth.UserID, req.Value)
+	if err != nil {
+		return nil, apperrors.Wrap(err)
+	}
+	return &userpb.ChangeThemeResponse{Result: req.Value}, nil
 }
 
-func (u *UserService) ChangeTheme(ctx context.Context, req *userpb.ChangeThemeRequest) (*userpb.ValueChangeResponse, error) {
-  if req == nil {
-    return nil, apperrors.InvalidArguments
-  }
-  auth, err := u.auth.User(ctx)
-  if err != nil {
-    return nil, apperrors.Wrap(err)
-  }
-  if req.Value == userpb.Theme_THEME_UNSPECIFIED {
-    return nil, apperrors.InvalidArguments
-  }
-  err = u.usr.ChangeTheme(ctx, *auth.UserID, req.Value)
-  if err != nil {
-    return nil, apperrors.Wrap(err)
-  }
-  result, err := anypb.New(wrapperspb.Int32(int32(req.Value)))
-  if err != nil {
-    return nil, apperrors.Wrap(err)
-  }
-  return &userpb.ValueChangeResponse{Result: result}, nil
-}
-
-func (u *UserService) ChangeLanguage(ctx context.Context, req *userpb.ChangeLanguageRequest) (*userpb.ValueChangeResponse, error) {
-  if req == nil {
-    return nil, apperrors.InvalidArguments
-  }
-  auth, err := u.auth.User(ctx)
-  if err != nil {
-    return nil, apperrors.Wrap(err)
-  }
-  if req.Value == userpb.Language_LANGUAGE_UNSPECIFIED {
-    return nil, apperrors.InvalidArguments
-  }
-  err = u.usr.ChangeLanguage(ctx, *auth.UserID, req.Value)
-  if err != nil {
-    return nil, apperrors.Wrap(err)
-  }
-  result, err := anypb.New(wrapperspb.Int32(int32(req.Value)))
-  if err != nil {
-    return nil, apperrors.Wrap(err)
-  }
-  return &userpb.ValueChangeResponse{Result: result}, nil
+func (u *UserService) ChangeLanguage(ctx context.Context, req *userpb.ChangeLanguageRequest) (*userpb.ChangeLanguageResponse, error) {
+	if req == nil {
+		return nil, apperrors.InvalidArguments
+	}
+	auth, err := u.auth.User(ctx)
+	if err != nil {
+		return nil, apperrors.Wrap(err)
+	}
+	if req.Value == userpb.Language_LANGUAGE_UNSPECIFIED {
+		return nil, apperrors.InvalidArguments
+	}
+	err = u.usr.ChangeLanguage(ctx, *auth.UserID, req.Value)
+	if err != nil {
+		return nil, apperrors.Wrap(err)
+	}
+	return &userpb.ChangeLanguageResponse{Result: req.Value}, nil
 }

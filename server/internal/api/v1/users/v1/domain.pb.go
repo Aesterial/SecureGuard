@@ -602,6 +602,138 @@ func (x *ChangeCryptRequest) GetValue() Crypt {
 	return Crypt_CRYPT_UNSPECIFIED
 }
 
+type ChangeThemeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        Theme                  `protobuf:"varint,1,opt,name=result,proto3,enum=xyz.secureguard.v1.users.v1.Theme" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangeThemeResponse) Reset() {
+	*x = ChangeThemeResponse{}
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangeThemeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangeThemeResponse) ProtoMessage() {}
+
+func (x *ChangeThemeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangeThemeResponse.ProtoReflect.Descriptor instead.
+func (*ChangeThemeResponse) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ChangeThemeResponse) GetResult() Theme {
+	if x != nil {
+		return x.Result
+	}
+	return Theme_THEME_UNSPECIFIED
+}
+
+type ChangeLanguageResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        Language               `protobuf:"varint,1,opt,name=result,proto3,enum=xyz.secureguard.v1.users.v1.Language" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangeLanguageResponse) Reset() {
+	*x = ChangeLanguageResponse{}
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangeLanguageResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangeLanguageResponse) ProtoMessage() {}
+
+func (x *ChangeLanguageResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangeLanguageResponse.ProtoReflect.Descriptor instead.
+func (*ChangeLanguageResponse) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ChangeLanguageResponse) GetResult() Language {
+	if x != nil {
+		return x.Result
+	}
+	return Language_LANGUAGE_UNSPECIFIED
+}
+
+type ChangeCryptResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        Crypt                  `protobuf:"varint,1,opt,name=result,proto3,enum=xyz.secureguard.v1.users.v1.Crypt" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangeCryptResponse) Reset() {
+	*x = ChangeCryptResponse{}
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangeCryptResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangeCryptResponse) ProtoMessage() {}
+
+func (x *ChangeCryptResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangeCryptResponse.ProtoReflect.Descriptor instead.
+func (*ChangeCryptResponse) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ChangeCryptResponse) GetResult() Crypt {
+	if x != nil {
+		return x.Result
+	}
+	return Crypt_CRYPT_UNSPECIFIED
+}
+
 type ValueChangeResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Result        *anypb.Any             `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
@@ -611,7 +743,7 @@ type ValueChangeResponse struct {
 
 func (x *ValueChangeResponse) Reset() {
 	*x = ValueChangeResponse{}
-	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[8]
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -623,7 +755,7 @@ func (x *ValueChangeResponse) String() string {
 func (*ValueChangeResponse) ProtoMessage() {}
 
 func (x *ValueChangeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[8]
+	mi := &file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -636,7 +768,7 @@ func (x *ValueChangeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValueChangeResponse.ProtoReflect.Descriptor instead.
 func (*ValueChangeResponse) Descriptor() ([]byte, []int) {
-	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{8}
+	return file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ValueChangeResponse) GetResult() *anypb.Any {
@@ -679,7 +811,13 @@ const file_xyz_secureguard_v1_users_v1_domain_proto_rawDesc = "" +
 	"\x15ChangeLanguageRequest\x12;\n" +
 	"\x05value\x18\x01 \x01(\x0e2%.xyz.secureguard.v1.users.v1.LanguageR\x05value\"N\n" +
 	"\x12ChangeCryptRequest\x128\n" +
-	"\x05value\x18\x01 \x01(\x0e2\".xyz.secureguard.v1.users.v1.CryptR\x05value\"C\n" +
+	"\x05value\x18\x01 \x01(\x0e2\".xyz.secureguard.v1.users.v1.CryptR\x05value\"Q\n" +
+	"\x13ChangeThemeResponse\x12:\n" +
+	"\x06result\x18\x01 \x01(\x0e2\".xyz.secureguard.v1.users.v1.ThemeR\x06result\"W\n" +
+	"\x16ChangeLanguageResponse\x12=\n" +
+	"\x06result\x18\x01 \x01(\x0e2%.xyz.secureguard.v1.users.v1.LanguageR\x06result\"Q\n" +
+	"\x13ChangeCryptResponse\x12:\n" +
+	"\x06result\x18\x01 \x01(\x0e2\".xyz.secureguard.v1.users.v1.CryptR\x06result\"C\n" +
 	"\x13ValueChangeResponse\x12,\n" +
 	"\x06result\x18\x01 \x01(\v2\x14.google.protobuf.AnyR\x06result*@\n" +
 	"\x05Theme\x12\x15\n" +
@@ -708,28 +846,31 @@ func file_xyz_secureguard_v1_users_v1_domain_proto_rawDescGZIP() []byte {
 }
 
 var file_xyz_secureguard_v1_users_v1_domain_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_xyz_secureguard_v1_users_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_xyz_secureguard_v1_users_v1_domain_proto_goTypes = []any{
-	(Theme)(0),                    // 0: xyz.secureguard.v1.users.v1.Theme
-	(Language)(0),                 // 1: xyz.secureguard.v1.users.v1.Language
-	(Crypt)(0),                    // 2: xyz.secureguard.v1.users.v1.Crypt
-	(*Preferences)(nil),           // 3: xyz.secureguard.v1.users.v1.Preferences
-	(*UserSelf)(nil),              // 4: xyz.secureguard.v1.users.v1.UserSelf
-	(*UserPublic)(nil),            // 5: xyz.secureguard.v1.users.v1.UserPublic
-	(*UserResponse)(nil),          // 6: xyz.secureguard.v1.users.v1.UserResponse
-	(*ListResponse)(nil),          // 7: xyz.secureguard.v1.users.v1.ListResponse
-	(*ChangeThemeRequest)(nil),    // 8: xyz.secureguard.v1.users.v1.ChangeThemeRequest
-	(*ChangeLanguageRequest)(nil), // 9: xyz.secureguard.v1.users.v1.ChangeLanguageRequest
-	(*ChangeCryptRequest)(nil),    // 10: xyz.secureguard.v1.users.v1.ChangeCryptRequest
-	(*ValueChangeResponse)(nil),   // 11: xyz.secureguard.v1.users.v1.ValueChangeResponse
-	(*timestamppb.Timestamp)(nil), // 12: google.protobuf.Timestamp
-	(*anypb.Any)(nil),             // 13: google.protobuf.Any
+	(Theme)(0),                     // 0: xyz.secureguard.v1.users.v1.Theme
+	(Language)(0),                  // 1: xyz.secureguard.v1.users.v1.Language
+	(Crypt)(0),                     // 2: xyz.secureguard.v1.users.v1.Crypt
+	(*Preferences)(nil),            // 3: xyz.secureguard.v1.users.v1.Preferences
+	(*UserSelf)(nil),               // 4: xyz.secureguard.v1.users.v1.UserSelf
+	(*UserPublic)(nil),             // 5: xyz.secureguard.v1.users.v1.UserPublic
+	(*UserResponse)(nil),           // 6: xyz.secureguard.v1.users.v1.UserResponse
+	(*ListResponse)(nil),           // 7: xyz.secureguard.v1.users.v1.ListResponse
+	(*ChangeThemeRequest)(nil),     // 8: xyz.secureguard.v1.users.v1.ChangeThemeRequest
+	(*ChangeLanguageRequest)(nil),  // 9: xyz.secureguard.v1.users.v1.ChangeLanguageRequest
+	(*ChangeCryptRequest)(nil),     // 10: xyz.secureguard.v1.users.v1.ChangeCryptRequest
+	(*ChangeThemeResponse)(nil),    // 11: xyz.secureguard.v1.users.v1.ChangeThemeResponse
+	(*ChangeLanguageResponse)(nil), // 12: xyz.secureguard.v1.users.v1.ChangeLanguageResponse
+	(*ChangeCryptResponse)(nil),    // 13: xyz.secureguard.v1.users.v1.ChangeCryptResponse
+	(*ValueChangeResponse)(nil),    // 14: xyz.secureguard.v1.users.v1.ValueChangeResponse
+	(*timestamppb.Timestamp)(nil),  // 15: google.protobuf.Timestamp
+	(*anypb.Any)(nil),              // 16: google.protobuf.Any
 }
 var file_xyz_secureguard_v1_users_v1_domain_proto_depIdxs = []int32{
 	0,  // 0: xyz.secureguard.v1.users.v1.Preferences.theme:type_name -> xyz.secureguard.v1.users.v1.Theme
 	1,  // 1: xyz.secureguard.v1.users.v1.Preferences.lang:type_name -> xyz.secureguard.v1.users.v1.Language
 	2,  // 2: xyz.secureguard.v1.users.v1.Preferences.crypto:type_name -> xyz.secureguard.v1.users.v1.Crypt
-	12, // 3: xyz.secureguard.v1.users.v1.UserSelf.joined:type_name -> google.protobuf.Timestamp
+	15, // 3: xyz.secureguard.v1.users.v1.UserSelf.joined:type_name -> google.protobuf.Timestamp
 	3,  // 4: xyz.secureguard.v1.users.v1.UserSelf.preferences:type_name -> xyz.secureguard.v1.users.v1.Preferences
 	1,  // 5: xyz.secureguard.v1.users.v1.UserPublic.lang:type_name -> xyz.secureguard.v1.users.v1.Language
 	2,  // 6: xyz.secureguard.v1.users.v1.UserPublic.crypt:type_name -> xyz.secureguard.v1.users.v1.Crypt
@@ -738,12 +879,15 @@ var file_xyz_secureguard_v1_users_v1_domain_proto_depIdxs = []int32{
 	0,  // 9: xyz.secureguard.v1.users.v1.ChangeThemeRequest.value:type_name -> xyz.secureguard.v1.users.v1.Theme
 	1,  // 10: xyz.secureguard.v1.users.v1.ChangeLanguageRequest.value:type_name -> xyz.secureguard.v1.users.v1.Language
 	2,  // 11: xyz.secureguard.v1.users.v1.ChangeCryptRequest.value:type_name -> xyz.secureguard.v1.users.v1.Crypt
-	13, // 12: xyz.secureguard.v1.users.v1.ValueChangeResponse.result:type_name -> google.protobuf.Any
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	0,  // 12: xyz.secureguard.v1.users.v1.ChangeThemeResponse.result:type_name -> xyz.secureguard.v1.users.v1.Theme
+	1,  // 13: xyz.secureguard.v1.users.v1.ChangeLanguageResponse.result:type_name -> xyz.secureguard.v1.users.v1.Language
+	2,  // 14: xyz.secureguard.v1.users.v1.ChangeCryptResponse.result:type_name -> xyz.secureguard.v1.users.v1.Crypt
+	16, // 15: xyz.secureguard.v1.users.v1.ValueChangeResponse.result:type_name -> google.protobuf.Any
+	16, // [16:16] is the sub-list for method output_type
+	16, // [16:16] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_xyz_secureguard_v1_users_v1_domain_proto_init() }
@@ -758,7 +902,7 @@ func file_xyz_secureguard_v1_users_v1_domain_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_xyz_secureguard_v1_users_v1_domain_proto_rawDesc), len(file_xyz_secureguard_v1_users_v1_domain_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   9,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

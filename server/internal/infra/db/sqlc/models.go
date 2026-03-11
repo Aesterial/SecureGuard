@@ -9,12 +9,12 @@ import (
 )
 
 type Password struct {
-	ID         pgtype.UUID        `json:"id"`
-	Owner      pgtype.UUID        `json:"owner"`
-	ServiceUrl string             `json:"service_url"`
-	Login      string             `json:"login"`
-	Pass       string             `json:"pass"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	ID        pgtype.UUID        `json:"id"`
+	Owner     pgtype.UUID        `json:"owner"`
+	Service   string             `json:"service"`
+	Login     string             `json:"login"`
+	Pass      string             `json:"pass"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type Preference struct {

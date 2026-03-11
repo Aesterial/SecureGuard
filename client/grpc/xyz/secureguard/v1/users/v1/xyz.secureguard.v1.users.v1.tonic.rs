@@ -146,7 +146,7 @@ pub mod user_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::ChangeThemeRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::ValueChangeResponse>,
+            tonic::Response<super::ChangeThemeResponse>,
             tonic::Status,
         > {
             self.inner
@@ -176,7 +176,7 @@ pub mod user_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::ChangeLanguageRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::ValueChangeResponse>,
+            tonic::Response<super::ChangeLanguageResponse>,
             tonic::Status,
         > {
             self.inner
@@ -206,7 +206,7 @@ pub mod user_service_client {
             &mut self,
             request: impl tonic::IntoRequest<super::ChangeCryptRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::ValueChangeResponse>,
+            tonic::Response<super::ChangeCryptResponse>,
             tonic::Status,
         > {
             self.inner
@@ -261,7 +261,7 @@ pub mod user_service_server {
             &self,
             request: tonic::Request<super::ChangeThemeRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::ValueChangeResponse>,
+            tonic::Response<super::ChangeThemeResponse>,
             tonic::Status,
         >;
         ///
@@ -269,7 +269,7 @@ pub mod user_service_server {
             &self,
             request: tonic::Request<super::ChangeLanguageRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::ValueChangeResponse>,
+            tonic::Response<super::ChangeLanguageResponse>,
             tonic::Status,
         >;
         ///
@@ -277,7 +277,7 @@ pub mod user_service_server {
             &self,
             request: tonic::Request<super::ChangeCryptRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::ValueChangeResponse>,
+            tonic::Response<super::ChangeCryptResponse>,
             tonic::Status,
         >;
     }
@@ -452,7 +452,7 @@ pub mod user_service_server {
                         T: UserService,
                     > tonic::server::UnaryService<super::ChangeThemeRequest>
                     for ChangeThemeSvc<T> {
-                        type Response = super::ValueChangeResponse;
+                        type Response = super::ChangeThemeResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -497,7 +497,7 @@ pub mod user_service_server {
                         T: UserService,
                     > tonic::server::UnaryService<super::ChangeLanguageRequest>
                     for ChangeLanguageSvc<T> {
-                        type Response = super::ValueChangeResponse;
+                        type Response = super::ChangeLanguageResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
@@ -542,7 +542,7 @@ pub mod user_service_server {
                         T: UserService,
                     > tonic::server::UnaryService<super::ChangeCryptRequest>
                     for ChangeCryptSvc<T> {
-                        type Response = super::ValueChangeResponse;
+                        type Response = super::ChangeCryptResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,

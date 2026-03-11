@@ -18,6 +18,7 @@ type Querier interface {
 	GetIsUsernameExists(ctx context.Context, username string) (bool, error)
 	GetListUsers(ctx context.Context, arg GetListUsersParams) ([]User, error)
 	GetPasswordByID(ctx context.Context, id pgtype.UUID) (GetPasswordByIDRow, error)
+	GetPasswordOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	GetSessionByID(ctx context.Context, id pgtype.UUID) (GetSessionByIDRow, error)
 	GetSessionInfo(ctx context.Context, id pgtype.UUID) (GetSessionInfoRow, error)
 	GetSessionOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
@@ -29,7 +30,7 @@ type Querier interface {
 	InitPreferences(ctx context.Context, owner pgtype.UUID) error
 	IsPreferencesExists(ctx context.Context, owner pgtype.UUID) (bool, error)
 	IsSessionExists(ctx context.Context, id pgtype.UUID) (bool, error)
-	ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]ListPasswordsByOwnerRow, error)
+	ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]Password, error)
 	ListSessionsByOwner(ctx context.Context, arg ListSessionsByOwnerParams) ([]ListSessionsByOwnerRow, error)
 	RevokeSession(ctx context.Context, id pgtype.UUID) error
 	UpdatePreferenceCrypt(ctx context.Context, arg UpdatePreferenceCryptParams) error
