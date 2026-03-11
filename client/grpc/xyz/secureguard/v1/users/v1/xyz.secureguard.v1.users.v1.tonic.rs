@@ -144,7 +144,7 @@ pub mod user_service_client {
         ///
         pub async fn change_theme(
             &mut self,
-            request: impl tonic::IntoRequest<super::super::super::RequestWithValue>,
+            request: impl tonic::IntoRequest<super::ChangeThemeRequest>,
         ) -> std::result::Result<
             tonic::Response<super::ValueChangeResponse>,
             tonic::Status,
@@ -174,7 +174,7 @@ pub mod user_service_client {
         ///
         pub async fn change_language(
             &mut self,
-            request: impl tonic::IntoRequest<super::super::super::RequestWithValue>,
+            request: impl tonic::IntoRequest<super::ChangeLanguageRequest>,
         ) -> std::result::Result<
             tonic::Response<super::ValueChangeResponse>,
             tonic::Status,
@@ -204,7 +204,7 @@ pub mod user_service_client {
         ///
         pub async fn change_crypt(
             &mut self,
-            request: impl tonic::IntoRequest<super::super::super::RequestWithValue>,
+            request: impl tonic::IntoRequest<super::ChangeCryptRequest>,
         ) -> std::result::Result<
             tonic::Response<super::ValueChangeResponse>,
             tonic::Status,
@@ -259,7 +259,7 @@ pub mod user_service_server {
         ///
         async fn change_theme(
             &self,
-            request: tonic::Request<super::super::super::RequestWithValue>,
+            request: tonic::Request<super::ChangeThemeRequest>,
         ) -> std::result::Result<
             tonic::Response<super::ValueChangeResponse>,
             tonic::Status,
@@ -267,7 +267,7 @@ pub mod user_service_server {
         ///
         async fn change_language(
             &self,
-            request: tonic::Request<super::super::super::RequestWithValue>,
+            request: tonic::Request<super::ChangeLanguageRequest>,
         ) -> std::result::Result<
             tonic::Response<super::ValueChangeResponse>,
             tonic::Status,
@@ -275,7 +275,7 @@ pub mod user_service_server {
         ///
         async fn change_crypt(
             &self,
-            request: tonic::Request<super::super::super::RequestWithValue>,
+            request: tonic::Request<super::ChangeCryptRequest>,
         ) -> std::result::Result<
             tonic::Response<super::ValueChangeResponse>,
             tonic::Status,
@@ -450,7 +450,7 @@ pub mod user_service_server {
                     struct ChangeThemeSvc<T: UserService>(pub Arc<T>);
                     impl<
                         T: UserService,
-                    > tonic::server::UnaryService<super::super::super::RequestWithValue>
+                    > tonic::server::UnaryService<super::ChangeThemeRequest>
                     for ChangeThemeSvc<T> {
                         type Response = super::ValueChangeResponse;
                         type Future = BoxFuture<
@@ -459,9 +459,7 @@ pub mod user_service_server {
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<
-                                super::super::super::RequestWithValue,
-                            >,
+                            request: tonic::Request<super::ChangeThemeRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
@@ -497,7 +495,7 @@ pub mod user_service_server {
                     struct ChangeLanguageSvc<T: UserService>(pub Arc<T>);
                     impl<
                         T: UserService,
-                    > tonic::server::UnaryService<super::super::super::RequestWithValue>
+                    > tonic::server::UnaryService<super::ChangeLanguageRequest>
                     for ChangeLanguageSvc<T> {
                         type Response = super::ValueChangeResponse;
                         type Future = BoxFuture<
@@ -506,9 +504,7 @@ pub mod user_service_server {
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<
-                                super::super::super::RequestWithValue,
-                            >,
+                            request: tonic::Request<super::ChangeLanguageRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
@@ -544,7 +540,7 @@ pub mod user_service_server {
                     struct ChangeCryptSvc<T: UserService>(pub Arc<T>);
                     impl<
                         T: UserService,
-                    > tonic::server::UnaryService<super::super::super::RequestWithValue>
+                    > tonic::server::UnaryService<super::ChangeCryptRequest>
                     for ChangeCryptSvc<T> {
                         type Response = super::ValueChangeResponse;
                         type Future = BoxFuture<
@@ -553,9 +549,7 @@ pub mod user_service_server {
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<
-                                super::super::super::RequestWithValue,
-                            >,
+                            request: tonic::Request<super::ChangeCryptRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {

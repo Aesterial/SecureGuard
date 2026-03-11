@@ -9,7 +9,6 @@ import (
 	"github.com/aesterial/secureguard/internal/domain"
 	authdomain "github.com/aesterial/secureguard/internal/domain/auth"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
-	"github.com/aesterial/secureguard/internal/shared/logging"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
 )
@@ -26,12 +25,10 @@ func NewAuthentificator(ses *sessionsapp.Service, usr *usersapp.Service) *Authen
 func (a *Authentificator) idFromContext(ctx context.Context) (*domain.UUID, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-	  logging.Info("metadata is missing")
 		return nil, apperrors.InvalidArguments
 	}
 
 	for _, value := range md.Get("session") {
-	  logging.Info("session data", logging.Field{Key: "id", Value: value})
 		sessionID, ok := strings.CutPrefix(value, "SG-")
 		if !ok || sessionID == "" {
 			continue
@@ -39,7 +36,6 @@ func (a *Authentificator) idFromContext(ctx context.Context) (*domain.UUID, erro
 
 		u, err := uuid.Parse(sessionID)
 		if err != nil {
-		  logging.Error("failed to parse uuid", logging.Field{Key: "err", Value: err.Error()})
 			return nil, apperrors.InvalidArguments
 		}
 
@@ -50,7 +46,6 @@ func (a *Authentificator) idFromContext(ctx context.Context) (*domain.UUID, erro
 		return &id, nil
 	}
 
-	logging.Error("no values found")
 	return nil, apperrors.InvalidArguments
 }
 
@@ -74,12 +69,10 @@ func (a *Authentificator) User(ctx context.Context) (*authdomain.Meta, error) {
 	var err error
 	metadata.Hash, err = a.deviceIdFromContext(ctx)
 	if err != nil {
-	  logging.Info("device id is missing", logging.Field{Key: "err", Value: err.Error()})
 		return &metadata, err
 	}
 	session, err := a.idFromContext(ctx)
 	if err != nil {
-	  logging.Info("session id getter error", logging.Field{Key: "err", Value: err.Error()})
 		return &metadata, err
 	}
 	valid, err := a.ses.IsValid(ctx, *session, metadata.Hash)
@@ -93,7 +86,7 @@ func (a *Authentificator) User(ctx context.Context) (*authdomain.Meta, error) {
 	if err != nil {
 		return &metadata, err
 	}
-	
+
 	metadata.UserID = owner
 	return &metadata, nil
 }

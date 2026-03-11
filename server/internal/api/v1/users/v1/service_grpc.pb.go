@@ -34,9 +34,9 @@ const (
 type UserServiceClient interface {
 	Info(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserResponse, error)
 	List(ctx context.Context, in *v1.RequestWithLimitAndOffset, opts ...grpc.CallOption) (*ListResponse, error)
-	ChangeTheme(ctx context.Context, in *v1.RequestWithValue, opts ...grpc.CallOption) (*ValueChangeResponse, error)
-	ChangeLanguage(ctx context.Context, in *v1.RequestWithValue, opts ...grpc.CallOption) (*ValueChangeResponse, error)
-	ChangeCrypt(ctx context.Context, in *v1.RequestWithValue, opts ...grpc.CallOption) (*ValueChangeResponse, error)
+	ChangeTheme(ctx context.Context, in *ChangeThemeRequest, opts ...grpc.CallOption) (*ValueChangeResponse, error)
+	ChangeLanguage(ctx context.Context, in *ChangeLanguageRequest, opts ...grpc.CallOption) (*ValueChangeResponse, error)
+	ChangeCrypt(ctx context.Context, in *ChangeCryptRequest, opts ...grpc.CallOption) (*ValueChangeResponse, error)
 }
 
 type userServiceClient struct {
@@ -67,7 +67,7 @@ func (c *userServiceClient) List(ctx context.Context, in *v1.RequestWithLimitAnd
 	return out, nil
 }
 
-func (c *userServiceClient) ChangeTheme(ctx context.Context, in *v1.RequestWithValue, opts ...grpc.CallOption) (*ValueChangeResponse, error) {
+func (c *userServiceClient) ChangeTheme(ctx context.Context, in *ChangeThemeRequest, opts ...grpc.CallOption) (*ValueChangeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ValueChangeResponse)
 	err := c.cc.Invoke(ctx, UserService_ChangeTheme_FullMethodName, in, out, cOpts...)
@@ -77,7 +77,7 @@ func (c *userServiceClient) ChangeTheme(ctx context.Context, in *v1.RequestWithV
 	return out, nil
 }
 
-func (c *userServiceClient) ChangeLanguage(ctx context.Context, in *v1.RequestWithValue, opts ...grpc.CallOption) (*ValueChangeResponse, error) {
+func (c *userServiceClient) ChangeLanguage(ctx context.Context, in *ChangeLanguageRequest, opts ...grpc.CallOption) (*ValueChangeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ValueChangeResponse)
 	err := c.cc.Invoke(ctx, UserService_ChangeLanguage_FullMethodName, in, out, cOpts...)
@@ -87,7 +87,7 @@ func (c *userServiceClient) ChangeLanguage(ctx context.Context, in *v1.RequestWi
 	return out, nil
 }
 
-func (c *userServiceClient) ChangeCrypt(ctx context.Context, in *v1.RequestWithValue, opts ...grpc.CallOption) (*ValueChangeResponse, error) {
+func (c *userServiceClient) ChangeCrypt(ctx context.Context, in *ChangeCryptRequest, opts ...grpc.CallOption) (*ValueChangeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ValueChangeResponse)
 	err := c.cc.Invoke(ctx, UserService_ChangeCrypt_FullMethodName, in, out, cOpts...)
@@ -103,9 +103,9 @@ func (c *userServiceClient) ChangeCrypt(ctx context.Context, in *v1.RequestWithV
 type UserServiceServer interface {
 	Info(context.Context, *emptypb.Empty) (*UserResponse, error)
 	List(context.Context, *v1.RequestWithLimitAndOffset) (*ListResponse, error)
-	ChangeTheme(context.Context, *v1.RequestWithValue) (*ValueChangeResponse, error)
-	ChangeLanguage(context.Context, *v1.RequestWithValue) (*ValueChangeResponse, error)
-	ChangeCrypt(context.Context, *v1.RequestWithValue) (*ValueChangeResponse, error)
+	ChangeTheme(context.Context, *ChangeThemeRequest) (*ValueChangeResponse, error)
+	ChangeLanguage(context.Context, *ChangeLanguageRequest) (*ValueChangeResponse, error)
+	ChangeCrypt(context.Context, *ChangeCryptRequest) (*ValueChangeResponse, error)
 }
 
 // UnimplementedUserServiceServer should be embedded to have
@@ -121,13 +121,13 @@ func (UnimplementedUserServiceServer) Info(context.Context, *emptypb.Empty) (*Us
 func (UnimplementedUserServiceServer) List(context.Context, *v1.RequestWithLimitAndOffset) (*ListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method List not implemented")
 }
-func (UnimplementedUserServiceServer) ChangeTheme(context.Context, *v1.RequestWithValue) (*ValueChangeResponse, error) {
+func (UnimplementedUserServiceServer) ChangeTheme(context.Context, *ChangeThemeRequest) (*ValueChangeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ChangeTheme not implemented")
 }
-func (UnimplementedUserServiceServer) ChangeLanguage(context.Context, *v1.RequestWithValue) (*ValueChangeResponse, error) {
+func (UnimplementedUserServiceServer) ChangeLanguage(context.Context, *ChangeLanguageRequest) (*ValueChangeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ChangeLanguage not implemented")
 }
-func (UnimplementedUserServiceServer) ChangeCrypt(context.Context, *v1.RequestWithValue) (*ValueChangeResponse, error) {
+func (UnimplementedUserServiceServer) ChangeCrypt(context.Context, *ChangeCryptRequest) (*ValueChangeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ChangeCrypt not implemented")
 }
 func (UnimplementedUserServiceServer) testEmbeddedByValue() {}
@@ -187,7 +187,7 @@ func _UserService_List_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _UserService_ChangeTheme_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.RequestWithValue)
+	in := new(ChangeThemeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -199,13 +199,13 @@ func _UserService_ChangeTheme_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: UserService_ChangeTheme_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).ChangeTheme(ctx, req.(*v1.RequestWithValue))
+		return srv.(UserServiceServer).ChangeTheme(ctx, req.(*ChangeThemeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _UserService_ChangeLanguage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.RequestWithValue)
+	in := new(ChangeLanguageRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -217,13 +217,13 @@ func _UserService_ChangeLanguage_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: UserService_ChangeLanguage_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).ChangeLanguage(ctx, req.(*v1.RequestWithValue))
+		return srv.(UserServiceServer).ChangeLanguage(ctx, req.(*ChangeLanguageRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _UserService_ChangeCrypt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.RequestWithValue)
+	in := new(ChangeCryptRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func _UserService_ChangeCrypt_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: UserService_ChangeCrypt_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).ChangeCrypt(ctx, req.(*v1.RequestWithValue))
+		return srv.(UserServiceServer).ChangeCrypt(ctx, req.(*ChangeCryptRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
