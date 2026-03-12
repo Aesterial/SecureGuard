@@ -113,7 +113,7 @@ func ensure() {
 }
 
 func Get() cfgdomain.Config {
-	if !env.IsLoaded() {
+	if !env.Loaded {
 		ensure()
 	}
 	return env

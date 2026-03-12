@@ -33,17 +33,9 @@ type Config struct {
 	Kafka    Kafka
 
 	Debug  bool
-	loaded bool
-}
-
-func (c *Config) IsLoaded() bool {
-	return c.loaded == true
-}
-
-func (c *Config) IsDebug() bool {
-	return c.Debug == true
+	Loaded bool
 }
 
 func (c *Config) MarkLoaded() {
-	c.loaded = true
+	c.Loaded = true
 }

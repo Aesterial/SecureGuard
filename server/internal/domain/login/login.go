@@ -3,7 +3,6 @@ package logindomain
 import (
 	"crypto/rand"
 	"encoding/binary"
-	"strings"
 )
 
 type Require struct {
@@ -21,9 +20,6 @@ const (
 )
 
 func (r Require) Normalize() Require {
-	raw := strings.TrimSpace(r.Username)
-	raw = strings.ToLower(raw)
-
 	clean := r.sanitizeUsername()
 
 	if len(clean) > maxUsernameLen {

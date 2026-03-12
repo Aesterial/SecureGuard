@@ -83,7 +83,7 @@ func main() {
 			),
 		),
 	)
-	if cfg.IsDebug() {
+	if cfg.Debug {
 		reflection.Register(server)
 	}
 	loginpb.RegisterLoginServiceServer(server, loginServer)

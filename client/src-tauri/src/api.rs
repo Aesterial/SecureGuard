@@ -243,6 +243,7 @@ impl ApiClient {
             service_url: entry.title.clone(),
             login: entry.salt.clone(),
             pass: packed,
+            salt: entry.salt.clone(),
         };
         let req = self.with_auth_metadata(Request::new(request))?;
         let response = client.create(req).await.map_err(map_tonic_error)?;
