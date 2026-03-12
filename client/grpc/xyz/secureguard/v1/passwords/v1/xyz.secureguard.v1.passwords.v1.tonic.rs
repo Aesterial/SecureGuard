@@ -10,7 +10,6 @@ pub mod password_service_client {
     )]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
-    ///
     #[derive(Debug, Clone)]
     pub struct PasswordServiceClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -91,10 +90,11 @@ pub mod password_service_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        ///
         pub async fn list(
             &mut self,
-            request: impl tonic::IntoRequest<()>,
+            request: impl tonic::IntoRequest<
+                super::super::super::RequestWithLimitAndOffset,
+            >,
         ) -> std::result::Result<tonic::Response<super::ListResponse>, tonic::Status> {
             self.inner
                 .ready()
@@ -220,10 +220,9 @@ pub mod password_service_server {
     /// Generated trait containing gRPC methods that should be implemented for use with PasswordServiceServer.
     #[async_trait]
     pub trait PasswordService: std::marker::Send + std::marker::Sync + 'static {
-        ///
         async fn list(
             &self,
-            request: tonic::Request<()>,
+            request: tonic::Request<super::super::super::RequestWithLimitAndOffset>,
         ) -> std::result::Result<tonic::Response<super::ListResponse>, tonic::Status>;
         ///
         async fn create(
@@ -247,7 +246,6 @@ pub mod password_service_server {
             request: tonic::Request<super::super::super::RequestWithId>,
         ) -> std::result::Result<tonic::Response<super::DeleteResponse>, tonic::Status>;
     }
-    ///
     #[derive(Debug)]
     pub struct PasswordServiceServer<T> {
         inner: Arc<T>,
@@ -327,14 +325,22 @@ pub mod password_service_server {
                 "/xyz.secureguard.v1.passwords.v1.PasswordService/List" => {
                     #[allow(non_camel_case_types)]
                     struct ListSvc<T: PasswordService>(pub Arc<T>);
-                    impl<T: PasswordService> tonic::server::UnaryService<()>
-                    for ListSvc<T> {
+                    impl<
+                        T: PasswordService,
+                    > tonic::server::UnaryService<
+                        super::super::super::RequestWithLimitAndOffset,
+                    > for ListSvc<T> {
                         type Response = super::ListResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
-                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<
+                                super::super::super::RequestWithLimitAndOffset,
+                            >,
+                        ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
                                 <T as PasswordService>::list(&inner, request).await

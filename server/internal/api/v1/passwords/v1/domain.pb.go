@@ -199,6 +199,7 @@ type CreateRequest struct {
 	ServiceUrl    string                 `protobuf:"bytes,1,opt,name=service_url,json=serviceUrl,proto3" json:"service_url,omitempty"`
 	Login         string                 `protobuf:"bytes,2,opt,name=login,proto3" json:"login,omitempty"`
 	Pass          string                 `protobuf:"bytes,3,opt,name=pass,proto3" json:"pass,omitempty"`
+	Salt          string                 `protobuf:"bytes,4,opt,name=salt,proto3" json:"salt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -250,6 +251,13 @@ func (x *CreateRequest) GetLogin() string {
 func (x *CreateRequest) GetPass() string {
 	if x != nil {
 		return x.Pass
+	}
+	return ""
+}
+
+func (x *CreateRequest) GetSalt() string {
+	if x != nil {
+		return x.Salt
 	}
 	return ""
 }
@@ -308,9 +316,11 @@ func (x *PassDataResponse) GetAt() *timestamppb.Timestamp {
 
 type UpdateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceUrl    *string                `protobuf:"bytes,1,opt,name=service_url,json=serviceUrl,proto3,oneof" json:"service_url,omitempty"`
-	Login         *string                `protobuf:"bytes,2,opt,name=login,proto3,oneof" json:"login,omitempty"`
-	Pass          *string                `protobuf:"bytes,3,opt,name=pass,proto3,oneof" json:"pass,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ServiceUrl    *string                `protobuf:"bytes,2,opt,name=service_url,json=serviceUrl,proto3,oneof" json:"service_url,omitempty"`
+	Login         *string                `protobuf:"bytes,3,opt,name=login,proto3,oneof" json:"login,omitempty"`
+	Pass          *string                `protobuf:"bytes,4,opt,name=pass,proto3,oneof" json:"pass,omitempty"`
+	Salt          string                 `protobuf:"bytes,5,opt,name=salt,proto3" json:"salt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -345,6 +355,13 @@ func (*UpdateRequest) Descriptor() ([]byte, []int) {
 	return file_xyz_secureguard_v1_passwords_v1_domain_proto_rawDescGZIP(), []int{5}
 }
 
+func (x *UpdateRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
 func (x *UpdateRequest) GetServiceUrl() string {
 	if x != nil && x.ServiceUrl != nil {
 		return *x.ServiceUrl
@@ -362,6 +379,13 @@ func (x *UpdateRequest) GetLogin() string {
 func (x *UpdateRequest) GetPass() string {
 	if x != nil && x.Pass != nil {
 		return *x.Pass
+	}
+	return ""
+}
+
+func (x *UpdateRequest) GetSalt() string {
+	if x != nil {
+		return x.Salt
 	}
 	return ""
 }
@@ -418,20 +442,23 @@ const file_xyz_secureguard_v1_passwords_v1_domain_proto_rawDesc = "" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"c\n" +
 	"\fListResponse\x12=\n" +
 	"\x04list\x18\x01 \x03(\v2).xyz.secureguard.v1.passwords.v1.PasswordR\x04list\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x05R\x05count\"Z\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"n\n" +
 	"\rCreateRequest\x12\x1f\n" +
 	"\vservice_url\x18\x01 \x01(\tR\n" +
 	"serviceUrl\x12\x14\n" +
 	"\x05login\x18\x02 \x01(\tR\x05login\x12\x12\n" +
-	"\x04pass\x18\x03 \x01(\tR\x04pass\"}\n" +
+	"\x04pass\x18\x03 \x01(\tR\x04pass\x12\x12\n" +
+	"\x04salt\x18\x04 \x01(\tR\x04salt\"}\n" +
 	"\x10PassDataResponse\x12=\n" +
 	"\x04info\x18\x01 \x01(\v2).xyz.secureguard.v1.passwords.v1.PasswordR\x04info\x12*\n" +
-	"\x02at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x02at\"\x8c\x01\n" +
-	"\rUpdateRequest\x12$\n" +
-	"\vservice_url\x18\x01 \x01(\tH\x00R\n" +
+	"\x02at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x02at\"\xb0\x01\n" +
+	"\rUpdateRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12$\n" +
+	"\vservice_url\x18\x02 \x01(\tH\x00R\n" +
 	"serviceUrl\x88\x01\x01\x12\x19\n" +
-	"\x05login\x18\x02 \x01(\tH\x01R\x05login\x88\x01\x01\x12\x17\n" +
-	"\x04pass\x18\x03 \x01(\tH\x02R\x04pass\x88\x01\x01B\x0e\n" +
+	"\x05login\x18\x03 \x01(\tH\x01R\x05login\x88\x01\x01\x12\x17\n" +
+	"\x04pass\x18\x04 \x01(\tH\x02R\x04pass\x88\x01\x01\x12\x12\n" +
+	"\x04salt\x18\x05 \x01(\tR\x04saltB\x0e\n" +
 	"\f_service_urlB\b\n" +
 	"\x06_loginB\a\n" +
 	"\x05_pass\"\x10\n" +

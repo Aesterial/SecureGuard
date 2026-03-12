@@ -14,6 +14,7 @@ type Password struct {
 	Service   string             `json:"service"`
 	Login     string             `json:"login"`
 	Pass      string             `json:"pass"`
+	Salt      string             `json:"salt"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 

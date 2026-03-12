@@ -1,4 +1,4 @@
-﻿use aes_gcm::{
+use aes_gcm::{
     aead::{Aead, KeyInit},
     Aes256Gcm, Nonce,
 };
@@ -126,8 +126,7 @@ fn derive_key_argon2id(seed_phrase: &str, salt: &[u8]) -> Result<[u8; 32], Strin
     let argon2 = Argon2::new(
         argon2::Algorithm::Argon2id,
         argon2::Version::V0x13,
-        argon2::Params::new(65536, 3, 4, Some(32))
-            .map_err(|e| format!("Argon2 params: {}", e))?,
+        argon2::Params::new(65536, 3, 4, Some(32)).map_err(|e| format!("Argon2 params: {}", e))?,
     );
 
     argon2

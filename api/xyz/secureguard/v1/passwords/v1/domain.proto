@@ -7,37 +7,40 @@ option go_package = "github.com/aesterial/secureguard/internal/api/v1/passwords/
 import "google/protobuf/timestamp.proto";
 
 message ServiceInfo {
-    string url = 1;
-    string name = 2;
+  string url = 1;
+  string name = 2;
 };
 
 message Password {
-    ServiceInfo serv = 1;
-    string login = 2;
-    string pass = 3;
-    google.protobuf.Timestamp created_at = 4;
+  ServiceInfo serv = 1;
+  string login = 2;
+  string pass = 3;
+  google.protobuf.Timestamp created_at = 4;
 };
 
 message ListResponse {
-    repeated Password list = 1;
-    int32 count = 2;
+  repeated Password list = 1;
+  int32 count = 2;
 };
 
 message CreateRequest {
-    string service_url = 1;
-    string login = 2;
-    string pass = 3;
+  string service_url = 1;
+  string login = 2;
+  string pass = 3;
+  string salt = 4;
 };
 
 message PassDataResponse {
-    Password info = 1;
-    google.protobuf.Timestamp at = 2;
+  Password info = 1;
+  google.protobuf.Timestamp at = 2;
 };
 
 message UpdateRequest {
-    optional string service_url = 1;
-    optional string login = 2;
-    optional string pass = 3;
+  string id = 1;
+  optional string service_url = 2;
+  optional string login = 3;
+  optional string pass = 4;
+  string salt = 5;
 };
 
 message DeleteResponse {};

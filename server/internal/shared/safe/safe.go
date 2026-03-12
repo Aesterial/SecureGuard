@@ -123,15 +123,12 @@ func Hydration[R any, E any](timeout time.Duration, fn func(context.Context, ...
 		response := reflect.MakeSlice(t, v.Len(), v.Len())
 		sem := make(chan struct{}, count)
 		for i := range v.Len() {
-			i := i
 			element := v.Index(i).Interface()
 			elem, ok := element.(E)
 			if !ok {
 				return empty, fmt.Errorf("invalid element type at index %d: %T", i, element)
 			}
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				select {
 				case sem <- struct{}{}:
 				case <-ctx.Done():
@@ -153,7 +150,7 @@ func Hydration[R any, E any](timeout time.Duration, fn func(context.Context, ...
 					}
 				}
 				response.Index(i).Set(reflect.ValueOf(current))
-			}()
+			})
 		}
 		wg.Wait()
 		if fErr != nil {

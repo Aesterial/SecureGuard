@@ -44,10 +44,28 @@ select password from users where username = $1 limit 1;
 -- name: CreatePassword :one
 insert into passwords (
     owner,
-    pass
+    service,
+    login,
+    pass,
+    salt
 )
-values ($1, $2)
-returning id, owner, pass, created_at;
+values ($1, $2, $3, $4, $5)
+returning id, owner, service, login, pass, salt, created_at;
+
+-- name: UpdatePasswordService :exec
+update passwords set service = $1, salt = $2 where id = $3;
+
+-- name: UpdatePasswordLogin :exec
+update passwords set login = $1, salt = $2 where id = $3;
+
+-- name: UpdatePasswordPass :exec
+update passwords set pass = $1, salt = $2 where id = $3;
+
+-- name: DeletePassword :exec
+delete from passwords where id = $1;
+
+-- name: IsPasswordExists :one
+select exists (select 1 from passwords where id = $1);
 
 -- name: GetPasswordByID :one
 select id, owner, pass, created_at

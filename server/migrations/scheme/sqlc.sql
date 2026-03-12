@@ -24,6 +24,7 @@ create table if not exists passwords (
     service varchar(64) not null,
     login text not null,
     pass text not null,
+    salt text not null,
     created_at timestamptz not null default now()
 );
 

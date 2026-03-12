@@ -33,6 +33,8 @@ pub struct CreateRequest {
     pub login: ::prost::alloc::string::String,
     #[prost(string, tag = "3")]
     pub pass: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub salt: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct PassDataResponse {
@@ -43,12 +45,16 @@ pub struct PassDataResponse {
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct UpdateRequest {
-    #[prost(string, optional, tag = "1")]
-    pub service_url: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, tag = "1")]
+    pub id: ::prost::alloc::string::String,
     #[prost(string, optional, tag = "2")]
-    pub login: ::core::option::Option<::prost::alloc::string::String>,
+    pub service_url: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag = "3")]
+    pub login: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "4")]
     pub pass: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, tag = "5")]
+    pub salt: ::prost::alloc::string::String,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct DeleteResponse {

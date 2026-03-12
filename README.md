@@ -92,11 +92,11 @@ git submodule update --init --recursive api/third_party/googleapis api/third_par
 
 3. Make sure backend port is aligned with client:
 
-- Client default endpoint: `http://127.0.0.1:50051`
+- Client default endpoint: `http://127.0.0.1:8080`
 - In `server/starter/.env`, set:
 
 ```env
-BOOT_PORT=50051
+BOOT_PORT=8080
 ```
 
 4. Run helper script:

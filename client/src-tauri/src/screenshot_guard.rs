@@ -1,4 +1,4 @@
-﻿#[cfg(target_os = "windows")]
+#[cfg(target_os = "windows")]
 use winapi::shared::minwindef::*;
 #[cfg(target_os = "windows")]
 use winapi::shared::windef::*;
@@ -202,11 +202,7 @@ fn install_keyboard_hook() {
     }
 }
 #[cfg(target_os = "windows")]
-unsafe extern "system" fn keyboard_proc(
-    code: i32,
-    w_param: WPARAM,
-    l_param: LPARAM,
-) -> LRESULT {
+unsafe extern "system" fn keyboard_proc(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
     if code == HC_ACTION as i32 {
         let kb = *(l_param as *const KBDLLHOOKSTRUCT);
 

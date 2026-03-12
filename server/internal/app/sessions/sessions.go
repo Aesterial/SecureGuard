@@ -39,7 +39,7 @@ func (s *Service) IsValid(ctx context.Context, id domain.UUID, hash string) (boo
 		return false, nil
 	}
 	if session.Hash != hash {
-	  return false, apperrors.Unauthenticated
+		return false, apperrors.Unauthenticated
 	}
 	return true, nil
 }

@@ -42,7 +42,7 @@ pub mod xyz {
     }
 }
 
-const DEFAULT_BACKEND: &str = "http://127.0.0.1:50051";
+const DEFAULT_BACKEND: &str = "http://127.0.0.1:8080";
 const DEFAULT_ENCRYPTION_ALGORITHM: &str = "aes256gcm-argon2id";
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -177,25 +177,47 @@ impl ApiClient {
 
     pub async fn list_passwords(&self) -> Result<Vec<PasswordEntry>, String> {
         use xyz::secureguard::v1::passwords::v1::password_service_client::PasswordServiceClient;
+        use xyz::secureguard::v1::RequestWithLimitAndOffset;
 
         let channel = self.connect().await?;
         let mut client = PasswordServiceClient::new(channel);
-        let req = self.with_auth_metadata(Request::new(()))?;
-        let response = client.list(req).await.map_err(map_tonic_error)?;
-        let payload = response.into_inner();
+        const PAGE_SIZE: i32 = 200;
+        let mut out = Vec::new();
+        let mut offset = 0_i32;
 
-        let mut out = Vec::with_capacity(payload.list.len());
-        for item in payload.list {
-            let fallback_created_at = timestamp_to_string(item.created_at);
-            let decoded = decode_payload(&item.pass, fallback_created_at);
-            out.push(PasswordEntry {
-                id: decoded.id,
-                title: decoded.title,
-                encrypted_password: decoded.encrypted_password,
-                salt: decoded.salt,
-                encryption_algorithm: normalize_encryption(&decoded.encryption_algorithm),
-                created_at: decoded.created_at,
-            });
+        loop {
+            let request = RequestWithLimitAndOffset {
+                limit: PAGE_SIZE,
+                offset,
+            };
+            let req = self.with_auth_metadata(Request::new(request))?;
+            let response = client.list(req).await.map_err(map_tonic_error)?;
+            let payload = response.into_inner();
+            let batch_len = payload.list.len() as i32;
+
+            for item in payload.list {
+                let fallback_created_at = timestamp_to_string(item.created_at);
+                let decoded = decode_payload(&item.pass, fallback_created_at);
+                out.push(PasswordEntry {
+                    id: decoded.id,
+                    title: decoded.title,
+                    encrypted_password: decoded.encrypted_password,
+                    salt: decoded.salt,
+                    encryption_algorithm: normalize_encryption(&decoded.encryption_algorithm),
+                    created_at: decoded.created_at,
+                });
+            }
+
+            if batch_len == 0 {
+                break;
+            }
+            offset += batch_len;
+            if payload.count > 0 && offset >= payload.count {
+                break;
+            }
+            if batch_len < PAGE_SIZE {
+                break;
+            }
         }
         Ok(out)
     }

@@ -14,31 +14,39 @@ import (
 const createPassword = `-- name: CreatePassword :one
 insert into passwords (
     owner,
-    pass
+    service,
+    login,
+    pass,
+    salt
 )
-values ($1, $2)
-returning id, owner, pass, created_at
+values ($1, $2, $3, $4, $5)
+returning id, owner, service, login, pass, salt, created_at
 `
 
 type CreatePasswordParams struct {
-	Owner pgtype.UUID `json:"owner"`
-	Pass  string      `json:"pass"`
+	Owner   pgtype.UUID `json:"owner"`
+	Service string      `json:"service"`
+	Login   string      `json:"login"`
+	Pass    string      `json:"pass"`
+	Salt    string      `json:"salt"`
 }
 
-type CreatePasswordRow struct {
-	ID        pgtype.UUID        `json:"id"`
-	Owner     pgtype.UUID        `json:"owner"`
-	Pass      string             `json:"pass"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-}
-
-func (q *Queries) CreatePassword(ctx context.Context, arg CreatePasswordParams) (CreatePasswordRow, error) {
-	row := q.db.QueryRow(ctx, createPassword, arg.Owner, arg.Pass)
-	var i CreatePasswordRow
+func (q *Queries) CreatePassword(ctx context.Context, arg CreatePasswordParams) (Password, error) {
+	row := q.db.QueryRow(ctx, createPassword,
+		arg.Owner,
+		arg.Service,
+		arg.Login,
+		arg.Pass,
+		arg.Salt,
+	)
+	var i Password
 	err := row.Scan(
 		&i.ID,
 		&i.Owner,
+		&i.Service,
+		&i.Login,
 		&i.Pass,
+		&i.Salt,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -87,6 +95,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Joined,
 	)
 	return i, err
+}
+
+const deletePassword = `-- name: DeletePassword :exec
+delete from passwords where id = $1
+`
+
+func (q *Queries) DeletePassword(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deletePassword, id)
+	return err
 }
 
 const getIsUserExists = `-- name: GetIsUserExists :one
@@ -338,6 +355,17 @@ func (q *Queries) InitPreferences(ctx context.Context, owner pgtype.UUID) error 
 	return err
 }
 
+const isPasswordExists = `-- name: IsPasswordExists :one
+select exists (select 1 from passwords where id = $1)
+`
+
+func (q *Queries) IsPasswordExists(ctx context.Context, id pgtype.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, isPasswordExists, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const isPreferencesExists = `-- name: IsPreferencesExists :one
 select exists (select 1 from preferences where owner = $1)
 `
@@ -375,15 +403,24 @@ type ListPasswordsByOwnerParams struct {
 	Offset int32       `json:"offset"`
 }
 
-func (q *Queries) ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]Password, error) {
+type ListPasswordsByOwnerRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	Owner     pgtype.UUID        `json:"owner"`
+	Service   string             `json:"service"`
+	Login     string             `json:"login"`
+	Pass      string             `json:"pass"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]ListPasswordsByOwnerRow, error) {
 	rows, err := q.db.Query(ctx, listPasswordsByOwner, arg.Owner, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Password{}
+	items := []ListPasswordsByOwnerRow{}
 	for rows.Next() {
-		var i Password
+		var i ListPasswordsByOwnerRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Owner,
@@ -457,6 +494,51 @@ update sessions set revoked = true where id = $1
 
 func (q *Queries) RevokeSession(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, revokeSession, id)
+	return err
+}
+
+const updatePasswordLogin = `-- name: UpdatePasswordLogin :exec
+update passwords set login = $1, salt = $2 where id = $3
+`
+
+type UpdatePasswordLoginParams struct {
+	Login string      `json:"login"`
+	Salt  string      `json:"salt"`
+	ID    pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdatePasswordLogin(ctx context.Context, arg UpdatePasswordLoginParams) error {
+	_, err := q.db.Exec(ctx, updatePasswordLogin, arg.Login, arg.Salt, arg.ID)
+	return err
+}
+
+const updatePasswordPass = `-- name: UpdatePasswordPass :exec
+update passwords set pass = $1, salt = $2 where id = $3
+`
+
+type UpdatePasswordPassParams struct {
+	Pass string      `json:"pass"`
+	Salt string      `json:"salt"`
+	ID   pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdatePasswordPass(ctx context.Context, arg UpdatePasswordPassParams) error {
+	_, err := q.db.Exec(ctx, updatePasswordPass, arg.Pass, arg.Salt, arg.ID)
+	return err
+}
+
+const updatePasswordService = `-- name: UpdatePasswordService :exec
+update passwords set service = $1, salt = $2 where id = $3
+`
+
+type UpdatePasswordServiceParams struct {
+	Service string      `json:"service"`
+	Salt    string      `json:"salt"`
+	ID      pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdatePasswordService(ctx context.Context, arg UpdatePasswordServiceParams) error {
+	_, err := q.db.Exec(ctx, updatePasswordService, arg.Service, arg.Salt, arg.ID)
 	return err
 }
 

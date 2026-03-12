@@ -5,7 +5,9 @@ import (
 	"strings"
 	"time"
 
+	passpb "github.com/aesterial/secureguard/internal/api/v1/passwords/v1"
 	"github.com/aesterial/secureguard/internal/domain"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Target int
@@ -58,6 +60,17 @@ type Service struct {
 	name string
 }
 
+func (s Service) Protobuf() *passpb.ServiceInfo {
+	var url string
+	if s.url != nil {
+		url = *s.url
+	}
+	return &passpb.ServiceInfo{
+		Url:  url,
+		Name: s.name,
+	}
+}
+
 type Password struct {
 	ID       domain.UUID
 	Service  Service
@@ -66,4 +79,21 @@ type Password struct {
 	Created  time.Time
 }
 
+func (p *Password) Protobuf() *passpb.Password {
+	return &passpb.Password{
+		Serv:      p.Service.Protobuf(),
+		Login:     p.Login,
+		Pass:      p.Password,
+		CreatedAt: timestamppb.New(p.Created),
+	}
+}
+
 type Passwords []*Password
+
+func (p Passwords) Protobuf() []*passpb.Password {
+	var list = make([]*passpb.Password, 0, len(p))
+	for i, element := range p {
+		list[i] = element.Protobuf()
+	}
+	return list
+}

@@ -1,4 +1,4 @@
-﻿#![cfg_attr(
+#![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
@@ -12,25 +12,25 @@ use api::{ApiClient, PasswordEntry};
 use crypto::{
     decrypt_password, default_encryption_algorithm, encrypt_password, resolve_encryption_algorithm,
 };
-use std::sync::atomic::{AtomicBool, Ordering};
-use tokio::sync::Mutex;
-use tauri::{ClipboardManager, Manager, State};
 #[cfg(target_os = "windows")]
 use std::ffi::OsStr;
 #[cfg(target_os = "windows")]
 use std::os::windows::ffi::OsStrExt;
 #[cfg(target_os = "windows")]
 use std::ptr;
+use std::sync::atomic::{AtomicBool, Ordering};
+use tauri::{ClipboardManager, Manager, State};
+use tokio::sync::Mutex;
 #[cfg(target_os = "windows")]
 use winapi::um::securitybaseapi::{AllocateAndInitializeSid, CheckTokenMembership, FreeSid};
 #[cfg(target_os = "windows")]
 use winapi::um::shellapi::ShellExecuteW;
 #[cfg(target_os = "windows")]
-use winapi::um::winuser::SW_SHOWNORMAL;
-#[cfg(target_os = "windows")]
 use winapi::um::winnt::{
     DOMAIN_ALIAS_RID_ADMINS, PSID, SECURITY_BUILTIN_DOMAIN_RID, SID_IDENTIFIER_AUTHORITY,
 };
+#[cfg(target_os = "windows")]
+use winapi::um::winuser::SW_SHOWNORMAL;
 #[cfg(target_os = "windows")]
 use winreg::enums::HKEY_CURRENT_USER;
 #[cfg(target_os = "windows")]
@@ -348,7 +348,10 @@ fn ensure_elevated_or_relaunch() {
     };
 
     if result <= 32 {
-        eprintln!("SecureGuard UAC: elevation failed (ShellExecuteW={})", result);
+        eprintln!(
+            "SecureGuard UAC: elevation failed (ShellExecuteW={})",
+            result
+        );
         std::process::exit(1);
     }
 

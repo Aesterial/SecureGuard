@@ -1,4 +1,4 @@
-﻿#[cfg(target_os = "windows")]
+#[cfg(target_os = "windows")]
 use winapi::shared::minwindef::*;
 // #[cfg(target_os = "windows")]
 // use winapi::shared::ntdef::NULL;
@@ -36,7 +36,6 @@ where
     }
 }
 
-
 fn djb2_hash(s: &[u8]) -> u32 {
     let mut hash: u32 = 5381;
     for &b in s {
@@ -46,9 +45,10 @@ fn djb2_hash(s: &[u8]) -> u32 {
 }
 
 fn hash_lower(s: &str) -> u32 {
-    let lower: Vec<u8> = s.bytes().map(|b| {
-        if b >= b'A' && b <= b'Z' { b + 32 } else { b }
-    }).collect();
+    let lower: Vec<u8> = s
+        .bytes()
+        .map(|b| if b >= b'A' && b <= b'Z' { b + 32 } else { b })
+        .collect();
     djb2_hash(&lower)
 }
 
@@ -56,17 +56,19 @@ fn hash_lower(s: &str) -> u32 {
 mod raw_syscall {
     use super::*;
 
-
     ///   4C 8B D1          mov r10, rcx
     ///   B8 XX XX 00 00    mov eax, <syscall_number>
 
-
     unsafe fn get_ssn(func_name: &[u8]) -> Option<u32> {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-        if ntdll.is_null() { return None; }
+        if ntdll.is_null() {
+            return None;
+        }
 
         let func = GetProcAddress(ntdll, func_name.as_ptr() as *const i8);
-        if func.is_null() { return None; }
+        if func.is_null() {
+            return None;
+        }
 
         let ptr = func as *const u8;
 
@@ -77,7 +79,6 @@ mod raw_syscall {
 
         resolve_ssn_from_neighbors(ntdll, ptr, func_name)
     }
-
 
     unsafe fn resolve_ssn_from_neighbors(
         _ntdll: winapi::shared::minwindef::HMODULE,
@@ -90,7 +91,9 @@ mod raw_syscall {
         for direction in &[-1isize, 1isize] {
             for distance in 1..=32isize {
                 let neighbor = (base + direction * distance * stub_size) as *const u8;
-                if neighbor.is_null() { continue; }
+                if neighbor.is_null() {
+                    continue;
+                }
 
                 if *neighbor == 0x4C
                     && *neighbor.add(1) == 0x8B
@@ -107,34 +110,38 @@ mod raw_syscall {
         resolve_ssn_from_disk(func_name)
     }
 
-
     unsafe fn resolve_ssn_from_disk(func_name: &[u8]) -> Option<u32> {
-            use std::fs;
-            use std::path::PathBuf;
+        use std::fs;
+        use std::path::PathBuf;
 
+        let sys_root = std::env::var("SystemRoot").unwrap_or_else(|_| "C:\\Windows".to_string());
+        let path = PathBuf::from(&sys_root).join("System32").join("ntdll.dll");
 
-            let sys_root = std::env::var("SystemRoot")
-                .unwrap_or_else(|_| "C:\\Windows".to_string());
-            let path = PathBuf::from(&sys_root).join("System32").join("ntdll.dll");
+        let data = fs::read(&path).ok()?;
 
-            let data = fs::read(&path).ok()?;
-
-            if data.len() < 0x1000 { return None; }
-
+        if data.len() < 0x1000 {
+            return None;
+        }
 
         let dos_header = &data[0..64];
-        if dos_header[0] != 0x4D || dos_header[1] != 0x5A { return None; }
-        let e_lfanew = u32::from_le_bytes([data[0x3C], data[0x3D], data[0x3E], data[0x3F]]) as usize;
-        if e_lfanew + 4 > data.len() { return None; }
+        if dos_header[0] != 0x4D || dos_header[1] != 0x5A {
+            return None;
+        }
+        let e_lfanew =
+            u32::from_le_bytes([data[0x3C], data[0x3D], data[0x3E], data[0x3F]]) as usize;
+        if e_lfanew + 4 > data.len() {
+            return None;
+        }
 
-
-        if &data[e_lfanew..e_lfanew + 4] != b"PE\0\0" { return None; }
-
+        if &data[e_lfanew..e_lfanew + 4] != b"PE\0\0" {
+            return None;
+        }
 
         let opt_hdr = e_lfanew + 24;
         let magic = u16::from_le_bytes([data[opt_hdr], data[opt_hdr + 1]]);
-        if magic != 0x020B { return None; }
-
+        if magic != 0x020B {
+            return None;
+        }
 
         let export_dir_offset = opt_hdr + 112;
         let export_rva = u32::from_le_bytes([
@@ -144,20 +151,35 @@ mod raw_syscall {
             data[export_dir_offset + 3],
         ]) as usize;
 
-        if export_rva == 0 { return None; }
-
+        if export_rva == 0 {
+            return None;
+        }
 
         let file_header = e_lfanew + 4;
-        let num_sections = u16::from_le_bytes([data[file_header + 2], data[file_header + 3]]) as usize;
-        let size_of_opt = u16::from_le_bytes([data[file_header + 16], data[file_header + 17]]) as usize;
+        let num_sections =
+            u16::from_le_bytes([data[file_header + 2], data[file_header + 3]]) as usize;
+        let size_of_opt =
+            u16::from_le_bytes([data[file_header + 16], data[file_header + 17]]) as usize;
         let first_section = file_header + 20 + size_of_opt;
 
         let rva_to_offset = |rva: usize| -> Option<usize> {
             for i in 0..num_sections {
                 let sh = first_section + i * 40;
-                let vaddr = u32::from_le_bytes([data[sh + 12], data[sh + 13], data[sh + 14], data[sh + 15]]) as usize;
-                let vsize = u32::from_le_bytes([data[sh + 8], data[sh + 9], data[sh + 10], data[sh + 11]]) as usize;
-                let raw_offset = u32::from_le_bytes([data[sh + 20], data[sh + 21], data[sh + 22], data[sh + 23]]) as usize;
+                let vaddr = u32::from_le_bytes([
+                    data[sh + 12],
+                    data[sh + 13],
+                    data[sh + 14],
+                    data[sh + 15],
+                ]) as usize;
+                let vsize =
+                    u32::from_le_bytes([data[sh + 8], data[sh + 9], data[sh + 10], data[sh + 11]])
+                        as usize;
+                let raw_offset = u32::from_le_bytes([
+                    data[sh + 20],
+                    data[sh + 21],
+                    data[sh + 22],
+                    data[sh + 23],
+                ]) as usize;
 
                 if rva >= vaddr && rva < vaddr + vsize {
                     return Some(rva - vaddr + raw_offset);
@@ -169,29 +191,36 @@ mod raw_syscall {
         let export_offset = rva_to_offset(export_rva)?;
 
         let num_names = u32::from_le_bytes([
-            data[export_offset + 24], data[export_offset + 25],
-            data[export_offset + 26], data[export_offset + 27],
+            data[export_offset + 24],
+            data[export_offset + 25],
+            data[export_offset + 26],
+            data[export_offset + 27],
         ]) as usize;
 
         let names_rva = u32::from_le_bytes([
-            data[export_offset + 32], data[export_offset + 33],
-            data[export_offset + 34], data[export_offset + 35],
+            data[export_offset + 32],
+            data[export_offset + 33],
+            data[export_offset + 34],
+            data[export_offset + 35],
         ]) as usize;
 
         let ordinals_rva = u32::from_le_bytes([
-            data[export_offset + 36], data[export_offset + 37],
-            data[export_offset + 38], data[export_offset + 39],
+            data[export_offset + 36],
+            data[export_offset + 37],
+            data[export_offset + 38],
+            data[export_offset + 39],
         ]) as usize;
 
         let funcs_rva = u32::from_le_bytes([
-            data[export_offset + 28], data[export_offset + 29],
-            data[export_offset + 30], data[export_offset + 31],
+            data[export_offset + 28],
+            data[export_offset + 29],
+            data[export_offset + 30],
+            data[export_offset + 31],
         ]) as usize;
 
         let names_offset = rva_to_offset(names_rva)?;
         let ordinals_offset = rva_to_offset(ordinals_rva)?;
         let funcs_offset = rva_to_offset(funcs_rva)?;
-
 
         let search_name = if func_name.last() == Some(&0) {
             &func_name[..func_name.len() - 1]
@@ -219,12 +248,14 @@ mod raw_syscall {
                     break;
                 }
             }
-            if !matches { continue; }
-
-            if name_off + search_name.len() < data.len() && data[name_off + search_name.len()] != 0 {
+            if !matches {
                 continue;
             }
 
+            if name_off + search_name.len() < data.len() && data[name_off + search_name.len()] != 0
+            {
+                continue;
+            }
 
             let ordinal = u16::from_le_bytes([
                 data[ordinals_offset + i * 2],
@@ -239,7 +270,6 @@ mod raw_syscall {
             ]) as usize;
 
             let func_file_offset = rva_to_offset(func_rva)?;
-
 
             // 4C 8B D1 B8 XX XX 00 00
             if func_file_offset + 8 <= data.len()
@@ -263,17 +293,8 @@ mod raw_syscall {
         None
     }
 
-
-
-
     #[inline(never)]
-    unsafe fn do_syscall4(
-        ssn: u32,
-        arg1: u64,
-        arg2: u64,
-        arg3: u64,
-        arg4: u64,
-    ) -> i32 {
+    unsafe fn do_syscall4(ssn: u32, arg1: u64, arg2: u64, arg3: u64, arg4: u64) -> i32 {
         let result: i32;
         core::arch::asm!(
             "mov r10, rcx",  // r10 == first arg
@@ -291,7 +312,7 @@ mod raw_syscall {
         result
     }
 
-   // DIRECT SYSCALLS $$$
+    // DIRECT SYSCALLS $$$
     pub unsafe fn syscall_nt_query_info_process(
         process: HANDLE,
         info_class: u32,
@@ -303,7 +324,6 @@ mod raw_syscall {
             Some(n) => n,
             None => return -1,
         };
-
 
         let result: i32;
         core::arch::asm!(
@@ -325,7 +345,6 @@ mod raw_syscall {
         result
     }
 
-
     pub unsafe fn syscall_nt_set_info_thread(
         thread: HANDLE,
         info_class: u32,
@@ -345,7 +364,6 @@ mod raw_syscall {
             buffer_size as u64,
         )
     }
-
 
     pub unsafe fn syscall_nt_query_sys_info(
         info_class: u32,
@@ -367,7 +385,6 @@ mod raw_syscall {
         )
     }
 
-
     pub unsafe fn syscall_nt_close(handle: HANDLE) -> i32 {
         let ssn = match get_ssn(b"NtClose\0") {
             Some(n) => n,
@@ -388,9 +405,6 @@ mod raw_syscall {
         result
     }
 
-
-
-
     pub fn check_debug_port_direct() {
         unsafe {
             let mut debug_port: usize = 0;
@@ -407,7 +421,6 @@ mod raw_syscall {
             }
         }
     }
-
 
     pub fn check_debug_object_direct() {
         unsafe {
@@ -426,7 +439,6 @@ mod raw_syscall {
         }
     }
 
-
     pub fn check_debug_flags_direct() {
         unsafe {
             let mut debug_flags: u32 = 1;
@@ -444,7 +456,6 @@ mod raw_syscall {
         }
     }
 
-
     pub fn hide_thread_direct() {
         unsafe {
             syscall_nt_set_info_thread(
@@ -455,7 +466,6 @@ mod raw_syscall {
             );
         }
     }
-
 
     pub fn check_kernel_debugger_direct() {
         unsafe {
@@ -479,23 +489,24 @@ mod raw_syscall {
         }
     }
 
-
     pub fn close_handle_trap_direct() {
         unsafe {
             let invalid: HANDLE = 0xDEADBEEFusize as HANDLE;
             let status = syscall_nt_close(invalid);
             // STATUS_INVALID_HANDLE = 0xC0000008
-            if status != -1073741816i32 { // 0xC0000008 as i32
+            if status != -1073741816i32 {
+                // 0xC0000008 as i32
                 super::corrupt_and_exit();
             }
         }
     }
 
-
     pub fn check_ntdll_hooks() {
         unsafe {
             let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-            if ntdll.is_null() { return; }
+            if ntdll.is_null() {
+                return;
+            }
 
             let funcs_to_check: &[&[u8]] = &[
                 b"NtQueryInformationProcess\0",
@@ -510,7 +521,9 @@ mod raw_syscall {
 
             for func_name in funcs_to_check {
                 let func = GetProcAddress(ntdll, func_name.as_ptr() as *const i8);
-                if func.is_null() { continue; }
+                if func.is_null() {
+                    continue;
+                }
 
                 let ptr = func as *const u8;
 
@@ -539,7 +552,6 @@ mod raw_syscall {
         }
     }
 }
-
 
 #[cfg(target_os = "windows")]
 fn blacklisted_hashes() -> Vec<u32> {
@@ -615,11 +627,9 @@ fn blacklisted_hashes() -> Vec<u32> {
     ]
 }
 
-
 pub fn init_protection() {
     #[cfg(target_os = "windows")]
     {
-
         check_debugger();
         check_hardware_breakpoints();
 
@@ -689,7 +699,6 @@ pub fn init_protection() {
 }
 */
 
-
 #[cfg(target_os = "windows")]
 fn check_debugger() {
     unsafe {
@@ -706,7 +715,6 @@ fn check_debugger() {
         check_peb_debug_flag();
     }
 }
-
 
 #[cfg(target_os = "windows")]
 fn check_peb_flag() {
@@ -750,8 +758,6 @@ fn check_peb_debug_flag() {
     }
 }
 
-
-
 #[cfg(target_os = "windows")]
 fn check_hardware_breakpoints() {
     unsafe {
@@ -769,19 +775,21 @@ fn check_hardware_breakpoints() {
     }
 }
 
-
 #[cfg(target_os = "windows")]
 fn check_ntquery_debug_port() {
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-        if ntdll.is_null() { return; }
+        if ntdll.is_null() {
+            return;
+        }
 
         let func = GetProcAddress(ntdll, b"NtQueryInformationProcess\0".as_ptr() as *const i8);
-        if func.is_null() { return; }
+        if func.is_null() {
+            return;
+        }
 
-        type NtQueryInfoProc = unsafe extern "system" fn(
-            HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32
-        ) -> i32;
+        type NtQueryInfoProc =
+            unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
 
         let nt_query: NtQueryInfoProc = std::mem::transmute(func);
 
@@ -800,22 +808,23 @@ fn check_ntquery_debug_port() {
     }
 }
 
-
 #[cfg(target_os = "windows")]
 fn check_ntquery_debug_object() {
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-        if ntdll.is_null() { return; }
+        if ntdll.is_null() {
+            return;
+        }
 
         let func = GetProcAddress(ntdll, b"NtQueryInformationProcess\0".as_ptr() as *const i8);
-        if func.is_null() { return; }
+        if func.is_null() {
+            return;
+        }
 
-        type NtQueryInfoProc = unsafe extern "system" fn(
-            HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32
-        ) -> i32;
+        type NtQueryInfoProc =
+            unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
 
         let nt_query: NtQueryInfoProc = std::mem::transmute(func);
-
 
         let mut debug_obj: usize = 0;
         let status = nt_query(
@@ -826,29 +835,29 @@ fn check_ntquery_debug_object() {
             ptr::null_mut(),
         );
 
-
         if status == 0 {
             corrupt_and_exit();
         }
     }
 }
 
-
 #[cfg(target_os = "windows")]
 fn check_ntquery_debug_flags() {
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-        if ntdll.is_null() { return; }
+        if ntdll.is_null() {
+            return;
+        }
 
         let func = GetProcAddress(ntdll, b"NtQueryInformationProcess\0".as_ptr() as *const i8);
-        if func.is_null() { return; }
+        if func.is_null() {
+            return;
+        }
 
-        type NtQueryInfoProc = unsafe extern "system" fn(
-            HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32
-        ) -> i32;
+        type NtQueryInfoProc =
+            unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
 
         let nt_query: NtQueryInfoProc = std::mem::transmute(func);
-
 
         let mut debug_flags: u32 = 1;
         let status = nt_query(
@@ -865,18 +874,20 @@ fn check_ntquery_debug_flags() {
     }
 }
 
-
 #[cfg(target_os = "windows")]
 fn check_heap_flags() {
     #[cfg(target_arch = "x86_64")]
     unsafe {
         let peb: u64;
         core::arch::asm!("mov {}, gs:[0x60]", out(reg) peb);
-        if peb == 0 { return; }
+        if peb == 0 {
+            return;
+        }
 
         let process_heap = ptr::read_unaligned((peb + 0x30) as *const u64);
-        if process_heap == 0 { return; }
-
+        if process_heap == 0 {
+            return;
+        }
 
         let flags = ptr::read_unaligned((process_heap + 0x70) as *const u32);
         let force_flags = ptr::read_unaligned((process_heap + 0x74) as *const u32);
@@ -887,22 +898,23 @@ fn check_heap_flags() {
     }
 }
 
-
 #[cfg(target_os = "windows")]
 fn check_kernel_debugger() {
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-        if ntdll.is_null() { return; }
+        if ntdll.is_null() {
+            return;
+        }
 
         let func = GetProcAddress(ntdll, b"NtQuerySystemInformation\0".as_ptr() as *const i8);
-        if func.is_null() { return; }
+        if func.is_null() {
+            return;
+        }
 
-        type NtQuerySysInfo = unsafe extern "system" fn(
-            u32, *mut std::ffi::c_void, u32, *mut u32
-        ) -> i32;
+        type NtQuerySysInfo =
+            unsafe extern "system" fn(u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
 
         let nt_query: NtQuerySysInfo = std::mem::transmute(func);
-
 
         #[repr(C)]
         struct KernelDebuggerInfo {
@@ -924,7 +936,6 @@ fn check_kernel_debugger() {
     }
 }
 
-
 #[cfg(target_os = "windows")]
 fn check_closehandle_trap() {
     unsafe {
@@ -938,7 +949,6 @@ fn check_closehandle_trap() {
     }
 }
 
-
 #[cfg(target_os = "windows")]
 fn check_timing() {
     let t1: u64;
@@ -946,7 +956,6 @@ fn check_timing() {
     unsafe {
         core::arch::asm!("rdtsc", "shl rdx, 32", "or rax, rdx", out("rax") t1, out("rdx") _);
     }
-
 
     let mut dummy: u64 = 0;
     for i in 0..500_000u64 {
@@ -961,7 +970,6 @@ fn check_timing() {
     if t2.wrapping_sub(t1) > 100_000_000 {
         corrupt_and_exit();
     }
-
 
     let start = Instant::now();
     let mut v: u64 = 0;
@@ -978,25 +986,32 @@ fn check_timing() {
 fn patch_dbg_attach() {
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-        if ntdll.is_null() { return; }
+        if ntdll.is_null() {
+            return;
+        }
 
         let func = GetProcAddress(ntdll, b"DbgUiRemoteBreakin\0".as_ptr() as *const i8);
-        if func.is_null() { return; }
+        if func.is_null() {
+            return;
+        }
 
         let mut old_protect: DWORD = 0;
         let patch_size = 8usize;
 
-        if VirtualProtect(func as *mut _, patch_size, PAGE_EXECUTE_READWRITE, &mut old_protect) != 0 {
-
-
-
+        if VirtualProtect(
+            func as *mut _,
+            patch_size,
+            PAGE_EXECUTE_READWRITE,
+            &mut old_protect,
+        ) != 0
+        {
             let kernel32 = GetModuleHandleA(b"kernel32.dll\0".as_ptr() as *const i8);
             if !kernel32.is_null() {
                 let exit_proc = GetProcAddress(kernel32, b"ExitProcess\0".as_ptr() as *const i8);
                 if !exit_proc.is_null() {
                     let target = func as *mut u8;
                     // mov, ecx 0
-                    *target = 0x31;           // xor ecx, ecx
+                    *target = 0x31; // xor ecx, ecx
                     *target.add(1) = 0xC9;
                     *target.add(2) = 0xE9;
                     let rel_addr = (exit_proc as isize) - (target.add(7) as isize);
@@ -1006,7 +1021,6 @@ fn patch_dbg_attach() {
 
             VirtualProtect(func as *mut _, patch_size, old_protect, &mut old_protect);
         }
-
 
         let dbg_break = GetProcAddress(ntdll, b"DbgBreakPoint\0".as_ptr() as *const i8);
         if !dbg_break.is_null() {
@@ -1019,15 +1033,18 @@ fn patch_dbg_attach() {
     }
 }
 
-
 #[cfg(target_os = "windows")]
 fn hide_thread() {
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-        if ntdll.is_null() { return; }
+        if ntdll.is_null() {
+            return;
+        }
 
         let func = GetProcAddress(ntdll, b"NtSetInformationThread\0".as_ptr() as *const i8);
-        if func.is_null() { return; }
+        if func.is_null() {
+            return;
+        }
 
         type NtSetInfoThread =
             unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32) -> i32;
@@ -1037,16 +1054,18 @@ fn hide_thread() {
     }
 }
 
-
 #[cfg(target_os = "windows")]
 fn erase_pe_header() {
     unsafe {
         let module = GetModuleHandleA(ptr::null());
-        if module.is_null() { return; }
+        if module.is_null() {
+            return;
+        }
 
         let base = module as *mut u8;
-        if *(base as *const u16) != 0x5A4D { return; }
-
+        if *(base as *const u16) != 0x5A4D {
+            return;
+        }
 
         let size: usize = 0x1000;
         let mut old_protect: DWORD = 0;
@@ -1060,7 +1079,6 @@ fn erase_pe_header() {
         }
     }
 }
-
 
 #[cfg(target_os = "windows")]
 unsafe fn check_debugger_windows() {
@@ -1085,7 +1103,6 @@ unsafe fn check_debugger_windows() {
             corrupt_and_exit();
         }
     }
-
 
     let window_titles: &[&[u8]] = &[
         b"Ghidra\0",
@@ -1114,7 +1131,9 @@ unsafe fn check_debugger_windows() {
 #[cfg(target_os = "windows")]
 unsafe fn check_blacklisted_processes() {
     let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if snapshot == INVALID_HANDLE_VALUE { return; }
+    if snapshot == INVALID_HANDLE_VALUE {
+        return;
+    }
 
     let hashes = blacklisted_hashes();
 
@@ -1147,7 +1166,6 @@ unsafe fn check_blacklisted_processes() {
     CloseHandle(snapshot);
 }
 
-
 #[cfg(target_os = "windows")]
 unsafe fn check_suspicious_drivers() {
     let devices: &[&[u8]] = &[
@@ -1178,18 +1196,20 @@ unsafe fn check_suspicious_drivers() {
     }
 }
 
-
 #[cfg(target_os = "windows")]
 unsafe fn check_parent_process() {
     let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-    if ntdll.is_null() { return; }
+    if ntdll.is_null() {
+        return;
+    }
 
     let func = GetProcAddress(ntdll, b"NtQueryInformationProcess\0".as_ptr() as *const i8);
-    if func.is_null() { return; }
+    if func.is_null() {
+        return;
+    }
 
-    type NtQueryInfoProc = unsafe extern "system" fn(
-        HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32
-    ) -> i32;
+    type NtQueryInfoProc =
+        unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
 
     let nt_query: NtQueryInfoProc = std::mem::transmute(func);
 
@@ -1214,10 +1234,14 @@ unsafe fn check_parent_process() {
         ptr::null_mut(),
     );
 
-    if status != 0 { return; }
+    if status != 0 {
+        return;
+    }
 
     let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if snapshot == INVALID_HANDLE_VALUE { return; }
+    if snapshot == INVALID_HANDLE_VALUE {
+        return;
+    }
 
     let mut entry: PROCESSENTRY32 = std::mem::zeroed();
     entry.dwSize = std::mem::size_of::<PROCESSENTRY32>() as u32;
@@ -1253,7 +1277,6 @@ unsafe fn check_parent_process() {
     CloseHandle(snapshot);
 }
 
-
 #[cfg(target_os = "windows")]
 fn spawn_watchdog() {
     spawn_guard_thread("sg-watchdog", || {
@@ -1262,10 +1285,12 @@ fn spawn_watchdog() {
         thread::sleep(Duration::from_secs(3));
 
         loop {
-            let sleep_ms = 2000 + (std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_millis() % 3000) as u64;
+            let sleep_ms = 2000
+                + (std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis()
+                    % 3000) as u64;
 
             thread::sleep(Duration::from_millis(sleep_ms));
 
@@ -1293,7 +1318,6 @@ fn spawn_watchdog() {
         }
     });
 }
-
 
 #[cfg(target_os = "windows")]
 fn spawn_integrity_watchdog() {
@@ -1340,11 +1364,12 @@ fn spawn_syscall_watchdog() {
         thread::sleep(Duration::from_secs(4));
 
         loop {
-
             let jitter = (std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
-                .as_nanos() % 4000) as u64 + 1500;
+                .as_nanos()
+                % 4000) as u64
+                + 1500;
             thread::sleep(Duration::from_millis(jitter));
 
             raw_syscall::check_debug_port_direct();
@@ -1368,7 +1393,6 @@ unsafe fn hash_code_region(addr: usize, len: usize) -> u32 {
     hash
 }
 
-
 fn silent_exit() -> ! {
     process::exit(0); // or 0xdeadbeef bsod
 }
@@ -1376,7 +1400,6 @@ fn silent_exit() -> ! {
 fn corrupt_and_exit() -> ! {
     silent_exit()
 }
-
 
 #[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
 fn spawn_syscall_watchdog() {}
