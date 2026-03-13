@@ -5,7 +5,7 @@ insert into users (
     seed_phrase
 )
 values ($1, $2, $3)
-returning id, username, password, seed_phrase, joined;
+returning id, username, password, seed_phrase, admin_access, joined;
 
 -- name: GetIsUserExists :one
 select exists (select 1 from users where id = $1);
@@ -13,20 +13,23 @@ select exists (select 1 from users where id = $1);
 -- name: GetIsUsernameExists :one
 select exists (select 1 from users where username = $1);
 
+-- name: GetIsUserAdmin :one
+select admin_access = true from users where id = $1 limit 1;
+
 -- name: GetUserByID :one
-select id, username, password, seed_phrase, joined
+select id, username, password, seed_phrase, admin_access, joined
 from users
 where id = $1
 limit 1;
 
 -- name: GetUserByUsername :one
-select id, username, password, seed_phrase, joined
+select id, username, password, seed_phrase, admin_access, joined
 from users
 where username = $1
 limit 1;
 
 -- name: GetListUsers :many
-select id, username, password, seed_phrase, joined
+select id, username, password, seed_phrase, admin_access, joined
 from users
 order by joined desc
 limit $1

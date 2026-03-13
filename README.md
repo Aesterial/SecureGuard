@@ -80,7 +80,7 @@ SecureGuard/
 1. Clone repository:
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Aesterial/SecureGuard.git
 cd SecureGuard
 ```
 

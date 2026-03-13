@@ -17,9 +17,11 @@ pub struct UserSelf {
     pub username: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "3")]
     pub joined: ::core::option::Option<::prost_types::Timestamp>,
-    #[prost(string, optional, tag = "4")]
+    #[prost(bool, tag = "4")]
+    pub staff: bool,
+    #[prost(string, optional, tag = "5")]
     pub phrase: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(message, optional, tag = "5")]
+    #[prost(message, optional, tag = "6")]
     pub preferences: ::core::option::Option<Preferences>,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]

@@ -35,8 +35,9 @@ message UserSelf {
   string id = 1;
   string username = 2;
   google.protobuf.Timestamp joined = 3;
-  optional string phrase = 4;
-  Preferences preferences = 5;
+  bool staff = 4;
+  optional string phrase = 5;
+  Preferences preferences = 6;
 }
 
 message UserPublic {

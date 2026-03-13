@@ -5,6 +5,7 @@ create table if not exists users (
     username varchar(32) not null,
     password varchar(255) not null,
     seed_phrase varchar(255) not null,
+    admin_access boolean not null default false,
     joined timestamptz not null default now()
 );
 

@@ -27,6 +27,7 @@ func (u *UserRepository) compileUser(usr dbsqlc.User, prefs dbsqlc.GetUserPrefer
 		ID:       domain.ParseUUID(usr.ID.Bytes),
 		Username: usr.Username,
 		Joined:   usr.Joined.Time,
+		Staff:    usr.AdminAccess,
 		Preferences: usersdomain.Preferences{
 			Theme:  usersdomain.ParseThemeSTR(prefs.Theme),
 			Lang:   usersdomain.ParseLanguageSTR(prefs.Lang),
@@ -224,4 +225,12 @@ func (u *UserRepository) Create(ctx context.Context, username string, passwordHa
 		return nil, err
 	}
 	return u.compileUser(usr, prefs), nil
+}
+
+func (u *UserRepository) IsUserAdmin(ctx context.Context, id domain.UUID) (bool, error) {
+	active, err := u.querier.GetIsUserAdmin(ctx, id.PG())
+	if err != nil {
+		return false, err
+	}
+	return active, nil
 }

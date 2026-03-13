@@ -235,8 +235,9 @@ type UserSelf struct {
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
 	Joined        *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=joined,proto3" json:"joined,omitempty"`
-	Phrase        *string                `protobuf:"bytes,4,opt,name=phrase,proto3,oneof" json:"phrase,omitempty"`
-	Preferences   *Preferences           `protobuf:"bytes,5,opt,name=preferences,proto3" json:"preferences,omitempty"`
+	Staff         bool                   `protobuf:"varint,4,opt,name=staff,proto3" json:"staff,omitempty"`
+	Phrase        *string                `protobuf:"bytes,5,opt,name=phrase,proto3,oneof" json:"phrase,omitempty"`
+	Preferences   *Preferences           `protobuf:"bytes,6,opt,name=preferences,proto3" json:"preferences,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -290,6 +291,13 @@ func (x *UserSelf) GetJoined() *timestamppb.Timestamp {
 		return x.Joined
 	}
 	return nil
+}
+
+func (x *UserSelf) GetStaff() bool {
+	if x != nil {
+		return x.Staff
+	}
+	return false
 }
 
 func (x *UserSelf) GetPhrase() string {
@@ -786,13 +794,14 @@ const file_xyz_secureguard_v1_users_v1_domain_proto_rawDesc = "" +
 	"\vPreferences\x128\n" +
 	"\x05theme\x18\x01 \x01(\x0e2\".xyz.secureguard.v1.users.v1.ThemeR\x05theme\x129\n" +
 	"\x04lang\x18\x02 \x01(\x0e2%.xyz.secureguard.v1.users.v1.LanguageR\x04lang\x12:\n" +
-	"\x06crypto\x18\x03 \x01(\x0e2\".xyz.secureguard.v1.users.v1.CryptR\x06crypto\"\xde\x01\n" +
+	"\x06crypto\x18\x03 \x01(\x0e2\".xyz.secureguard.v1.users.v1.CryptR\x06crypto\"\xf4\x01\n" +
 	"\bUserSelf\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x122\n" +
-	"\x06joined\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x06joined\x12\x1b\n" +
-	"\x06phrase\x18\x04 \x01(\tH\x00R\x06phrase\x88\x01\x01\x12J\n" +
-	"\vpreferences\x18\x05 \x01(\v2(.xyz.secureguard.v1.users.v1.PreferencesR\vpreferencesB\t\n" +
+	"\x06joined\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x06joined\x12\x14\n" +
+	"\x05staff\x18\x04 \x01(\bR\x05staff\x12\x1b\n" +
+	"\x06phrase\x18\x05 \x01(\tH\x00R\x06phrase\x88\x01\x01\x12J\n" +
+	"\vpreferences\x18\x06 \x01(\v2(.xyz.secureguard.v1.users.v1.PreferencesR\vpreferencesB\t\n" +
 	"\a_phrase\"\xcc\x01\n" +
 	"\n" +
 	"UserPublic\x12\x0e\n" +

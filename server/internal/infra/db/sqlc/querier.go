@@ -15,6 +15,7 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (pgtype.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeletePassword(ctx context.Context, id pgtype.UUID) error
+	GetIsUserAdmin(ctx context.Context, id pgtype.UUID) (bool, error)
 	GetIsUserExists(ctx context.Context, id pgtype.UUID) (bool, error)
 	GetIsUsernameExists(ctx context.Context, username string) (bool, error)
 	GetListUsers(ctx context.Context, arg GetListUsersParams) ([]User, error)

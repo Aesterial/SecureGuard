@@ -31,10 +31,12 @@ func (s *PasswordsService) Create(ctx context.Context, req *passpb.CreateRequest
 	}
 	auth, err := s.auth.User(ctx)
 	if err != nil {
+		logging.Error("failed to authorize password: " + err.Error())
 		return nil, err
 	}
 	pass, err := s.pass.Create(ctx, *auth.UserID, req.ServiceUrl, req.Login, req.Pass, req.Salt)
 	if err != nil {
+		logging.Error("failed to add password: " + err.Error())
 		return nil, apperrors.Wrap(err)
 	}
 	if pass == nil {

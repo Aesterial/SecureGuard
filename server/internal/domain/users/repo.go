@@ -14,6 +14,7 @@ type Repository interface {
 	GetPassword(ctx context.Context, target domain.UUID) (string, error)
 	GetPasswordByUsername(ctx context.Context, username string) (string, error)
 	IsExists(ctx context.Context, target domain.UUID) (bool, error)
+	IsUserAdmin(ctx context.Context, target domain.UUID) (bool, error)
 	IsUsernameExists(ctx context.Context, username string) (bool, error)
 	ChangeCrypt(ctx context.Context, target domain.UUID, set Crypt) error
 	ChangeTheme(ctx context.Context, target domain.UUID, set Theme) error

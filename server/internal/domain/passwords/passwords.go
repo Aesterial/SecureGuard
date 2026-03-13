@@ -91,7 +91,7 @@ func (p *Password) Protobuf() *passpb.Password {
 type Passwords []*Password
 
 func (p Passwords) Protobuf() []*passpb.Password {
-	var list = make([]*passpb.Password, 0, len(p))
+	var list = make([]*passpb.Password, len(p))
 	for i, element := range p {
 		list[i] = element.Protobuf()
 	}

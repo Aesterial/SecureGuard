@@ -210,6 +210,7 @@ type User struct {
 	ID          domain.UUID
 	Username    string
 	Joined      time.Time
+	Staff       bool
 	Preferences Preferences
 }
 
@@ -224,6 +225,7 @@ func (u *User) ProtobufSelf() *userpb.UserSelf {
 		Username: u.Username,
 		Joined:   timestamppb.New(u.Joined),
 		Phrase:   p.Phrase,
+		Staff:    u.Staff,
 		Preferences: &userpb.Preferences{
 			Theme: p.Theme.PB(),
 			Lang:  p.Lang.PB(),

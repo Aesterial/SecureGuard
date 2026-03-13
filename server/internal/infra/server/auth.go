@@ -64,7 +64,11 @@ func (a *Authentificator) deviceIdFromContext(ctx context.Context) (string, erro
 	return "", apperrors.InvalidArguments
 }
 
-func (a *Authentificator) User(ctx context.Context) (*authdomain.Meta, error) {
+func (a *Authentificator) User(ctx context.Context, checkStaff ...bool) (*authdomain.Meta, error) {
+	var staffCheck bool
+	if len(checkStaff) > 0 {
+		staffCheck = checkStaff[0]
+	}
 	var metadata authdomain.Meta
 	var err error
 	metadata.Hash, err = a.deviceIdFromContext(ctx)
@@ -86,7 +90,18 @@ func (a *Authentificator) User(ctx context.Context) (*authdomain.Meta, error) {
 	if err != nil {
 		return &metadata, err
 	}
-
+	if owner == nil {
+		return nil, apperrors.NotFound
+	}
+	if staffCheck {
+		staff, err := a.usr.IsAdmin(ctx, *owner)
+		if err != nil {
+			return nil, apperrors.Wrap(err)
+		}
+		if !staff {
+			return nil, apperrors.AccessDenied
+		}
+	}
 	metadata.UserID = owner
 	return &metadata, nil
 }

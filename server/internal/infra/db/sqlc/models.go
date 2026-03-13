@@ -35,9 +35,10 @@ type Session struct {
 }
 
 type User struct {
-	ID         pgtype.UUID        `json:"id"`
-	Username   string             `json:"username"`
-	Password   string             `json:"password"`
-	SeedPhrase string             `json:"seed_phrase"`
-	Joined     pgtype.Timestamptz `json:"joined"`
+	ID          pgtype.UUID        `json:"id"`
+	Username    string             `json:"username"`
+	Password    string             `json:"password"`
+	SeedPhrase  string             `json:"seed_phrase"`
+	AdminAccess bool               `json:"admin_access"`
+	Joined      pgtype.Timestamptz `json:"joined"`
 }

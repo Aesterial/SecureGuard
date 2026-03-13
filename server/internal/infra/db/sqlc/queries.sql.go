@@ -75,7 +75,7 @@ insert into users (
     seed_phrase
 )
 values ($1, $2, $3)
-returning id, username, password, seed_phrase, joined
+returning id, username, password, seed_phrase, admin_access, joined
 `
 
 type CreateUserParams struct {
@@ -92,6 +92,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Username,
 		&i.Password,
 		&i.SeedPhrase,
+		&i.AdminAccess,
 		&i.Joined,
 	)
 	return i, err
@@ -104,6 +105,17 @@ delete from passwords where id = $1
 func (q *Queries) DeletePassword(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deletePassword, id)
 	return err
+}
+
+const getIsUserAdmin = `-- name: GetIsUserAdmin :one
+select admin_access = true from users where id = $1 limit 1
+`
+
+func (q *Queries) GetIsUserAdmin(ctx context.Context, id pgtype.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, getIsUserAdmin, id)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const getIsUserExists = `-- name: GetIsUserExists :one
@@ -129,7 +141,7 @@ func (q *Queries) GetIsUsernameExists(ctx context.Context, username string) (boo
 }
 
 const getListUsers = `-- name: GetListUsers :many
-select id, username, password, seed_phrase, joined
+select id, username, password, seed_phrase, admin_access, joined
 from users
 order by joined desc
 limit $1
@@ -155,6 +167,7 @@ func (q *Queries) GetListUsers(ctx context.Context, arg GetListUsersParams) ([]U
 			&i.Username,
 			&i.Password,
 			&i.SeedPhrase,
+			&i.AdminAccess,
 			&i.Joined,
 		); err != nil {
 			return nil, err
@@ -269,7 +282,7 @@ func (q *Queries) GetSessionOwner(ctx context.Context, id pgtype.UUID) (pgtype.U
 }
 
 const getUserByID = `-- name: GetUserByID :one
-select id, username, password, seed_phrase, joined
+select id, username, password, seed_phrase, admin_access, joined
 from users
 where id = $1
 limit 1
@@ -283,13 +296,14 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 		&i.Username,
 		&i.Password,
 		&i.SeedPhrase,
+		&i.AdminAccess,
 		&i.Joined,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-select id, username, password, seed_phrase, joined
+select id, username, password, seed_phrase, admin_access, joined
 from users
 where username = $1
 limit 1
@@ -303,6 +317,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Username,
 		&i.Password,
 		&i.SeedPhrase,
+		&i.AdminAccess,
 		&i.Joined,
 	)
 	return i, err

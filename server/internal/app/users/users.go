@@ -110,3 +110,11 @@ func (s *Service) ChangeTheme(ctx context.Context, target domain.UUID, set userp
 	}
 	return nil
 }
+
+func (s *Service) IsAdmin(ctx context.Context, target domain.UUID) (bool, error) {
+	active, err := s.usr.IsUserAdmin(ctx, target)
+	if err != nil {
+		return false, err
+	}
+	return active, nil
+}
