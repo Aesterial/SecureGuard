@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -21,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	LoginService_Register_FullMethodName  = "/xyz.secureguard.v1.login.v1.LoginService/Register"
 	LoginService_Authorize_FullMethodName = "/xyz.secureguard.v1.login.v1.LoginService/Authorize"
+	LoginService_Logout_FullMethodName    = "/xyz.secureguard.v1.login.v1.LoginService/Logout"
 )
 
 // LoginServiceClient is the client API for LoginService service.
@@ -29,6 +31,7 @@ const (
 type LoginServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	Authorize(ctx context.Context, in *AuthorizeRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type loginServiceClient struct {
@@ -59,12 +62,23 @@ func (c *loginServiceClient) Authorize(ctx context.Context, in *AuthorizeRequest
 	return out, nil
 }
 
+func (c *loginServiceClient) Logout(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, LoginService_Logout_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LoginServiceServer is the server API for LoginService service.
 // All implementations should embed UnimplementedLoginServiceServer
 // for forward compatibility.
 type LoginServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*LoginResponse, error)
 	Authorize(context.Context, *AuthorizeRequest) (*LoginResponse, error)
+	Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedLoginServiceServer should be embedded to have
@@ -79,6 +93,9 @@ func (UnimplementedLoginServiceServer) Register(context.Context, *RegisterReques
 }
 func (UnimplementedLoginServiceServer) Authorize(context.Context, *AuthorizeRequest) (*LoginResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Authorize not implemented")
+}
+func (UnimplementedLoginServiceServer) Logout(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method Logout not implemented")
 }
 func (UnimplementedLoginServiceServer) testEmbeddedByValue() {}
 
@@ -136,6 +153,24 @@ func _LoginService_Authorize_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LoginService_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LoginServiceServer).Logout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: LoginService_Logout_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LoginServiceServer).Logout(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LoginService_ServiceDesc is the grpc.ServiceDesc for LoginService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -150,6 +185,10 @@ var LoginService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Authorize",
 			Handler:    _LoginService_Authorize_Handler,
+		},
+		{
+			MethodName: "Logout",
+			Handler:    _LoginService_Logout_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

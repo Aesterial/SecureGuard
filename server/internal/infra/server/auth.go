@@ -79,14 +79,15 @@ func (a *Authentificator) User(ctx context.Context, checkStaff ...bool) (*authdo
 	if err != nil {
 		return &metadata, err
 	}
-	valid, err := a.ses.IsValid(ctx, *session, metadata.Hash)
+	metadata.SessionID = session
+	valid, err := a.ses.IsValid(ctx, *metadata.SessionID, metadata.Hash)
 	if err != nil {
 		return &metadata, err
 	}
 	if !valid {
 		return &metadata, apperrors.Unauthenticated
 	}
-	owner, err := a.ses.GetOwner(ctx, *session)
+	owner, err := a.ses.GetOwner(ctx, *metadata.SessionID)
 	if err != nil {
 		return &metadata, err
 	}

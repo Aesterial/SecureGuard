@@ -10,6 +10,7 @@ import (
 	logindomain "github.com/aesterial/secureguard/internal/domain/login"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
 	"github.com/aesterial/secureguard/internal/shared/logging"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type LoginService struct {
@@ -85,4 +86,17 @@ func (s *LoginService) Authorize(ctx context.Context, req *loginpb.AuthorizeRequ
 		return nil, apperrors.Wrap(err)
 	}
 	return &loginpb.LoginResponse{Info: usr.ProtobufSelf(), Session: session.String()}, nil
+}
+
+func (s *LoginService) Logout(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
+	auth, err := s.auth.User(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = s.auth.ses.Revoke(ctx, *auth.SessionID)
+	if err != nil {
+		logging.Error("failed to revoke session", logging.Field{Key: "err", Value: err.Error()})
+		return nil, apperrors.Wrap(err)
+	}
+	return &emptypb.Empty{}, nil
 }

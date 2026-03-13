@@ -9,6 +9,7 @@ package login
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -24,23 +25,27 @@ var File_xyz_secureguard_v1_login_v1_service_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_login_v1_service_proto_rawDesc = "" +
 	"\n" +
-	")xyz/secureguard/v1/login/v1/service.proto\x12\x1bxyz.secureguard.v1.login.v1\x1a(xyz/secureguard/v1/login/v1/domain.proto2\xdc\x01\n" +
+	")xyz/secureguard/v1/login/v1/service.proto\x12\x1bxyz.secureguard.v1.login.v1\x1a(xyz/secureguard/v1/login/v1/domain.proto\x1a\x1bgoogle/protobuf/empty.proto2\x96\x02\n" +
 	"\fLoginService\x12d\n" +
 	"\bRegister\x12,.xyz.secureguard.v1.login.v1.RegisterRequest\x1a*.xyz.secureguard.v1.login.v1.LoginResponse\x12f\n" +
-	"\tAuthorize\x12-.xyz.secureguard.v1.login.v1.AuthorizeRequest\x1a*.xyz.secureguard.v1.login.v1.LoginResponseBAZ?github.com/aesterial/secureguard/internal/api/v1/login/v1;loginb\x06proto3"
+	"\tAuthorize\x12-.xyz.secureguard.v1.login.v1.AuthorizeRequest\x1a*.xyz.secureguard.v1.login.v1.LoginResponse\x128\n" +
+	"\x06Logout\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.EmptyBAZ?github.com/aesterial/secureguard/internal/api/v1/login/v1;loginb\x06proto3"
 
 var file_xyz_secureguard_v1_login_v1_service_proto_goTypes = []any{
 	(*RegisterRequest)(nil),  // 0: xyz.secureguard.v1.login.v1.RegisterRequest
 	(*AuthorizeRequest)(nil), // 1: xyz.secureguard.v1.login.v1.AuthorizeRequest
-	(*LoginResponse)(nil),    // 2: xyz.secureguard.v1.login.v1.LoginResponse
+	(*emptypb.Empty)(nil),    // 2: google.protobuf.Empty
+	(*LoginResponse)(nil),    // 3: xyz.secureguard.v1.login.v1.LoginResponse
 }
 var file_xyz_secureguard_v1_login_v1_service_proto_depIdxs = []int32{
 	0, // 0: xyz.secureguard.v1.login.v1.LoginService.Register:input_type -> xyz.secureguard.v1.login.v1.RegisterRequest
 	1, // 1: xyz.secureguard.v1.login.v1.LoginService.Authorize:input_type -> xyz.secureguard.v1.login.v1.AuthorizeRequest
-	2, // 2: xyz.secureguard.v1.login.v1.LoginService.Register:output_type -> xyz.secureguard.v1.login.v1.LoginResponse
-	2, // 3: xyz.secureguard.v1.login.v1.LoginService.Authorize:output_type -> xyz.secureguard.v1.login.v1.LoginResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	2, // 2: xyz.secureguard.v1.login.v1.LoginService.Logout:input_type -> google.protobuf.Empty
+	3, // 3: xyz.secureguard.v1.login.v1.LoginService.Register:output_type -> xyz.secureguard.v1.login.v1.LoginResponse
+	3, // 4: xyz.secureguard.v1.login.v1.LoginService.Authorize:output_type -> xyz.secureguard.v1.login.v1.LoginResponse
+	2, // 5: xyz.secureguard.v1.login.v1.LoginService.Logout:output_type -> google.protobuf.Empty
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

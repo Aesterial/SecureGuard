@@ -2,11 +2,13 @@ package sessionsapp
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/aesterial/secureguard/internal/domain"
 	sessionsdomain "github.com/aesterial/secureguard/internal/domain/sessions"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
+	"github.com/jackc/pgx/v5"
 )
 
 type Service struct {
@@ -75,4 +77,15 @@ func (s *Service) Create(ctx context.Context, id domain.UUID, hash string) (*dom
 		return nil, apperrors.NotFound
 	}
 	return session, nil
+}
+
+func (s *Service) Revoke(ctx context.Context, id domain.UUID) error {
+	err := s.ses.Revoke(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return apperrors.NotFound
+		}
+		return err
+	}
+	return nil
 }

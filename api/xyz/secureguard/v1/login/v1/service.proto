@@ -5,8 +5,10 @@ package xyz.secureguard.v1.login.v1;
 option go_package = "github.com/aesterial/secureguard/internal/api/v1/login/v1;login";
 
 import "xyz/secureguard/v1/login/v1/domain.proto";
+import "google/protobuf/empty.proto";
 
 service LoginService {
   rpc Register(RegisterRequest) returns (LoginResponse);
   rpc Authorize(AuthorizeRequest) returns (LoginResponse);
+  rpc Logout(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
