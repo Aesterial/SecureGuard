@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -27,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StatsServiceClient interface {
-	Today(ctx context.Context, in *TodayRequest, opts ...grpc.CallOption) (*StatsResponse, error)
+	Today(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatsResponse, error)
 	ByDate(ctx context.Context, in *ByDateRequest, opts ...grpc.CallOption) (*StatsResponse, error)
 }
 
@@ -39,7 +40,7 @@ func NewStatsServiceClient(cc grpc.ClientConnInterface) StatsServiceClient {
 	return &statsServiceClient{cc}
 }
 
-func (c *statsServiceClient) Today(ctx context.Context, in *TodayRequest, opts ...grpc.CallOption) (*StatsResponse, error) {
+func (c *statsServiceClient) Today(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(StatsResponse)
 	err := c.cc.Invoke(ctx, StatsService_Today_FullMethodName, in, out, cOpts...)
@@ -63,7 +64,7 @@ func (c *statsServiceClient) ByDate(ctx context.Context, in *ByDateRequest, opts
 // All implementations should embed UnimplementedStatsServiceServer
 // for forward compatibility.
 type StatsServiceServer interface {
-	Today(context.Context, *TodayRequest) (*StatsResponse, error)
+	Today(context.Context, *emptypb.Empty) (*StatsResponse, error)
 	ByDate(context.Context, *ByDateRequest) (*StatsResponse, error)
 }
 
@@ -74,7 +75,7 @@ type StatsServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedStatsServiceServer struct{}
 
-func (UnimplementedStatsServiceServer) Today(context.Context, *TodayRequest) (*StatsResponse, error) {
+func (UnimplementedStatsServiceServer) Today(context.Context, *emptypb.Empty) (*StatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Today not implemented")
 }
 func (UnimplementedStatsServiceServer) ByDate(context.Context, *ByDateRequest) (*StatsResponse, error) {
@@ -101,7 +102,7 @@ func RegisterStatsServiceServer(s grpc.ServiceRegistrar, srv StatsServiceServer)
 }
 
 func _StatsService_Today_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TodayRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -113,7 +114,7 @@ func _StatsService_Today_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: StatsService_Today_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StatsServiceServer).Today(ctx, req.(*TodayRequest))
+		return srv.(StatsServiceServer).Today(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

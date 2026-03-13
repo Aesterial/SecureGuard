@@ -5,8 +5,9 @@ package stats.v1;
 option go_package = "github.com/aesterial/secureguard/internal/api/v1/stats/v1;stats";
 
 import "xyz/secureguard/v1/stats/v1/domain.proto";
+import "google/protobuf/empty.proto";
 
 service StatsService {
-    rpc Today(TodayRequest) returns (StatsResponse);
+    rpc Today(google.protobuf.Empty) returns (StatsResponse);
     rpc ByDate(ByDateRequest) returns (StatsResponse);
 }

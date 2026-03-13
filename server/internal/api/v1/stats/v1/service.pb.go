@@ -9,6 +9,7 @@ package stats
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -24,18 +25,18 @@ var File_xyz_secureguard_v1_stats_v1_service_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_stats_v1_service_proto_rawDesc = "" +
 	"\n" +
-	")xyz/secureguard/v1/stats/v1/service.proto\x12\bstats.v1\x1a(xyz/secureguard/v1/stats/v1/domain.proto2\x84\x01\n" +
+	")xyz/secureguard/v1/stats/v1/service.proto\x12\bstats.v1\x1a(xyz/secureguard/v1/stats/v1/domain.proto\x1a\x1bgoogle/protobuf/empty.proto2\x84\x01\n" +
 	"\fStatsService\x128\n" +
-	"\x05Today\x12\x16.stats.v1.TodayRequest\x1a\x17.stats.v1.StatsResponse\x12:\n" +
+	"\x05Today\x12\x16.google.protobuf.Empty\x1a\x17.stats.v1.StatsResponse\x12:\n" +
 	"\x06ByDate\x12\x17.stats.v1.ByDateRequest\x1a\x17.stats.v1.StatsResponseBAZ?github.com/aesterial/secureguard/internal/api/v1/stats/v1;statsb\x06proto3"
 
 var file_xyz_secureguard_v1_stats_v1_service_proto_goTypes = []any{
-	(*TodayRequest)(nil),  // 0: stats.v1.TodayRequest
+	(*emptypb.Empty)(nil), // 0: google.protobuf.Empty
 	(*ByDateRequest)(nil), // 1: stats.v1.ByDateRequest
 	(*StatsResponse)(nil), // 2: stats.v1.StatsResponse
 }
 var file_xyz_secureguard_v1_stats_v1_service_proto_depIdxs = []int32{
-	0, // 0: stats.v1.StatsService.Today:input_type -> stats.v1.TodayRequest
+	0, // 0: stats.v1.StatsService.Today:input_type -> google.protobuf.Empty
 	1, // 1: stats.v1.StatsService.ByDate:input_type -> stats.v1.ByDateRequest
 	2, // 2: stats.v1.StatsService.Today:output_type -> stats.v1.StatsResponse
 	2, // 3: stats.v1.StatsService.ByDate:output_type -> stats.v1.StatsResponse

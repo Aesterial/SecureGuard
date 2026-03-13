@@ -93,7 +93,7 @@ pub mod stats_service_client {
         ///
         pub async fn today(
             &mut self,
-            request: impl tonic::IntoRequest<super::TodayRequest>,
+            request: impl tonic::IntoRequest<()>,
         ) -> std::result::Result<tonic::Response<super::StatsResponse>, tonic::Status> {
             self.inner
                 .ready()
@@ -152,7 +152,7 @@ pub mod stats_service_server {
         ///
         async fn today(
             &self,
-            request: tonic::Request<super::TodayRequest>,
+            request: tonic::Request<()>,
         ) -> std::result::Result<tonic::Response<super::StatsResponse>, tonic::Status>;
         ///
         async fn by_date(
@@ -239,18 +239,14 @@ pub mod stats_service_server {
                 "/stats.v1.StatsService/Today" => {
                     #[allow(non_camel_case_types)]
                     struct TodaySvc<T: StatsService>(pub Arc<T>);
-                    impl<
-                        T: StatsService,
-                    > tonic::server::UnaryService<super::TodayRequest> for TodaySvc<T> {
+                    impl<T: StatsService> tonic::server::UnaryService<()>
+                    for TodaySvc<T> {
                         type Response = super::StatsResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::TodayRequest>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
                                 <T as StatsService>::today(&inner, request).await

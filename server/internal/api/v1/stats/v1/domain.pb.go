@@ -77,53 +77,8 @@ func (Fields) EnumDescriptor() ([]byte, []int) {
 	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{0}
 }
 
-type TodayRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Fields        []Fields               `protobuf:"varint,1,rep,packed,name=fields,proto3,enum=stats.v1.Fields" json:"fields,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *TodayRequest) Reset() {
-	*x = TodayRequest{}
-	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *TodayRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*TodayRequest) ProtoMessage() {}
-
-func (x *TodayRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use TodayRequest.ProtoReflect.Descriptor instead.
-func (*TodayRequest) Descriptor() ([]byte, []int) {
-	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *TodayRequest) GetFields() []Fields {
-	if x != nil {
-		return x.Fields
-	}
-	return nil
-}
-
 type ByDateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Fields        []Fields               `protobuf:"varint,1,rep,packed,name=fields,proto3,enum=stats.v1.Fields" json:"fields,omitempty"`
 	Day           *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=day,proto3" json:"day,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -131,7 +86,7 @@ type ByDateRequest struct {
 
 func (x *ByDateRequest) Reset() {
 	*x = ByDateRequest{}
-	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[1]
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -143,7 +98,7 @@ func (x *ByDateRequest) String() string {
 func (*ByDateRequest) ProtoMessage() {}
 
 func (x *ByDateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[1]
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -156,14 +111,7 @@ func (x *ByDateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ByDateRequest.ProtoReflect.Descriptor instead.
 func (*ByDateRequest) Descriptor() ([]byte, []int) {
-	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *ByDateRequest) GetFields() []Fields {
-	if x != nil {
-		return x.Fields
-	}
-	return nil
+	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *ByDateRequest) GetDay() *timestamppb.Timestamp {
@@ -173,27 +121,96 @@ func (x *ByDateRequest) GetDay() *timestamppb.Timestamp {
 	return nil
 }
 
-type StatValue struct {
+type Total struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Users          int32                  `protobuf:"varint,1,opt,name=users,proto3" json:"users,omitempty"`
+	Admins         int32                  `protobuf:"varint,2,opt,name=admins,proto3" json:"admins,omitempty"`
+	Passwords      int32                  `protobuf:"varint,3,opt,name=passwords,proto3" json:"passwords,omitempty"`
+	ActiveSessions int32                  `protobuf:"varint,4,opt,name=active_sessions,json=activeSessions,proto3" json:"active_sessions,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Total) Reset() {
+	*x = Total{}
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Total) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Total) ProtoMessage() {}
+
+func (x *Total) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Total.ProtoReflect.Descriptor instead.
+func (*Total) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Total) GetUsers() int32 {
+	if x != nil {
+		return x.Users
+	}
+	return 0
+}
+
+func (x *Total) GetAdmins() int32 {
+	if x != nil {
+		return x.Admins
+	}
+	return 0
+}
+
+func (x *Total) GetPasswords() int32 {
+	if x != nil {
+		return x.Passwords
+	}
+	return 0
+}
+
+func (x *Total) GetActiveSessions() int32 {
+	if x != nil {
+		return x.ActiveSessions
+	}
+	return 0
+}
+
+type GraphPoint struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Elements      map[string]int64       `protobuf:"bytes,1,rep,name=elements,proto3" json:"elements,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	Time          *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=time,proto3" json:"time,omitempty"`
+	Value         int32                  `protobuf:"varint,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *StatValue) Reset() {
-	*x = StatValue{}
+func (x *GraphPoint) Reset() {
+	*x = GraphPoint{}
 	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *StatValue) String() string {
+func (x *GraphPoint) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StatValue) ProtoMessage() {}
+func (*GraphPoint) ProtoMessage() {}
 
-func (x *StatValue) ProtoReflect() protoreflect.Message {
+func (x *GraphPoint) ProtoReflect() protoreflect.Message {
 	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -205,28 +222,92 @@ func (x *StatValue) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StatValue.ProtoReflect.Descriptor instead.
-func (*StatValue) Descriptor() ([]byte, []int) {
+// Deprecated: Use GraphPoint.ProtoReflect.Descriptor instead.
+func (*GraphPoint) Descriptor() ([]byte, []int) {
 	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *StatValue) GetElements() map[string]int64 {
+func (x *GraphPoint) GetTime() *timestamppb.Timestamp {
 	if x != nil {
-		return x.Elements
+		return x.Time
 	}
 	return nil
 }
 
+func (x *GraphPoint) GetValue() int32 {
+	if x != nil {
+		return x.Value
+	}
+	return 0
+}
+
+type Latency struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	P50           float64                `protobuf:"fixed64,1,opt,name=p50,proto3" json:"p50,omitempty"`
+	P90           float64                `protobuf:"fixed64,2,opt,name=p90,proto3" json:"p90,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Latency) Reset() {
+	*x = Latency{}
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Latency) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Latency) ProtoMessage() {}
+
+func (x *Latency) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Latency.ProtoReflect.Descriptor instead.
+func (*Latency) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Latency) GetP50() float64 {
+	if x != nil {
+		return x.P50
+	}
+	return 0
+}
+
+func (x *Latency) GetP90() float64 {
+	if x != nil {
+		return x.P90
+	}
+	return 0
+}
+
 type StatsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Info          map[string]*StatValue  `protobuf:"bytes,1,rep,name=info,proto3" json:"info,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	TopServices   map[string]int32       `protobuf:"bytes,1,rep,name=top_services,json=topServices,proto3" json:"top_services,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	ActivityGraph []*GraphPoint          `protobuf:"bytes,3,rep,name=activity_graph,json=activityGraph,proto3" json:"activity_graph,omitempty"`
+	RegisterGraph []*GraphPoint          `protobuf:"bytes,2,rep,name=register_graph,json=registerGraph,proto3" json:"register_graph,omitempty"`
+	Total         *Total                 `protobuf:"bytes,4,opt,name=total,proto3" json:"total,omitempty"`
+	Crypt         map[string]int32       `protobuf:"bytes,5,rep,name=crypt,proto3" json:"crypt,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	Latency       *Latency               `protobuf:"bytes,6,opt,name=latency,proto3" json:"latency,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StatsResponse) Reset() {
 	*x = StatsResponse{}
-	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[3]
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -238,7 +319,7 @@ func (x *StatsResponse) String() string {
 func (*StatsResponse) ProtoMessage() {}
 
 func (x *StatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[3]
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -251,12 +332,47 @@ func (x *StatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatsResponse.ProtoReflect.Descriptor instead.
 func (*StatsResponse) Descriptor() ([]byte, []int) {
-	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{3}
+	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *StatsResponse) GetInfo() map[string]*StatValue {
+func (x *StatsResponse) GetTopServices() map[string]int32 {
 	if x != nil {
-		return x.Info
+		return x.TopServices
+	}
+	return nil
+}
+
+func (x *StatsResponse) GetActivityGraph() []*GraphPoint {
+	if x != nil {
+		return x.ActivityGraph
+	}
+	return nil
+}
+
+func (x *StatsResponse) GetRegisterGraph() []*GraphPoint {
+	if x != nil {
+		return x.RegisterGraph
+	}
+	return nil
+}
+
+func (x *StatsResponse) GetTotal() *Total {
+	if x != nil {
+		return x.Total
+	}
+	return nil
+}
+
+func (x *StatsResponse) GetCrypt() map[string]int32 {
+	if x != nil {
+		return x.Crypt
+	}
+	return nil
+}
+
+func (x *StatsResponse) GetLatency() *Latency {
+	if x != nil {
+		return x.Latency
 	}
 	return nil
 }
@@ -265,22 +381,35 @@ var File_xyz_secureguard_v1_stats_v1_domain_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_stats_v1_domain_proto_rawDesc = "" +
 	"\n" +
-	"(xyz/secureguard/v1/stats/v1/domain.proto\x12\bstats.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"8\n" +
-	"\fTodayRequest\x12(\n" +
-	"\x06fields\x18\x01 \x03(\x0e2\x10.stats.v1.FieldsR\x06fields\"g\n" +
-	"\rByDateRequest\x12(\n" +
-	"\x06fields\x18\x01 \x03(\x0e2\x10.stats.v1.FieldsR\x06fields\x12,\n" +
-	"\x03day\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x03day\"\x87\x01\n" +
-	"\tStatValue\x12=\n" +
-	"\belements\x18\x01 \x03(\v2!.stats.v1.StatValue.ElementsEntryR\belements\x1a;\n" +
-	"\rElementsEntry\x12\x10\n" +
+	"(xyz/secureguard/v1/stats/v1/domain.proto\x12\bstats.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"=\n" +
+	"\rByDateRequest\x12,\n" +
+	"\x03day\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x03day\"|\n" +
+	"\x05Total\x12\x14\n" +
+	"\x05users\x18\x01 \x01(\x05R\x05users\x12\x16\n" +
+	"\x06admins\x18\x02 \x01(\x05R\x06admins\x12\x1c\n" +
+	"\tpasswords\x18\x03 \x01(\x05R\tpasswords\x12'\n" +
+	"\x0factive_sessions\x18\x04 \x01(\x05R\x0eactiveSessions\"R\n" +
+	"\n" +
+	"GraphPoint\x12.\n" +
+	"\x04time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\x04time\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value\"-\n" +
+	"\aLatency\x12\x10\n" +
+	"\x03p50\x18\x01 \x01(\x01R\x03p50\x12\x10\n" +
+	"\x03p90\x18\x02 \x01(\x01R\x03p90\"\xde\x03\n" +
+	"\rStatsResponse\x12K\n" +
+	"\ftop_services\x18\x01 \x03(\v2(.stats.v1.StatsResponse.TopServicesEntryR\vtopServices\x12;\n" +
+	"\x0eactivity_graph\x18\x03 \x03(\v2\x14.stats.v1.GraphPointR\ractivityGraph\x12;\n" +
+	"\x0eregister_graph\x18\x02 \x03(\v2\x14.stats.v1.GraphPointR\rregisterGraph\x12%\n" +
+	"\x05total\x18\x04 \x01(\v2\x0f.stats.v1.TotalR\x05total\x128\n" +
+	"\x05crypt\x18\x05 \x03(\v2\".stats.v1.StatsResponse.CryptEntryR\x05crypt\x12+\n" +
+	"\alatency\x18\x06 \x01(\v2\x11.stats.v1.LatencyR\alatency\x1a>\n" +
+	"\x10TopServicesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01\"\x94\x01\n" +
-	"\rStatsResponse\x125\n" +
-	"\x04info\x18\x01 \x03(\v2!.stats.v1.StatsResponse.InfoEntryR\x04info\x1aL\n" +
-	"\tInfoEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12)\n" +
-	"\x05value\x18\x02 \x01(\v2\x13.stats.v1.StatValueR\x05value:\x028\x01*j\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a8\n" +
+	"\n" +
+	"CryptEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01*j\n" +
 	"\x06Fields\x12\x16\n" +
 	"\x12FIELDS_UNSPECIFIED\x10\x00\x12\x0e\n" +
 	"\n" +
@@ -302,29 +431,32 @@ func file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP() []byte {
 }
 
 var file_xyz_secureguard_v1_stats_v1_domain_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_xyz_secureguard_v1_stats_v1_domain_proto_goTypes = []any{
 	(Fields)(0),                   // 0: stats.v1.Fields
-	(*TodayRequest)(nil),          // 1: stats.v1.TodayRequest
-	(*ByDateRequest)(nil),         // 2: stats.v1.ByDateRequest
-	(*StatValue)(nil),             // 3: stats.v1.StatValue
-	(*StatsResponse)(nil),         // 4: stats.v1.StatsResponse
-	nil,                           // 5: stats.v1.StatValue.ElementsEntry
-	nil,                           // 6: stats.v1.StatsResponse.InfoEntry
-	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
+	(*ByDateRequest)(nil),         // 1: stats.v1.ByDateRequest
+	(*Total)(nil),                 // 2: stats.v1.Total
+	(*GraphPoint)(nil),            // 3: stats.v1.GraphPoint
+	(*Latency)(nil),               // 4: stats.v1.Latency
+	(*StatsResponse)(nil),         // 5: stats.v1.StatsResponse
+	nil,                           // 6: stats.v1.StatsResponse.TopServicesEntry
+	nil,                           // 7: stats.v1.StatsResponse.CryptEntry
+	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
 }
 var file_xyz_secureguard_v1_stats_v1_domain_proto_depIdxs = []int32{
-	0, // 0: stats.v1.TodayRequest.fields:type_name -> stats.v1.Fields
-	0, // 1: stats.v1.ByDateRequest.fields:type_name -> stats.v1.Fields
-	7, // 2: stats.v1.ByDateRequest.day:type_name -> google.protobuf.Timestamp
-	5, // 3: stats.v1.StatValue.elements:type_name -> stats.v1.StatValue.ElementsEntry
-	6, // 4: stats.v1.StatsResponse.info:type_name -> stats.v1.StatsResponse.InfoEntry
-	3, // 5: stats.v1.StatsResponse.InfoEntry.value:type_name -> stats.v1.StatValue
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	8, // 0: stats.v1.ByDateRequest.day:type_name -> google.protobuf.Timestamp
+	8, // 1: stats.v1.GraphPoint.time:type_name -> google.protobuf.Timestamp
+	6, // 2: stats.v1.StatsResponse.top_services:type_name -> stats.v1.StatsResponse.TopServicesEntry
+	3, // 3: stats.v1.StatsResponse.activity_graph:type_name -> stats.v1.GraphPoint
+	3, // 4: stats.v1.StatsResponse.register_graph:type_name -> stats.v1.GraphPoint
+	2, // 5: stats.v1.StatsResponse.total:type_name -> stats.v1.Total
+	7, // 6: stats.v1.StatsResponse.crypt:type_name -> stats.v1.StatsResponse.CryptEntry
+	4, // 7: stats.v1.StatsResponse.latency:type_name -> stats.v1.Latency
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_xyz_secureguard_v1_stats_v1_domain_proto_init() }
@@ -338,7 +470,7 @@ func file_xyz_secureguard_v1_stats_v1_domain_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_xyz_secureguard_v1_stats_v1_domain_proto_rawDesc), len(file_xyz_secureguard_v1_stats_v1_domain_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
