@@ -46,6 +46,16 @@ const STARTUP_RUN_KEY_PATH: &str = "Software\\Microsoft\\Windows\\CurrentVersion
 #[cfg(target_os = "windows")]
 const STARTUP_VALUE_NAME: &str = "SecureGuard";
 
+fn is_not_authenticated_error(message: &str) -> bool {
+    let normalized = message.to_ascii_lowercase();
+    normalized.contains("not authenticated") || normalized.contains("unauthenticated")
+}
+
+fn clear_auth_state(state: &State<'_, AppState>, api: &mut ApiClient) {
+    api.clear_session();
+    state.authenticated.store(false, Ordering::SeqCst);
+}
+
 #[tauri::command]
 async fn login(
     state: State<'_, AppState>,
@@ -82,8 +92,8 @@ async fn register(
     if password.len() < 8 {
         return Err("Пароль минимум 8 символов".into());
     }
-    if seed_phrase.split_whitespace().count() < 3 {
-        return Err("Сид-фраза минимум 3 слова".into());
+    if seed_phrase.split_whitespace().count() < 1 {
+        return Err("Seed phrase must contain at least 1 word".into());
     }
 
     {
@@ -109,8 +119,16 @@ async fn get_passwords(state: State<'_, AppState>) -> Result<Vec<PasswordEntry>,
     if !state.authenticated.load(Ordering::SeqCst) {
         return Err("Не авторизован".into());
     }
-    let api = state.api.lock().await;
-    api.list_passwords().await
+    let mut api = state.api.lock().await;
+    match api.list_passwords().await {
+        Ok(entries) => Ok(entries),
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(&state, &mut api);
+            }
+            Err(err)
+        }
+    }
 }
 
 #[tauri::command]
@@ -148,8 +166,16 @@ async fn add_password(
         created_at: chrono_now(),
     };
 
-    let api = state.api.lock().await;
-    api.add_password(entry).await
+    let mut api = state.api.lock().await;
+    match api.add_password(entry).await {
+        Ok(saved) => Ok(saved),
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(&state, &mut api);
+            }
+            Err(err)
+        }
+    }
 }
 
 #[tauri::command]
@@ -164,8 +190,16 @@ async fn copy_password(
     }
 
     let entry = {
-        let api = state.api.lock().await;
-        let list = api.list_passwords().await?;
+        let mut api = state.api.lock().await;
+        let list = match api.list_passwords().await {
+            Ok(list) => list,
+            Err(err) => {
+                if is_not_authenticated_error(&err) {
+                    clear_auth_state(&state, &mut api);
+                }
+                return Err(err);
+            }
+        };
         list.iter()
             .find(|e| e.id == entry_id)
             .cloned()
@@ -210,17 +244,26 @@ async fn delete_password(state: State<'_, AppState>, entry_id: String) -> Result
     if !state.authenticated.load(Ordering::SeqCst) {
         return Err("Не авторизован".into());
     }
-    let api = state.api.lock().await;
-    api.delete_password(&entry_id).await
+    let mut api = state.api.lock().await;
+    match api.delete_password(&entry_id).await {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(&state, &mut api);
+            }
+            Err(err)
+        }
+    }
 }
 
 #[tauri::command]
 async fn is_authenticated(state: State<'_, AppState>) -> Result<bool, String> {
-    if state.authenticated.load(Ordering::SeqCst) {
-        return Ok(true);
-    }
     let api = state.api.lock().await;
-    Ok(api.is_authenticated())
+    let authenticated = state.authenticated.load(Ordering::SeqCst) && api.is_authenticated();
+    if !authenticated {
+        state.authenticated.store(false, Ordering::SeqCst);
+    }
+    Ok(authenticated)
 }
 
 #[tauri::command]

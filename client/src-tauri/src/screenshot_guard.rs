@@ -73,12 +73,6 @@ pub fn init_screenshot_protection(window: Window) {
         spawn_guard_thread("sg-affinity-keepalive", move || {
             monitor_affinity(hwnd as HWND);
         });
-        spawn_guard_thread("sg-kb-hook", || {
-            install_keyboard_hook();
-        });
-        spawn_guard_thread("sg-capture-monitor", || {
-            monitor_capture_tools();
-        });
         spawn_guard_thread("sg-clipboard-monitor", move || {
             monitor_clipboard(hwnd as HWND);
         });

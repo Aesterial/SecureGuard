@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
 use std::env;
+use std::hash::{Hash, Hasher};
 use tonic::metadata::MetadataValue;
 use tonic::transport::{Channel, Endpoint};
 use tonic::{Code, Request, Status};
@@ -124,7 +126,7 @@ impl ApiClient {
 
     fn with_auth_metadata<T>(&self, mut req: Request<T>) -> Result<Request<T>, String> {
         req = self.with_client_metadata(req)?;
-        let session = self.session.as_deref().ok_or("Не авторизован")?;
+        let session = self.session.as_deref().ok_or("Not authenticated")?;
         let session_header = format!("SG-{}", session);
         let value = MetadataValue::try_from(session_header.as_str())
             .map_err(|e| format!("Session metadata: {}", e))?;
@@ -196,8 +198,8 @@ impl ApiClient {
             let batch_len = payload.list.len() as i32;
 
             for item in payload.list {
-                let fallback_created_at = timestamp_to_string(item.created_at);
-                let decoded = decode_payload(&item.pass, fallback_created_at);
+                let fallback_created_at = timestamp_to_string(item.created_at.clone());
+                let decoded = decode_password_entry(&item, fallback_created_at);
                 out.push(PasswordEntry {
                     id: decoded.id,
                     title: decoded.title,
@@ -229,20 +231,21 @@ impl ApiClient {
         let channel = self.connect().await?;
         let mut client = PasswordServiceClient::new(channel);
 
-        let payload = PasswordPayload {
-            id: String::new(),
+        let metadata = PasswordPayload {
+            id: uuid::Uuid::new_v4().to_string(),
             title: entry.title.clone(),
-            encrypted_password: entry.encrypted_password.clone(),
+            encrypted_password: String::new(),
             salt: entry.salt.clone(),
             encryption_algorithm: normalize_encryption(&entry.encryption_algorithm),
             created_at: entry.created_at.clone(),
         };
-        let packed = serde_json::to_string(&payload).map_err(|e| format!("Payload: {}", e))?;
+        let packed_metadata =
+            serde_json::to_string(&metadata).map_err(|e| format!("Payload: {}", e))?;
 
         let request = CreateRequest {
             service_url: entry.title.clone(),
-            login: entry.salt.clone(),
-            pass: packed,
+            login: packed_metadata,
+            pass: entry.encrypted_password.clone(),
             salt: entry.salt.clone(),
         };
         let req = self.with_auth_metadata(Request::new(request))?;
@@ -252,8 +255,8 @@ impl ApiClient {
             .info
             .ok_or("Сервер не вернул данные записи")?;
 
-        let fallback_created_at = timestamp_to_string(info.created_at);
-        let decoded = decode_payload(&info.pass, fallback_created_at);
+        let fallback_created_at = timestamp_to_string(info.created_at.clone());
+        let decoded = decode_password_entry(&info, fallback_created_at);
 
         Ok(PasswordEntry {
             id: decoded.id,
@@ -286,25 +289,102 @@ fn normalize_encryption(value: &str) -> String {
     normalized
 }
 
-fn decode_payload(raw: &str, fallback_created_at: String) -> PasswordPayload {
-    if let Ok(mut payload) = serde_json::from_str::<PasswordPayload>(raw) {
-        if payload.created_at.trim().is_empty() {
-            payload.created_at = fallback_created_at;
+fn decode_password_entry(
+    item: &xyz::secureguard::v1::passwords::v1::Password,
+    fallback_created_at: String,
+) -> PasswordPayload {
+    if let Ok(mut payload) = serde_json::from_str::<PasswordPayload>(&item.pass) {
+        if !payload.encrypted_password.trim().is_empty() || !payload.salt.trim().is_empty() {
+            fill_payload_defaults(item, &mut payload, fallback_created_at);
+            return payload;
         }
-        if payload.encryption_algorithm.trim().is_empty() {
-            payload.encryption_algorithm = DEFAULT_ENCRYPTION_ALGORITHM.to_string();
-        }
-        return payload;
     }
 
-    PasswordPayload {
+    let mut payload = PasswordPayload {
         id: String::new(),
         title: String::new(),
-        encrypted_password: raw.to_string(),
+        encrypted_password: item.pass.clone(),
         salt: String::new(),
         encryption_algorithm: DEFAULT_ENCRYPTION_ALGORITHM.to_string(),
         created_at: fallback_created_at,
+    };
+
+    if let Ok(metadata) = serde_json::from_str::<PasswordPayload>(&item.login) {
+        if !metadata.id.trim().is_empty() {
+            payload.id = metadata.id;
+        }
+        if !metadata.title.trim().is_empty() {
+            payload.title = metadata.title;
+        }
+        if !metadata.salt.trim().is_empty() {
+            payload.salt = metadata.salt;
+        }
+        if !metadata.encryption_algorithm.trim().is_empty() {
+            payload.encryption_algorithm = metadata.encryption_algorithm;
+        }
+        if !metadata.created_at.trim().is_empty() {
+            payload.created_at = metadata.created_at;
+        }
     }
+
+    if payload.salt.trim().is_empty() {
+        // Backward compatibility: legacy entries stored salt directly in login.
+        payload.salt = item.login.clone();
+    }
+
+    fill_payload_defaults(item, &mut payload, String::new());
+    payload
+}
+
+fn fill_payload_defaults(
+    item: &xyz::secureguard::v1::passwords::v1::Password,
+    payload: &mut PasswordPayload,
+    fallback_created_at: String,
+) {
+    if payload.id.trim().is_empty() {
+        payload.id = build_fallback_entry_id(item);
+    }
+
+    if payload.title.trim().is_empty() {
+        if let Some(service) = item.serv.as_ref() {
+            if !service.name.trim().is_empty() {
+                payload.title = service.name.clone();
+            } else if !service.url.trim().is_empty() {
+                payload.title = service.url.clone();
+            }
+        }
+    }
+
+    if payload.title.trim().is_empty() {
+        payload.title = "Entry".to_string();
+    }
+
+    if payload.created_at.trim().is_empty() && !fallback_created_at.trim().is_empty() {
+        payload.created_at = fallback_created_at;
+    }
+
+    if payload.encryption_algorithm.trim().is_empty() {
+        payload.encryption_algorithm = DEFAULT_ENCRYPTION_ALGORITHM.to_string();
+    }
+}
+
+fn build_fallback_entry_id(item: &xyz::secureguard::v1::passwords::v1::Password) -> String {
+    let mut hasher = DefaultHasher::new();
+
+    if let Some(service) = item.serv.as_ref() {
+        service.name.hash(&mut hasher);
+        service.url.hash(&mut hasher);
+    }
+
+    item.login.hash(&mut hasher);
+    item.pass.hash(&mut hasher);
+
+    if let Some(ts) = item.created_at.as_ref() {
+        ts.seconds.hash(&mut hasher);
+        ts.nanos.hash(&mut hasher);
+    }
+
+    format!("sg-{:016x}", hasher.finish())
 }
 
 fn timestamp_to_string(value: Option<prost_types::Timestamp>) -> String {
@@ -320,6 +400,10 @@ fn timestamp_to_string(value: Option<prost_types::Timestamp>) -> String {
 }
 
 fn map_tonic_error(status: Status) -> String {
+    if status.code() == Code::Unauthenticated {
+        return "Not authenticated".to_string();
+    }
+
     if !status.message().trim().is_empty() {
         return status.message().to_string();
     }

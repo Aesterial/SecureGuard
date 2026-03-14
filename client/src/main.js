@@ -33,7 +33,7 @@ var I18N = {
     "register.usernamePlaceholder": "Минимум 3 символа",
     "register.passwordPlaceholder": "Минимум 8 символов",
     "register.passwordConfirmPlaceholder": "Повторите пароль",
-    "register.seedPlaceholder": "Введите сид-фразу (мин. 3 слова)",
+    "register.seedPlaceholder": "Введите сид-фразу (мин. 1 слово)",
 
     "dashboard.title": "Хранилище",
     "dashboard.addPassword": "Добавить пароль",
@@ -134,7 +134,7 @@ var I18N = {
     "error.loginMin": "Логин: минимум 3 символа",
     "error.passwordMin": "Пароль: минимум 8 символов",
     "error.passwordsMismatch": "Пароли не совпадают",
-    "error.seedMin": "Сид-фраза: минимум 3 слова",
+    "error.seedMin": "Сид-фраза: минимум 1 слово",
     "error.enterSeed": "Введите сид-фразу",
     "error.invalidSeed": "Неверная сид-фраза",
     "error.load": "Ошибка загрузки",
@@ -149,7 +149,7 @@ var I18N = {
     "error.invalidCredentials": "Неверный логин или пароль",
     "error.loginMinRaw": "Логин должен быть минимум 3 символа",
     "error.passwordMinRaw": "Пароль должен быть минимум 8 символов",
-    "error.seedMinRaw": "Сид-фраза должна быть минимум 3 слова",
+    "error.seedMinRaw": "Сид-фраза должна быть минимум 1 слово",
     "error.userExists": "Пользователь уже существует",
     "error.notAuthenticated": "Вы не авторизованы",
     "error.entryNotFound": "Запись не найдена",
@@ -183,7 +183,7 @@ var I18N = {
     "register.usernamePlaceholder": "At least 3 characters",
     "register.passwordPlaceholder": "At least 8 characters",
     "register.passwordConfirmPlaceholder": "Repeat password",
-    "register.seedPlaceholder": "Secret phrase (min. 3 words)",
+    "register.seedPlaceholder": "Secret phrase (min. 1 word)",
     "dashboard.title": "Vault",
     "dashboard.addPassword": "Add password",
     "dashboard.emptyTitle": "No passwords yet",
@@ -267,7 +267,7 @@ var I18N = {
     "error.loginMin": "Username: minimum 3 characters",
     "error.passwordMin": "Password: minimum 8 characters",
     "error.passwordsMismatch": "Passwords do not match",
-    "error.seedMin": "Seed phrase: minimum 3 words",
+    "error.seedMin": "Seed phrase: minimum 1 word",
     "error.enterSeed": "Enter seed phrase",
     "error.invalidSeed": "Invalid seed phrase",
     "error.load": "Load error",
@@ -282,7 +282,7 @@ var I18N = {
     "error.invalidCredentials": "Invalid username or password",
     "error.loginMinRaw": "Username must be at least 3 characters",
     "error.passwordMinRaw": "Password must be at least 8 characters",
-    "error.seedMinRaw": "Seed phrase must be at least 3 words",
+    "error.seedMinRaw": "Seed phrase must be at least 1 word",
     "error.userExists": "User already exists",
     "error.notAuthenticated": "Not authenticated",
     "error.entryNotFound": "Entry not found",
@@ -295,9 +295,11 @@ var MESSAGE_KEY_BY_TEXT = {
   "Неверный логин или пароль": "error.invalidCredentials",
   "Логин должен быть минимум 3 символа": "error.loginMinRaw",
   "Пароль должен быть минимум 8 символов": "error.passwordMinRaw",
-  "Сид-фраза должна быть минимум 3 слова": "error.seedMinRaw",
+  "Сид-фраза должна быть минимум 1 слово": "error.seedMinRaw",
+  "Seed phrase must contain at least 1 word": "error.seedMinRaw",
   "Пользователь уже существует": "error.userExists",
   "Вы не авторизованы": "error.notAuthenticated",
+  "Not authenticated": "error.notAuthenticated",
   "Заполните все поля": "error.fillAllFields",
   "Запись не найдена": "error.entryNotFound",
   "Скопировано": "notify.copied",
@@ -384,8 +386,8 @@ function createFallbackInvoke() {
       if (!regPass || regPass.length < 8) {
         throw "Пароль должен быть минимум 8 символов";
       }
-      if (regSeed.split(/\s+/).filter(Boolean).length < 3) {
-        throw "Сид-фраза должна быть минимум 3 слова";
+      if (regSeed.split(/\s+/).filter(Boolean).length < 1) {
+        throw "Seed phrase must contain at least 1 word";
       }
       if (users[regUser]) {
         throw "Пользователь уже существует";
@@ -510,6 +512,8 @@ function initApp(invoke) {
   var settingsSyncInProgress = false;
   var startupSyncInProgress = false;
   var weakConfirmResolver = null;
+  var cachedSeedPhrase = "";
+  var authHandlingInProgress = false;
 
   var loaded = loadSettings();
   var appSettings = loaded.settings;
@@ -543,7 +547,7 @@ function initApp(invoke) {
     del: document.getElementById("del-modal"),
   };
 
-  var currentPage = "login";
+  var currentPage = null;
   var isAnimating = false;
 
   function getLanguage() {
@@ -615,6 +619,34 @@ function initApp(invoke) {
     }
 
     return text;
+  }
+
+  function isAuthErrorMessage(raw) {
+    if (raw === undefined || raw === null) {
+      return false;
+    }
+
+    var text = String(raw).toLowerCase();
+    return (
+      text.indexOf("не авториз") !== -1 ||
+      text.indexOf("not authenticated") !== -1 ||
+      text.indexOf("unauthenticated") !== -1
+    );
+  }
+
+  async function handleAuthFailure(err) {
+    if (!authenticated || authHandlingInProgress || !isAuthErrorMessage(err)) {
+      return false;
+    }
+
+    authHandlingInProgress = true;
+    try {
+      await performLogout(t("error.notAuthenticated"), "err");
+    } finally {
+      authHandlingInProgress = false;
+    }
+
+    return true;
   }
 
   function setText(selector, key) {
@@ -768,9 +800,30 @@ function initApp(invoke) {
     renderAutoLockMinuteOptions();
   }
 
-  function showPage(name) {
-    if (isAnimating || name === currentPage) return;
+  function showPage(name, options) {
     if (!pages[name]) return;
+
+    options = options || {};
+    var instant = !!options.instant;
+
+    if (name === currentPage && !instant) return;
+    if (isAnimating && !instant) return;
+
+    if (instant || !currentPage) {
+      Object.keys(pages).forEach(function (key) {
+        if (pages[key]) {
+          pages[key].classList.remove("active");
+          pages[key].style.opacity = "";
+          pages[key].style.transform = "";
+          pages[key].style.transition = "";
+        }
+      });
+
+      pages[name].classList.add("active");
+      currentPage = name;
+      isAnimating = false;
+      return;
+    }
 
     isAnimating = true;
 
@@ -1051,6 +1104,7 @@ function initApp(invoke) {
   async function performLogout(message, type) {
     clearAutoLockTimer();
     authenticated = false;
+    cachedSeedPhrase = "";
 
     try {
       await invoke("logout");
@@ -1061,7 +1115,7 @@ function initApp(invoke) {
     hideModal("del");
     currentId = null;
     deleteId = null;
-    showPage("login");
+    showPage("login", { instant: true });
 
     if (message) {
       notify(message, type || "ok");
@@ -1091,6 +1145,7 @@ function initApp(invoke) {
   function setAuthenticated(value) {
     authenticated = !!value;
     if (!authenticated) {
+      cachedSeedPhrase = "";
       clearAutoLockTimer();
       return;
     }
@@ -1125,7 +1180,9 @@ function initApp(invoke) {
       }
     } catch (err) {
       renderSettings();
-      notify(localizeMessage(err, "error.screenshotGuardChange"), "err");
+      if (!(await handleAuthFailure(err))) {
+        notify(localizeMessage(err, "error.screenshotGuardChange"), "err");
+      }
     }
 
     settingsControls.screenshotGuard.disabled = false;
@@ -1184,7 +1241,9 @@ function initApp(invoke) {
       }
     } catch (err) {
       renderSettings();
-      notify(localizeMessage(err, "error.startupChange"), "err");
+      if (!(await handleAuthFailure(err))) {
+        notify(localizeMessage(err, "error.startupChange"), "err");
+      }
     }
 
     settingsControls.startupEnabled.disabled = false;
@@ -1202,6 +1261,9 @@ function initApp(invoke) {
       saveSettings();
       renderSettings();
     } catch (err) {
+      if (await handleAuthFailure(err)) {
+        return;
+      }
       notify(localizeMessage(err, "error.startupStatus"), "err");
     }
   }
@@ -1215,7 +1277,9 @@ function initApp(invoke) {
       hideModal("del");
       await loadPasswords();
     } catch (err) {
-      notify(localizeMessage(err, "error.delete"), "err");
+      if (!(await handleAuthFailure(err))) {
+        notify(localizeMessage(err, "error.delete"), "err");
+      }
     }
 
     deleteId = null;
@@ -1265,6 +1329,9 @@ function initApp(invoke) {
         list.appendChild(makeCard(entries[i], i));
       }
     } catch (err) {
+      if (await handleAuthFailure(err)) {
+        return;
+      }
       notify(localizeMessage(err, "error.load"), "err");
     }
   }
@@ -1294,8 +1361,26 @@ function initApp(invoke) {
       '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>' +
       "</button>";
 
-    card.addEventListener("click", function (e) {
+    card.addEventListener("click", async function (e) {
       if (e.target.closest(".card-del")) return;
+
+      if (cachedSeedPhrase) {
+        try {
+          await invoke("copy_password", {
+            entryId: entry.id,
+            seedPhrase: cachedSeedPhrase,
+          });
+          notify(t("notify.passwordCopied"));
+          return;
+        } catch (err) {
+          if (await handleAuthFailure(err)) {
+            return;
+          }
+          cachedSeedPhrase = "";
+          notify(localizeMessage(err, "error.invalidSeed"), "err");
+        }
+      }
+
       currentId = entry.id;
       showModal("seed");
       setTimeout(function () {
@@ -1472,6 +1557,7 @@ function initApp(invoke) {
       try {
         await invoke("login", { username: u, password: p });
         setAuthenticated(true);
+        cachedSeedPhrase = "";
         await syncScreenshotGuardOnStart();
         await syncStartupOnStart();
         notify(t("notify.welcome"));
@@ -1518,7 +1604,7 @@ function initApp(invoke) {
         notify(t("error.passwordsMismatch"), "err");
         return;
       }
-      if (s.trim().split(/\s+/).length < 3) {
+      if (s.trim().split(/\s+/).filter(Boolean).length < 1) {
         notify(t("error.seedMin"), "err");
         return;
       }
@@ -1626,7 +1712,9 @@ function initApp(invoke) {
         showPage("dashboard");
         await loadPasswords();
       } catch (err) {
-        notify(localizeMessage(err, "error.save"), "err");
+        if (!(await handleAuthFailure(err))) {
+          notify(localizeMessage(err, "error.save"), "err");
+        }
       }
 
       setLoad("save-btn", false);
@@ -1643,7 +1731,7 @@ function initApp(invoke) {
   document
     .getElementById("modal-yes")
     .addEventListener("click", async function () {
-      var seed = document.getElementById("modal-seed").value;
+      var seed = document.getElementById("modal-seed").value.trim();
       if (!seed) {
         notify(t("error.enterSeed"), "err");
         return;
@@ -1657,14 +1745,20 @@ function initApp(invoke) {
 
       try {
         await invoke("copy_password", { entryId: currentId, seedPhrase: seed });
+        cachedSeedPhrase = seed;
         hideModal("seed");
         notify(t("notify.passwordCopied"));
+        currentId = null;
       } catch (err) {
+        if (await handleAuthFailure(err)) {
+          setLoad("modal-yes", false);
+          currentId = null;
+          return;
+        }
         notify(localizeMessage(err, "error.invalidSeed"), "err");
       }
 
       setLoad("modal-yes", false);
-      currentId = null;
     });
 
   document.getElementById("modal-no").addEventListener("click", function () {
@@ -1719,7 +1813,6 @@ function initApp(invoke) {
     if (e.ctrlKey && e.key === "u") e.preventDefault();
 
     if (e.key === "PrintScreen" && appSettings.screenshotGuardEnabled) {
-      e.preventDefault();
       notify(t("notify.screenshotsBlocked"), "err");
     }
 
@@ -1740,17 +1833,24 @@ function initApp(invoke) {
   async function init() {
     renderSettings();
 
+    var ok = false;
     try {
-      var ok = await invoke("is_authenticated");
-      if (ok) {
-        setAuthenticated(true);
-        await syncScreenshotGuardOnStart();
-        await syncStartupOnStart();
-        currentPage = "login";
-        showPage("dashboard");
-        await loadPasswords();
-      }
-    } catch (e) {}
+      ok = !!(await invoke("is_authenticated"));
+    } catch (e) {
+      ok = false;
+    }
+
+    if (ok) {
+      setAuthenticated(true);
+      await syncScreenshotGuardOnStart();
+      await syncStartupOnStart();
+      showPage("dashboard", { instant: true });
+      await loadPasswords();
+      return;
+    }
+
+    setAuthenticated(false);
+    showPage("login", { instant: true });
   }
 
   init();
