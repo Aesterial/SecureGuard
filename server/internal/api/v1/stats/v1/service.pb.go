@@ -25,23 +25,27 @@ var File_xyz_secureguard_v1_stats_v1_service_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_stats_v1_service_proto_rawDesc = "" +
 	"\n" +
-	")xyz/secureguard/v1/stats/v1/service.proto\x12\bstats.v1\x1a(xyz/secureguard/v1/stats/v1/domain.proto\x1a\x1bgoogle/protobuf/empty.proto2\x84\x01\n" +
+	")xyz/secureguard/v1/stats/v1/service.proto\x12\bstats.v1\x1a(xyz/secureguard/v1/stats/v1/domain.proto\x1a\x1bgoogle/protobuf/empty.proto2\xbe\x01\n" +
 	"\fStatsService\x128\n" +
 	"\x05Today\x12\x16.google.protobuf.Empty\x1a\x17.stats.v1.StatsResponse\x12:\n" +
-	"\x06ByDate\x12\x17.stats.v1.ByDateRequest\x1a\x17.stats.v1.StatsResponseBAZ?github.com/aesterial/secureguard/internal/api/v1/stats/v1;statsb\x06proto3"
+	"\x06ByDate\x12\x17.stats.v1.ByDateRequest\x1a\x17.stats.v1.StatsResponse\x128\n" +
+	"\x05Total\x12\x16.google.protobuf.Empty\x1a\x17.stats.v1.TotalResponseBAZ?github.com/aesterial/secureguard/internal/api/v1/stats/v1;statsb\x06proto3"
 
 var file_xyz_secureguard_v1_stats_v1_service_proto_goTypes = []any{
 	(*emptypb.Empty)(nil), // 0: google.protobuf.Empty
 	(*ByDateRequest)(nil), // 1: stats.v1.ByDateRequest
 	(*StatsResponse)(nil), // 2: stats.v1.StatsResponse
+	(*TotalResponse)(nil), // 3: stats.v1.TotalResponse
 }
 var file_xyz_secureguard_v1_stats_v1_service_proto_depIdxs = []int32{
 	0, // 0: stats.v1.StatsService.Today:input_type -> google.protobuf.Empty
 	1, // 1: stats.v1.StatsService.ByDate:input_type -> stats.v1.ByDateRequest
-	2, // 2: stats.v1.StatsService.Today:output_type -> stats.v1.StatsResponse
-	2, // 3: stats.v1.StatsService.ByDate:output_type -> stats.v1.StatsResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	0, // 2: stats.v1.StatsService.Total:input_type -> google.protobuf.Empty
+	2, // 3: stats.v1.StatsService.Today:output_type -> stats.v1.StatsResponse
+	2, // 4: stats.v1.StatsService.ByDate:output_type -> stats.v1.StatsResponse
+	3, // 5: stats.v1.StatsService.Total:output_type -> stats.v1.TotalResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

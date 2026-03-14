@@ -20,10 +20,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	logging "github.com/aesterial/secureguard/internal/app/logging"
 	dbclient "github.com/aesterial/secureguard/internal/infra/db"
 	"github.com/aesterial/secureguard/internal/infra/db/repos"
 	"github.com/aesterial/secureguard/internal/infra/server"
-	"github.com/aesterial/secureguard/internal/shared/logging"
 
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
 	passpb "github.com/aesterial/secureguard/internal/api/v1/passwords/v1"

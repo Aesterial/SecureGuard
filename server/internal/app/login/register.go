@@ -3,10 +3,10 @@ package loginapp
 import (
 	"context"
 
+	logging "github.com/aesterial/secureguard/internal/app/logging"
 	"github.com/aesterial/secureguard/internal/domain"
 	logindomain "github.com/aesterial/secureguard/internal/domain/login"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
-	"github.com/aesterial/secureguard/internal/shared/logging"
 )
 
 func (s *Service) Register(ctx context.Context, require logindomain.RegisterRequire, hash string) (*domain.UUID, *domain.UUID, error) {

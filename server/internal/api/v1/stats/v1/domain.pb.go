@@ -121,7 +121,7 @@ func (x *ByDateRequest) GetDay() *timestamppb.Timestamp {
 	return nil
 }
 
-type Total struct {
+type TotalResponse struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Users          int32                  `protobuf:"varint,1,opt,name=users,proto3" json:"users,omitempty"`
 	Admins         int32                  `protobuf:"varint,2,opt,name=admins,proto3" json:"admins,omitempty"`
@@ -131,20 +131,20 @@ type Total struct {
 	sizeCache      protoimpl.SizeCache
 }
 
-func (x *Total) Reset() {
-	*x = Total{}
+func (x *TotalResponse) Reset() {
+	*x = TotalResponse{}
 	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Total) String() string {
+func (x *TotalResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Total) ProtoMessage() {}
+func (*TotalResponse) ProtoMessage() {}
 
-func (x *Total) ProtoReflect() protoreflect.Message {
+func (x *TotalResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -156,33 +156,33 @@ func (x *Total) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Total.ProtoReflect.Descriptor instead.
-func (*Total) Descriptor() ([]byte, []int) {
+// Deprecated: Use TotalResponse.ProtoReflect.Descriptor instead.
+func (*TotalResponse) Descriptor() ([]byte, []int) {
 	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Total) GetUsers() int32 {
+func (x *TotalResponse) GetUsers() int32 {
 	if x != nil {
 		return x.Users
 	}
 	return 0
 }
 
-func (x *Total) GetAdmins() int32 {
+func (x *TotalResponse) GetAdmins() int32 {
 	if x != nil {
 		return x.Admins
 	}
 	return 0
 }
 
-func (x *Total) GetPasswords() int32 {
+func (x *TotalResponse) GetPasswords() int32 {
 	if x != nil {
 		return x.Passwords
 	}
 	return 0
 }
 
-func (x *Total) GetActiveSessions() int32 {
+func (x *TotalResponse) GetActiveSessions() int32 {
 	if x != nil {
 		return x.ActiveSessions
 	}
@@ -298,9 +298,8 @@ type StatsResponse struct {
 	TopServices   map[string]int32       `protobuf:"bytes,1,rep,name=top_services,json=topServices,proto3" json:"top_services,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	ActivityGraph []*GraphPoint          `protobuf:"bytes,3,rep,name=activity_graph,json=activityGraph,proto3" json:"activity_graph,omitempty"`
 	RegisterGraph []*GraphPoint          `protobuf:"bytes,2,rep,name=register_graph,json=registerGraph,proto3" json:"register_graph,omitempty"`
-	Total         *Total                 `protobuf:"bytes,4,opt,name=total,proto3" json:"total,omitempty"`
-	Crypt         map[string]int32       `protobuf:"bytes,5,rep,name=crypt,proto3" json:"crypt,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	Latency       *Latency               `protobuf:"bytes,6,opt,name=latency,proto3" json:"latency,omitempty"`
+	Crypt         map[string]int32       `protobuf:"bytes,4,rep,name=crypt,proto3" json:"crypt,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	Latency       *Latency               `protobuf:"bytes,5,opt,name=latency,proto3" json:"latency,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -356,13 +355,6 @@ func (x *StatsResponse) GetRegisterGraph() []*GraphPoint {
 	return nil
 }
 
-func (x *StatsResponse) GetTotal() *Total {
-	if x != nil {
-		return x.Total
-	}
-	return nil
-}
-
 func (x *StatsResponse) GetCrypt() map[string]int32 {
 	if x != nil {
 		return x.Crypt
@@ -383,8 +375,8 @@ const file_xyz_secureguard_v1_stats_v1_domain_proto_rawDesc = "" +
 	"\n" +
 	"(xyz/secureguard/v1/stats/v1/domain.proto\x12\bstats.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"=\n" +
 	"\rByDateRequest\x12,\n" +
-	"\x03day\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x03day\"|\n" +
-	"\x05Total\x12\x14\n" +
+	"\x03day\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x03day\"\x84\x01\n" +
+	"\rTotalResponse\x12\x14\n" +
 	"\x05users\x18\x01 \x01(\x05R\x05users\x12\x16\n" +
 	"\x06admins\x18\x02 \x01(\x05R\x06admins\x12\x1c\n" +
 	"\tpasswords\x18\x03 \x01(\x05R\tpasswords\x12'\n" +
@@ -395,14 +387,13 @@ const file_xyz_secureguard_v1_stats_v1_domain_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\x05R\x05value\"-\n" +
 	"\aLatency\x12\x10\n" +
 	"\x03p50\x18\x01 \x01(\x01R\x03p50\x12\x10\n" +
-	"\x03p90\x18\x02 \x01(\x01R\x03p90\"\xde\x03\n" +
+	"\x03p90\x18\x02 \x01(\x01R\x03p90\"\xb7\x03\n" +
 	"\rStatsResponse\x12K\n" +
 	"\ftop_services\x18\x01 \x03(\v2(.stats.v1.StatsResponse.TopServicesEntryR\vtopServices\x12;\n" +
 	"\x0eactivity_graph\x18\x03 \x03(\v2\x14.stats.v1.GraphPointR\ractivityGraph\x12;\n" +
-	"\x0eregister_graph\x18\x02 \x03(\v2\x14.stats.v1.GraphPointR\rregisterGraph\x12%\n" +
-	"\x05total\x18\x04 \x01(\v2\x0f.stats.v1.TotalR\x05total\x128\n" +
-	"\x05crypt\x18\x05 \x03(\v2\".stats.v1.StatsResponse.CryptEntryR\x05crypt\x12+\n" +
-	"\alatency\x18\x06 \x01(\v2\x11.stats.v1.LatencyR\alatency\x1a>\n" +
+	"\x0eregister_graph\x18\x02 \x03(\v2\x14.stats.v1.GraphPointR\rregisterGraph\x128\n" +
+	"\x05crypt\x18\x04 \x03(\v2\".stats.v1.StatsResponse.CryptEntryR\x05crypt\x12+\n" +
+	"\alatency\x18\x05 \x01(\v2\x11.stats.v1.LatencyR\alatency\x1a>\n" +
 	"\x10TopServicesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a8\n" +
@@ -435,7 +426,7 @@ var file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes = make([]protoimpl.Me
 var file_xyz_secureguard_v1_stats_v1_domain_proto_goTypes = []any{
 	(Fields)(0),                   // 0: stats.v1.Fields
 	(*ByDateRequest)(nil),         // 1: stats.v1.ByDateRequest
-	(*Total)(nil),                 // 2: stats.v1.Total
+	(*TotalResponse)(nil),         // 2: stats.v1.TotalResponse
 	(*GraphPoint)(nil),            // 3: stats.v1.GraphPoint
 	(*Latency)(nil),               // 4: stats.v1.Latency
 	(*StatsResponse)(nil),         // 5: stats.v1.StatsResponse
@@ -449,14 +440,13 @@ var file_xyz_secureguard_v1_stats_v1_domain_proto_depIdxs = []int32{
 	6, // 2: stats.v1.StatsResponse.top_services:type_name -> stats.v1.StatsResponse.TopServicesEntry
 	3, // 3: stats.v1.StatsResponse.activity_graph:type_name -> stats.v1.GraphPoint
 	3, // 4: stats.v1.StatsResponse.register_graph:type_name -> stats.v1.GraphPoint
-	2, // 5: stats.v1.StatsResponse.total:type_name -> stats.v1.Total
-	7, // 6: stats.v1.StatsResponse.crypt:type_name -> stats.v1.StatsResponse.CryptEntry
-	4, // 7: stats.v1.StatsResponse.latency:type_name -> stats.v1.Latency
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	7, // 5: stats.v1.StatsResponse.crypt:type_name -> stats.v1.StatsResponse.CryptEntry
+	4, // 6: stats.v1.StatsResponse.latency:type_name -> stats.v1.Latency
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_xyz_secureguard_v1_stats_v1_domain_proto_init() }

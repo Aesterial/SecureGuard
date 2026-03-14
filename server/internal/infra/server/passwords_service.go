@@ -6,11 +6,11 @@ import (
 
 	typespb "github.com/aesterial/secureguard/internal/api/v1"
 	passpb "github.com/aesterial/secureguard/internal/api/v1/passwords/v1"
+	logging "github.com/aesterial/secureguard/internal/app/logging"
 	passapp "github.com/aesterial/secureguard/internal/app/passwords"
 	"github.com/aesterial/secureguard/internal/domain"
 	passdomain "github.com/aesterial/secureguard/internal/domain/passwords"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
-	"github.com/aesterial/secureguard/internal/shared/logging"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

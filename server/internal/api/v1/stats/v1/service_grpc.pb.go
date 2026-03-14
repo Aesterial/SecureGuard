@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	StatsService_Today_FullMethodName  = "/stats.v1.StatsService/Today"
 	StatsService_ByDate_FullMethodName = "/stats.v1.StatsService/ByDate"
+	StatsService_Total_FullMethodName  = "/stats.v1.StatsService/Total"
 )
 
 // StatsServiceClient is the client API for StatsService service.
@@ -30,6 +31,7 @@ const (
 type StatsServiceClient interface {
 	Today(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StatsResponse, error)
 	ByDate(ctx context.Context, in *ByDateRequest, opts ...grpc.CallOption) (*StatsResponse, error)
+	Total(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*TotalResponse, error)
 }
 
 type statsServiceClient struct {
@@ -60,12 +62,23 @@ func (c *statsServiceClient) ByDate(ctx context.Context, in *ByDateRequest, opts
 	return out, nil
 }
 
+func (c *statsServiceClient) Total(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*TotalResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TotalResponse)
+	err := c.cc.Invoke(ctx, StatsService_Total_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // StatsServiceServer is the server API for StatsService service.
 // All implementations should embed UnimplementedStatsServiceServer
 // for forward compatibility.
 type StatsServiceServer interface {
 	Today(context.Context, *emptypb.Empty) (*StatsResponse, error)
 	ByDate(context.Context, *ByDateRequest) (*StatsResponse, error)
+	Total(context.Context, *emptypb.Empty) (*TotalResponse, error)
 }
 
 // UnimplementedStatsServiceServer should be embedded to have
@@ -80,6 +93,9 @@ func (UnimplementedStatsServiceServer) Today(context.Context, *emptypb.Empty) (*
 }
 func (UnimplementedStatsServiceServer) ByDate(context.Context, *ByDateRequest) (*StatsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ByDate not implemented")
+}
+func (UnimplementedStatsServiceServer) Total(context.Context, *emptypb.Empty) (*TotalResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Total not implemented")
 }
 func (UnimplementedStatsServiceServer) testEmbeddedByValue() {}
 
@@ -137,6 +153,24 @@ func _StatsService_ByDate_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _StatsService_Total_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StatsServiceServer).Total(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StatsService_Total_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StatsServiceServer).Total(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // StatsService_ServiceDesc is the grpc.ServiceDesc for StatsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -151,6 +185,10 @@ var StatsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ByDate",
 			Handler:    _StatsService_ByDate_Handler,
+		},
+		{
+			MethodName: "Total",
+			Handler:    _StatsService_Total_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -18,7 +18,7 @@ message ByDateRequest {
     google.protobuf.Timestamp day = 2;
 }
 
-message Total {
+message TotalResponse {
   int32 users = 1;
   int32 admins = 2;
   int32 passwords = 3;
@@ -39,7 +39,6 @@ message StatsResponse {
     map<string, int32> top_services = 1;
     repeated GraphPoint activity_graph = 3;
     repeated GraphPoint register_graph = 2;
-    Total total = 4;
-    map<string, int32> crypt = 5;
-    Latency latency = 6;
+    map<string, int32> crypt = 4;
+    Latency latency = 5;
 }

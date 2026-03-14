@@ -5,11 +5,11 @@ import (
 	"errors"
 
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
+	logging "github.com/aesterial/secureguard/internal/app/logging"
 	loginapp "github.com/aesterial/secureguard/internal/app/login"
 	userapp "github.com/aesterial/secureguard/internal/app/users"
 	logindomain "github.com/aesterial/secureguard/internal/domain/login"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
-	"github.com/aesterial/secureguard/internal/shared/logging"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

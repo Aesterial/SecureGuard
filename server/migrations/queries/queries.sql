@@ -133,3 +133,18 @@ update sessions set revoked = true where id = $1;
 
 -- name: IsSessionExists :one
 select exists (select 1 from sessions where id = $1);
+
+-- name: GetSavedStatsLatency :one
+select p50, p90 from statistics where at = $1 limit 1;
+
+-- name: GetTotalUsers :one
+select COUNT(*) from users limit 1;
+
+-- name: GetTotalPasswords :one
+select COUNT(*) from users limit 1;
+
+-- name: GetTotalAdmins :one
+select COUNT(*) from users where admin_access = true limit 1;
+
+-- name: GetTotalActiveSessions :one
+select COUNT(*) from sessions where revoked <> true limit 1;

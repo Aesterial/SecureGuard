@@ -217,6 +217,22 @@ func (q *Queries) GetPasswordOwner(ctx context.Context, id pgtype.UUID) (pgtype.
 	return owner, err
 }
 
+const getSavedStatsLatency = `-- name: GetSavedStatsLatency :one
+select p50, p90 from statistics where at = $1 limit 1
+`
+
+type GetSavedStatsLatencyRow struct {
+	P50 float64 `json:"p50"`
+	P90 float64 `json:"p90"`
+}
+
+func (q *Queries) GetSavedStatsLatency(ctx context.Context, at pgtype.Timestamptz) (GetSavedStatsLatencyRow, error) {
+	row := q.db.QueryRow(ctx, getSavedStatsLatency, at)
+	var i GetSavedStatsLatencyRow
+	err := row.Scan(&i.P50, &i.P90)
+	return i, err
+}
+
 const getSessionByID = `-- name: GetSessionByID :one
 select id, owner, client_hash, created, revoked
 from sessions
@@ -279,6 +295,50 @@ func (q *Queries) GetSessionOwner(ctx context.Context, id pgtype.UUID) (pgtype.U
 	var owner pgtype.UUID
 	err := row.Scan(&owner)
 	return owner, err
+}
+
+const getTotalActiveSessions = `-- name: GetTotalActiveSessions :one
+select COUNT(*) from sessions where revoked <> true limit 1
+`
+
+func (q *Queries) GetTotalActiveSessions(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalActiveSessions)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTotalAdmins = `-- name: GetTotalAdmins :one
+select COUNT(*) from users where admin_access = true limit 1
+`
+
+func (q *Queries) GetTotalAdmins(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalAdmins)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTotalPasswords = `-- name: GetTotalPasswords :one
+select COUNT(*) from users limit 1
+`
+
+func (q *Queries) GetTotalPasswords(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalPasswords)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTotalUsers = `-- name: GetTotalUsers :one
+select COUNT(*) from users limit 1
+`
+
+func (q *Queries) GetTotalUsers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalUsers)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const getUserByID = `-- name: GetUserByID :one

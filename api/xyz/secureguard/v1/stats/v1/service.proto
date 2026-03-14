@@ -10,4 +10,5 @@ import "google/protobuf/empty.proto";
 service StatsService {
     rpc Today(google.protobuf.Empty) returns (StatsResponse);
     rpc ByDate(ByDateRequest) returns (StatsResponse);
+    rpc Total(google.protobuf.Empty) returns (TotalResponse);
 }

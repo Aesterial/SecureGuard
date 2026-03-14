@@ -6,7 +6,7 @@ pub struct ByDateRequest {
     pub day: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
-pub struct Total {
+pub struct TotalResponse {
     #[prost(int32, tag = "1")]
     pub users: i32,
     #[prost(int32, tag = "2")]
@@ -38,11 +38,9 @@ pub struct StatsResponse {
     pub activity_graph: ::prost::alloc::vec::Vec<GraphPoint>,
     #[prost(message, repeated, tag = "2")]
     pub register_graph: ::prost::alloc::vec::Vec<GraphPoint>,
-    #[prost(message, optional, tag = "4")]
-    pub total: ::core::option::Option<Total>,
-    #[prost(map = "string, int32", tag = "5")]
+    #[prost(map = "string, int32", tag = "4")]
     pub crypt: ::std::collections::HashMap<::prost::alloc::string::String, i32>,
-    #[prost(message, optional, tag = "6")]
+    #[prost(message, optional, tag = "5")]
     pub latency: ::core::option::Option<Latency>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]

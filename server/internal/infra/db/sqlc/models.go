@@ -8,6 +8,13 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Activty struct {
+	ID        pgtype.UUID        `json:"id"`
+	Users     int32              `json:"users"`
+	Registers int32              `json:"registers"`
+	At        pgtype.Timestamptz `json:"at"`
+}
+
 type Password struct {
 	ID        pgtype.UUID        `json:"id"`
 	Owner     pgtype.UUID        `json:"owner"`
@@ -32,6 +39,15 @@ type Session struct {
 	Revoked    bool               `json:"revoked"`
 	Created    pgtype.Timestamptz `json:"created"`
 	Expires    pgtype.Timestamptz `json:"expires"`
+}
+
+type Statistic struct {
+	ID          pgtype.UUID        `json:"id"`
+	P50         float64            `json:"p50"`
+	P90         float64            `json:"p90"`
+	ServicesTop []byte             `json:"services_top"`
+	CryptUses   []byte             `json:"crypt_uses"`
+	At          pgtype.Timestamptz `json:"at"`
 }
 
 type User struct {
