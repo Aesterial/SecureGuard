@@ -599,7 +599,7 @@ function initApp(invoke) {
       return fallbackKey ? t(fallbackKey) : "";
     }
 
-    var text = String(raw);
+    var text = extractErrorText(raw);
     var knownKey = MESSAGE_KEY_BY_TEXT[text];
     if (knownKey) {
       return t(knownKey);
@@ -626,12 +626,99 @@ function initApp(invoke) {
       return false;
     }
 
-    var text = String(raw).toLowerCase();
+    var grpcCode = extractGrpcCode(raw);
+    if (grpcCode === 16) {
+      return true;
+    }
+
+    var text = extractErrorText(raw).toLowerCase();
     return (
+      text === "16" ||
       text.indexOf("не авториз") !== -1 ||
       text.indexOf("not authenticated") !== -1 ||
       text.indexOf("unauthenticated") !== -1
     );
+  }
+
+  function extractErrorText(raw) {
+    if (raw === undefined || raw === null) {
+      return "";
+    }
+
+    if (typeof raw === "string") {
+      return raw;
+    }
+
+    if (typeof raw === "object") {
+      if (typeof raw.message === "string" && raw.message.trim() !== "") {
+        return raw.message;
+      }
+      if (typeof raw.error === "string" && raw.error.trim() !== "") {
+        return raw.error;
+      }
+      if (
+        raw.details &&
+        typeof raw.details === "object" &&
+        typeof raw.details.message === "string" &&
+        raw.details.message.trim() !== ""
+      ) {
+        return raw.details.message;
+      }
+    }
+
+    return String(raw);
+  }
+
+  function parseErrorCodeValue(value) {
+    if (typeof value === "number" && isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      var normalized = value.trim().toLowerCase();
+      if (normalized === "unauthenticated") {
+        return 16;
+      }
+      if (/^-?\d+$/.test(normalized)) {
+        var parsed = parseInt(normalized, 10);
+        return isNaN(parsed) ? null : parsed;
+      }
+    }
+
+    return null;
+  }
+
+  function extractGrpcCode(raw) {
+    if (!raw || typeof raw !== "object") {
+      return null;
+    }
+
+    var candidates = [
+      raw.code,
+      raw.status,
+      raw.grpc_code,
+      raw.grpcCode,
+      raw.grpc_status,
+      raw.grpcStatus,
+    ];
+
+    if (raw.details && typeof raw.details === "object") {
+      candidates.push(
+        raw.details.code,
+        raw.details.status,
+        raw.details.grpc_code,
+        raw.details.grpcCode,
+      );
+    }
+
+    for (var i = 0; i < candidates.length; i += 1) {
+      var parsed = parseErrorCodeValue(candidates[i]);
+      if (parsed !== null) {
+        return parsed;
+      }
+    }
+
+    return null;
   }
 
   async function handleAuthFailure(err) {
@@ -1855,3 +1942,4 @@ function initApp(invoke) {
 
   init();
 }
+
