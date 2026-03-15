@@ -14,17 +14,37 @@ type Latency struct {
 	P90 float64
 }
 
+func percentile(sorted []float32, p float64) float64 {
+	n := len(sorted)
+	if n == 0 {
+		return 0
+	}
+
+	idx := int(math.Ceil(p*float64(n))) - 1
+	if idx < 0 {
+		idx = 0
+	}
+	if idx >= n {
+		idx = n - 1
+	}
+
+	return float64(sorted[idx])
+}
+
 func NewLatency(list []float32) Latency {
 	n := len(list)
 	if n == 0 {
 		return Latency{}
 	}
-	sort.Slice(list, func(i, j int) bool {
-		return list[i] < list[j]
+
+	sorted := append([]float32(nil), list...)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i] < sorted[j]
 	})
+
 	return Latency{
-		P50: math.Ceil(0.5*float64(len(list)) - 1),
-		P90: math.Ceil(0.9*float64(len(list)) - 1),
+		P50: percentile(sorted, 0.50),
+		P90: percentile(sorted, 0.90),
 	}
 }
 
@@ -109,8 +129,7 @@ type TimeRange struct {
 }
 
 func NewTimeRange(at time.Time) TimeRange {
-	now := time.Now()
-	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	startOfDay := time.Date(at.Year(), at.Month(), at.Day(), 0, 0, 0, 0, at.Location())
 	endOfDay := startOfDay.AddDate(0, 0, 1)
 	return TimeRange{
 		Start: startOfDay,

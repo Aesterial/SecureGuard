@@ -11,6 +11,47 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countUsersRegisteredBetween = `-- name: CountUsersRegisteredBetween :one
+select COUNT(*)
+from users
+where joined >= $1 and joined < $2
+`
+
+type CountUsersRegisteredBetweenParams struct {
+	Joined   pgtype.Timestamptz `json:"joined"`
+	Joined_2 pgtype.Timestamptz `json:"joined_2"`
+}
+
+func (q *Queries) CountUsersRegisteredBetween(ctx context.Context, arg CountUsersRegisteredBetweenParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countUsersRegisteredBetween, arg.Joined, arg.Joined_2)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const createActivitySnapshot = `-- name: CreateActivitySnapshot :exec
+insert into activity (
+    users,
+    registers,
+    at
+)
+select $1, $2, $3
+where not exists (
+    select 1 from activity where at = $3
+)
+`
+
+type CreateActivitySnapshotParams struct {
+	Users     int32              `json:"users"`
+	Registers int32              `json:"registers"`
+	At        pgtype.Timestamptz `json:"at"`
+}
+
+func (q *Queries) CreateActivitySnapshot(ctx context.Context, arg CreateActivitySnapshotParams) error {
+	_, err := q.db.Exec(ctx, createActivitySnapshot, arg.Users, arg.Registers, arg.At)
+	return err
+}
+
 const createPassword = `-- name: CreatePassword :one
 insert into passwords (
     owner,
@@ -68,6 +109,39 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (p
 	return id, err
 }
 
+const createStatisticsSnapshot = `-- name: CreateStatisticsSnapshot :exec
+insert into statistics (
+    p50,
+    p90,
+    services_top,
+    crypt_uses,
+    at
+)
+select $1, $2, $3, $4, $5
+where not exists (
+    select 1 from statistics where at = $5
+)
+`
+
+type CreateStatisticsSnapshotParams struct {
+	P50         float64            `json:"p50"`
+	P90         float64            `json:"p90"`
+	ServicesTop []byte             `json:"services_top"`
+	CryptUses   []byte             `json:"crypt_uses"`
+	At          pgtype.Timestamptz `json:"at"`
+}
+
+func (q *Queries) CreateStatisticsSnapshot(ctx context.Context, arg CreateStatisticsSnapshotParams) error {
+	_, err := q.db.Exec(ctx, createStatisticsSnapshot,
+		arg.P50,
+		arg.P90,
+		arg.ServicesTop,
+		arg.CryptUses,
+		arg.At,
+	)
+	return err
+}
+
 const createUser = `-- name: CreateUser :one
 insert into users (
     username,
@@ -98,80 +172,12 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
-const createStatisticsSnapshot = `-- name: CreateStatisticsSnapshot :exec
-insert into statistics (
-    p50,
-    p90,
-    services_top,
-    crypt_uses,
-    at
-)
-select $1, $2, $3, $4, $5
-where not exists (
-    select 1 from statistics where at = $5
-)
-`
-
-type CreateStatisticsSnapshotParams struct {
-	P50         float64            `json:"p50"`
-	P90         float64            `json:"p90"`
-	ServicesTop []byte             `json:"services_top"`
-	CryptUses   []byte             `json:"crypt_uses"`
-	At          pgtype.Timestamptz `json:"at"`
-}
-
-func (q *Queries) CreateStatisticsSnapshot(ctx context.Context, arg CreateStatisticsSnapshotParams) error {
-	_, err := q.db.Exec(ctx, createStatisticsSnapshot, arg.P50, arg.P90, arg.ServicesTop, arg.CryptUses, arg.At)
-	return err
-}
-
 const deletePassword = `-- name: DeletePassword :exec
 delete from passwords where id = $1
 `
 
 func (q *Queries) DeletePassword(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deletePassword, id)
-	return err
-}
-
-const countUsersRegisteredBetween = `-- name: CountUsersRegisteredBetween :one
-select COUNT(*)
-from users
-where joined >= $1 and joined < $2
-`
-
-type CountUsersRegisteredBetweenParams struct {
-	Joined   pgtype.Timestamptz `json:"joined"`
-	Joined_2 pgtype.Timestamptz `json:"joined_2"`
-}
-
-func (q *Queries) CountUsersRegisteredBetween(ctx context.Context, arg CountUsersRegisteredBetweenParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countUsersRegisteredBetween, arg.Joined, arg.Joined_2)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const createActivitySnapshot = `-- name: CreateActivitySnapshot :exec
-insert into activity (
-    users,
-    registers,
-    at
-)
-select $1, $2, $3
-where not exists (
-    select 1 from activity where at = $3
-)
-`
-
-type CreateActivitySnapshotParams struct {
-	Users     int32              `json:"users"`
-	Registers int32              `json:"registers"`
-	At        pgtype.Timestamptz `json:"at"`
-}
-
-func (q *Queries) CreateActivitySnapshot(ctx context.Context, arg CreateActivitySnapshotParams) error {
-	_, err := q.db.Exec(ctx, createActivitySnapshot, arg.Users, arg.Registers, arg.At)
 	return err
 }
 
@@ -356,7 +362,7 @@ func (q *Queries) GetListUsers(ctx context.Context, arg GetListUsersParams) ([]U
 }
 
 const getPasswordByID = `-- name: GetPasswordByID :one
-select id, owner, pass, created_at
+select id, owner, service, login, pass, created_at
 from passwords
 where id = $1
 limit 1
@@ -365,6 +371,8 @@ limit 1
 type GetPasswordByIDRow struct {
 	ID        pgtype.UUID        `json:"id"`
 	Owner     pgtype.UUID        `json:"owner"`
+	Service   string             `json:"service"`
+	Login     string             `json:"login"`
 	Pass      string             `json:"pass"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
@@ -375,6 +383,8 @@ func (q *Queries) GetPasswordByID(ctx context.Context, id pgtype.UUID) (GetPassw
 	err := row.Scan(
 		&i.ID,
 		&i.Owner,
+		&i.Service,
+		&i.Login,
 		&i.Pass,
 		&i.CreatedAt,
 	)
@@ -484,7 +494,7 @@ func (q *Queries) GetSessionOwner(ctx context.Context, id pgtype.UUID) (pgtype.U
 }
 
 const getTotalActiveSessions = `-- name: GetTotalActiveSessions :one
-select COUNT(*) from sessions where revoked <> true limit 1
+select count(*) from sessions where not revoked and expires > now()
 `
 
 func (q *Queries) GetTotalActiveSessions(ctx context.Context) (int64, error) {

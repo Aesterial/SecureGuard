@@ -49,6 +49,27 @@ func (s *PasswordsRepository) IsExists(ctx context.Context, id domain.UUID) (boo
 	return exists, nil
 }
 
+func (s *PasswordsRepository) GetInfo(ctx context.Context, target domain.UUID) (*passdomain.Password, error) {
+	exists, err := s.IsExists(ctx, target)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, apperrors.NotFound
+	}
+	info, err := s.querier.GetPasswordByID(ctx, target.PG())
+	if err != nil {
+		return nil, err
+	}
+	return &passdomain.Password{
+		ID:       target,
+		Service:  passdomain.ParseService(info.Service),
+		Login:    info.Login,
+		Password: info.Pass,
+		Created:  info.CreatedAt.Time,
+	}, nil
+}
+
 func (s *PasswordsRepository) GetList(ctx context.Context, target domain.UUID, limit, offset int32) (passdomain.Passwords, error) {
 	exists, err := s.isUserExists(ctx, target)
 	if err != nil {
@@ -120,7 +141,14 @@ func (s *PasswordsRepository) Update(ctx context.Context, target domain.UUID, up
 	default:
 		return nil, apperrors.InvalidArguments
 	}
-	return nil, err
+	if err != nil {
+		return nil, err
+	}
+	info, err := s.GetInfo(ctx, target)
+	if err != nil {
+		return nil, err
+	}
+	return info, nil
 }
 
 func (s *PasswordsRepository) Delete(ctx context.Context, target domain.UUID) error {

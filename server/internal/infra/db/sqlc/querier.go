@@ -14,8 +14,8 @@ type Querier interface {
 	CountUsersRegisteredBetween(ctx context.Context, arg CountUsersRegisteredBetweenParams) (int64, error)
 	CreateActivitySnapshot(ctx context.Context, arg CreateActivitySnapshotParams) error
 	CreatePassword(ctx context.Context, arg CreatePasswordParams) (Password, error)
-	CreateStatisticsSnapshot(ctx context.Context, arg CreateStatisticsSnapshotParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) (pgtype.UUID, error)
+	CreateStatisticsSnapshot(ctx context.Context, arg CreateStatisticsSnapshotParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeletePassword(ctx context.Context, id pgtype.UUID) error
 	GetActivityStatistics(ctx context.Context, arg GetActivityStatisticsParams) ([]GetActivityStatisticsRow, error)

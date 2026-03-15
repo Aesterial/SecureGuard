@@ -19,7 +19,7 @@ func (s *Service) Register(ctx context.Context, require logindomain.RegisterRequ
 		logging.Error("failed to generate password hash", logging.F("error", err.Error()))
 		return nil, nil, err
 	}
-	usr, err := s.usr.Create(ctx, require.Username, pass, require.Phrase)
+	usr, err := s.usr.Create(ctx, normal.Username, pass, require.Phrase)
 	if err != nil {
 		logging.Error("failed to create user", logging.F("error", err.Error()))
 		return nil, nil, err

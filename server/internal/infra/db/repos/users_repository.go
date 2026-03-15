@@ -98,7 +98,7 @@ func (u *UserRepository) GetByIDs(ctx context.Context, limit int32, ids ...domai
 	if err != nil {
 		return nil, err
 	}
-	var response = make(usersdomain.Users, 0, len(users))
+	var response = make(usersdomain.Users, len(users))
 	for i := range users {
 		prefs, err := u.querier.GetUserPreferences(ctx, users[i].ID)
 		if err != nil {
@@ -114,7 +114,7 @@ func (u *UserRepository) GetList(ctx context.Context, limit, offset int32) (user
 	if err != nil {
 		return nil, err
 	}
-	var response = make(usersdomain.Users, 0, len(usrs))
+	var response = make(usersdomain.Users, len(usrs))
 	for i := range usrs {
 		prefs, err := u.querier.GetUserPreferences(ctx, usrs[i].ID)
 		if err != nil {

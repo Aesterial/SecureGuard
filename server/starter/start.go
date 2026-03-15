@@ -28,8 +28,8 @@ import (
 
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
 	passpb "github.com/aesterial/secureguard/internal/api/v1/passwords/v1"
-	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
 	statspb "github.com/aesterial/secureguard/internal/api/v1/stats/v1"
+	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
 )
 
 func main() {
@@ -80,7 +80,7 @@ func main() {
 	loginServer := server.NewLoginService(usrService, loginService, authentificator)
 	passServer := server.NewPasswordsService(passService, authentificator)
 	statsServer := server.NewStatsService(statsService, authentificator)
-	
+
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			interceptors.LoggingServerInterceptor(),

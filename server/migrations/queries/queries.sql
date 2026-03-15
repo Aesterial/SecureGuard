@@ -71,7 +71,7 @@ delete from passwords where id = $1;
 select exists (select 1 from passwords where id = $1);
 
 -- name: GetPasswordByID :one
-select id, owner, pass, created_at
+select id, owner, service, login, pass, created_at
 from passwords
 where id = $1
 limit 1;
@@ -163,7 +163,7 @@ select COUNT(*) from users limit 1;
 select COUNT(*) from users where admin_access = true limit 1;
 
 -- name: GetTotalActiveSessions :one
-select COUNT(*) from sessions where revoked <> true limit 1;
+select count(*) from sessions where not revoked and expires > now();
 
 -- name: GetChoosenPreferencesCrypt :many
 select crypt from preferences;

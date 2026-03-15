@@ -5,19 +5,15 @@ import (
 	"time"
 
 	logging "github.com/aesterial/secureguard/internal/app/logging"
+	statsdomain "github.com/aesterial/secureguard/internal/domain/stats"
 )
 
-type persistenceRepository interface {
-	SaveDailyStatistics(ctx context.Context, at time.Time) error
-	SaveHourlyActivity(ctx context.Context, at time.Time) error
-}
-
 type PersistenceWorker struct {
-	repo persistenceRepository
+	repo statsdomain.PersistenceRepository
 	now  func() time.Time
 }
 
-func NewPersistenceWorker(repo persistenceRepository) *PersistenceWorker {
+func NewPersistenceWorker(repo statsdomain.PersistenceRepository) *PersistenceWorker {
 	return &PersistenceWorker{
 		repo: repo,
 		now:  time.Now,
