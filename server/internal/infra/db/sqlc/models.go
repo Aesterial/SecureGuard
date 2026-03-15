@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Activty struct {
+type Activity struct {
 	ID        pgtype.UUID        `json:"id"`
 	Users     int32              `json:"users"`
 	Registers int32              `json:"registers"`

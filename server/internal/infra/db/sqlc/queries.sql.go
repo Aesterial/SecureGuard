@@ -98,6 +98,33 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const createStatisticsSnapshot = `-- name: CreateStatisticsSnapshot :exec
+insert into statistics (
+    p50,
+    p90,
+    services_top,
+    crypt_uses,
+    at
+)
+select $1, $2, $3, $4, $5
+where not exists (
+    select 1 from statistics where at = $5
+)
+`
+
+type CreateStatisticsSnapshotParams struct {
+	P50         float64            `json:"p50"`
+	P90         float64            `json:"p90"`
+	ServicesTop []byte             `json:"services_top"`
+	CryptUses   []byte             `json:"crypt_uses"`
+	At          pgtype.Timestamptz `json:"at"`
+}
+
+func (q *Queries) CreateStatisticsSnapshot(ctx context.Context, arg CreateStatisticsSnapshotParams) error {
+	_, err := q.db.Exec(ctx, createStatisticsSnapshot, arg.P50, arg.P90, arg.ServicesTop, arg.CryptUses, arg.At)
+	return err
+}
+
 const deletePassword = `-- name: DeletePassword :exec
 delete from passwords where id = $1
 `
@@ -105,6 +132,154 @@ delete from passwords where id = $1
 func (q *Queries) DeletePassword(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, deletePassword, id)
 	return err
+}
+
+const countUsersRegisteredBetween = `-- name: CountUsersRegisteredBetween :one
+select COUNT(*)
+from users
+where joined >= $1 and joined < $2
+`
+
+type CountUsersRegisteredBetweenParams struct {
+	Joined   pgtype.Timestamptz `json:"joined"`
+	Joined_2 pgtype.Timestamptz `json:"joined_2"`
+}
+
+func (q *Queries) CountUsersRegisteredBetween(ctx context.Context, arg CountUsersRegisteredBetweenParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countUsersRegisteredBetween, arg.Joined, arg.Joined_2)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const createActivitySnapshot = `-- name: CreateActivitySnapshot :exec
+insert into activity (
+    users,
+    registers,
+    at
+)
+select $1, $2, $3
+where not exists (
+    select 1 from activity where at = $3
+)
+`
+
+type CreateActivitySnapshotParams struct {
+	Users     int32              `json:"users"`
+	Registers int32              `json:"registers"`
+	At        pgtype.Timestamptz `json:"at"`
+}
+
+func (q *Queries) CreateActivitySnapshot(ctx context.Context, arg CreateActivitySnapshotParams) error {
+	_, err := q.db.Exec(ctx, createActivitySnapshot, arg.Users, arg.Registers, arg.At)
+	return err
+}
+
+const getActivityStatistics = `-- name: GetActivityStatistics :many
+select users, registers, at from activity where at >= $1 AND at < $2
+`
+
+type GetActivityStatisticsParams struct {
+	At   pgtype.Timestamptz `json:"at"`
+	At_2 pgtype.Timestamptz `json:"at_2"`
+}
+
+type GetActivityStatisticsRow struct {
+	Users     int32              `json:"users"`
+	Registers int32              `json:"registers"`
+	At        pgtype.Timestamptz `json:"at"`
+}
+
+func (q *Queries) GetActivityStatistics(ctx context.Context, arg GetActivityStatisticsParams) ([]GetActivityStatisticsRow, error) {
+	rows, err := q.db.Query(ctx, getActivityStatistics, arg.At, arg.At_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetActivityStatisticsRow{}
+	for rows.Next() {
+		var i GetActivityStatisticsRow
+		if err := rows.Scan(&i.Users, &i.Registers, &i.At); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getChoosenPreferencesCrypt = `-- name: GetChoosenPreferencesCrypt :many
+select crypt from preferences
+`
+
+func (q *Queries) GetChoosenPreferencesCrypt(ctx context.Context) ([]string, error) {
+	rows, err := q.db.Query(ctx, getChoosenPreferencesCrypt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var crypt string
+		if err := rows.Scan(&crypt); err != nil {
+			return nil, err
+		}
+		items = append(items, crypt)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getChoosenPreferencesLanguage = `-- name: GetChoosenPreferencesLanguage :many
+select lang from preferences
+`
+
+func (q *Queries) GetChoosenPreferencesLanguage(ctx context.Context) ([]string, error) {
+	rows, err := q.db.Query(ctx, getChoosenPreferencesLanguage)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var lang string
+		if err := rows.Scan(&lang); err != nil {
+			return nil, err
+		}
+		items = append(items, lang)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getChoosenPreferencesTheme = `-- name: GetChoosenPreferencesTheme :many
+select theme from preferences
+`
+
+func (q *Queries) GetChoosenPreferencesTheme(ctx context.Context) ([]string, error) {
+	rows, err := q.db.Query(ctx, getChoosenPreferencesTheme)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var theme string
+		if err := rows.Scan(&theme); err != nil {
+			return nil, err
+		}
+		items = append(items, theme)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getIsUserAdmin = `-- name: GetIsUserAdmin :one
@@ -231,6 +406,17 @@ func (q *Queries) GetSavedStatsLatency(ctx context.Context, at pgtype.Timestampt
 	var i GetSavedStatsLatencyRow
 	err := row.Scan(&i.P50, &i.P90)
 	return i, err
+}
+
+const getServicesTopStats = `-- name: GetServicesTopStats :one
+select services_top from statistics where at = $1 limit 1
+`
+
+func (q *Queries) GetServicesTopStats(ctx context.Context, at pgtype.Timestamptz) ([]byte, error) {
+	row := q.db.QueryRow(ctx, getServicesTopStats, at)
+	var services_top []byte
+	err := row.Scan(&services_top)
+	return services_top, err
 }
 
 const getSessionByID = `-- name: GetSessionByID :one

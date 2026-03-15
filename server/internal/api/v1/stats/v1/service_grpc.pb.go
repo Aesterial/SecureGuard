@@ -20,9 +20,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	StatsService_Today_FullMethodName  = "/stats.v1.StatsService/Today"
-	StatsService_ByDate_FullMethodName = "/stats.v1.StatsService/ByDate"
-	StatsService_Total_FullMethodName  = "/stats.v1.StatsService/Total"
+	StatsService_Today_FullMethodName  = "/xyz.secureguard.v1.stats.v1.StatsService/Today"
+	StatsService_ByDate_FullMethodName = "/xyz.secureguard.v1.stats.v1.StatsService/ByDate"
+	StatsService_Total_FullMethodName  = "/xyz.secureguard.v1.stats.v1.StatsService/Total"
 )
 
 // StatsServiceClient is the client API for StatsService service.
@@ -175,7 +175,7 @@ func _StatsService_Total_Handler(srv interface{}, ctx context.Context, dec func(
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var StatsService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "stats.v1.StatsService",
+	ServiceName: "xyz.secureguard.v1.stats.v1.StatsService",
 	HandlerType: (*StatsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

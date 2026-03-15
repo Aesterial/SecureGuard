@@ -14,6 +14,7 @@ import (
 	loginapp "github.com/aesterial/secureguard/internal/app/login"
 	passapp "github.com/aesterial/secureguard/internal/app/passwords"
 	sessionsapp "github.com/aesterial/secureguard/internal/app/sessions"
+	statsapp "github.com/aesterial/secureguard/internal/app/stats"
 	usersapp "github.com/aesterial/secureguard/internal/app/users"
 	interceptors "github.com/aesterial/secureguard/internal/infra/server/interceptors"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
@@ -28,6 +29,7 @@ import (
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
 	passpb "github.com/aesterial/secureguard/internal/api/v1/passwords/v1"
 	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
+	statspb "github.com/aesterial/secureguard/internal/api/v1/stats/v1"
 )
 
 func main() {
@@ -64,17 +66,21 @@ func main() {
 	usrRepo := repos.NewUserRepository(conn.Querier())
 	sesRepo := repos.NewSessionsRepository(conn.Querier())
 	passRepo := repos.NewPasswordsRepository(conn.Querier())
+	statsRepo := repos.NewStatsRepository(conn.Querier())
 
 	usrService := usersapp.NewUserService(usrRepo)
 	sesService := sessionsapp.NewSessionService(sesRepo)
 	passService := passapp.NewPassService(passRepo)
+	statsService := statsapp.NewStatsService(statsRepo)
+	statsWorker := statsapp.NewPersistenceWorker(statsRepo)
 	loginService := loginapp.NewLoginService(usrRepo, sesService)
 
 	authentificator := server.NewAuthentificator(sesService, usrService)
 	usrServer := server.NewUserService(usrService, authentificator)
 	loginServer := server.NewLoginService(usrService, loginService, authentificator)
 	passServer := server.NewPasswordsService(passService, authentificator)
-
+	statsServer := server.NewStatsService(statsService, authentificator)
+	
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			interceptors.LoggingServerInterceptor(),
@@ -89,6 +95,8 @@ func main() {
 	loginpb.RegisterLoginServiceServer(server, loginServer)
 	userpb.RegisterUserServiceServer(server, usrServer)
 	passpb.RegisterPasswordServiceServer(server, passServer)
+	statspb.RegisterStatsServiceServer(server, statsServer)
+	statsWorker.Start(ctx)
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", cfg.Boot.Port))
 	if err != nil {
 		logging.Critical("failed to listen", logging.F("error", err.Error()))

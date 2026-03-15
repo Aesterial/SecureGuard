@@ -37,7 +37,7 @@ create table if not exists sessions (
   client_hash text not null,
   revoked boolean not null default false,
   created timestamptz not null default now(),
-  expires timestamptz not null default (now() + interval '30 minutes')
+  expires timestamptz not null default (now() + interval '90 minutes')
 );
 
 create index if not exists sessions_owner_idx on sessions (owner);
@@ -50,10 +50,12 @@ create table if not exists statistics (
   crypt_uses jsonb not null,
   at timestamptz not null
 );
+create index if not exists statistics_at_idx on statistics (at);
 
-create table if not exists activty (
+create table if not exists activity (
   id uuid primary key default pg_catalog.gen_random_uuid(),
   users integer not null check (users >= 0),
   registers integer not null check (registers >= 0),
-  at timestamptz primary key
+  at timestamptz not null
 );
+create index if not exists activity_at_idx on activity (at);

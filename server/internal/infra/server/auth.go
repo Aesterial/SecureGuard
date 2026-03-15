@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	logging "github.com/aesterial/secureguard/internal/app/logging"
 	sessionsapp "github.com/aesterial/secureguard/internal/app/sessions"
 	usersapp "github.com/aesterial/secureguard/internal/app/users"
 	"github.com/aesterial/secureguard/internal/domain"
@@ -73,15 +74,18 @@ func (a *Authentificator) User(ctx context.Context, checkStaff ...bool) (*authdo
 	var err error
 	metadata.Hash, err = a.deviceIdFromContext(ctx)
 	if err != nil {
+		logging.Error("Failed to get info from device context: " + err.Error())
 		return &metadata, err
 	}
 	session, err := a.idFromContext(ctx)
 	if err != nil {
+		logging.Error("failed to get id from context : " + err.Error())
 		return &metadata, err
 	}
 	metadata.SessionID = session
 	valid, err := a.ses.IsValid(ctx, *metadata.SessionID, metadata.Hash)
 	if err != nil {
+		logging.Error("failed to check is session valid: " + err.Error())
 		return &metadata, err
 	}
 	if !valid {
@@ -89,6 +93,7 @@ func (a *Authentificator) User(ctx context.Context, checkStaff ...bool) (*authdo
 	}
 	owner, err := a.ses.GetOwner(ctx, *metadata.SessionID)
 	if err != nil {
+		logging.Error("failed to get owner: " + err.Error())
 		return &metadata, err
 	}
 	if owner == nil {
@@ -97,6 +102,7 @@ func (a *Authentificator) User(ctx context.Context, checkStaff ...bool) (*authdo
 	if staffCheck {
 		staff, err := a.usr.IsAdmin(ctx, *owner)
 		if err != nil {
+			logging.Error("failed to check is user admin: " + err.Error())
 			return nil, apperrors.Wrap(err)
 		}
 		if !staff {

@@ -11,10 +11,17 @@ import (
 )
 
 type Querier interface {
+	CountUsersRegisteredBetween(ctx context.Context, arg CountUsersRegisteredBetweenParams) (int64, error)
+	CreateActivitySnapshot(ctx context.Context, arg CreateActivitySnapshotParams) error
 	CreatePassword(ctx context.Context, arg CreatePasswordParams) (Password, error)
+	CreateStatisticsSnapshot(ctx context.Context, arg CreateStatisticsSnapshotParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) (pgtype.UUID, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeletePassword(ctx context.Context, id pgtype.UUID) error
+	GetActivityStatistics(ctx context.Context, arg GetActivityStatisticsParams) ([]GetActivityStatisticsRow, error)
+	GetChoosenPreferencesCrypt(ctx context.Context) ([]string, error)
+	GetChoosenPreferencesLanguage(ctx context.Context) ([]string, error)
+	GetChoosenPreferencesTheme(ctx context.Context) ([]string, error)
 	GetIsUserAdmin(ctx context.Context, id pgtype.UUID) (bool, error)
 	GetIsUserExists(ctx context.Context, id pgtype.UUID) (bool, error)
 	GetIsUsernameExists(ctx context.Context, username string) (bool, error)
@@ -22,6 +29,7 @@ type Querier interface {
 	GetPasswordByID(ctx context.Context, id pgtype.UUID) (GetPasswordByIDRow, error)
 	GetPasswordOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	GetSavedStatsLatency(ctx context.Context, at pgtype.Timestamptz) (GetSavedStatsLatencyRow, error)
+	GetServicesTopStats(ctx context.Context, at pgtype.Timestamptz) ([]byte, error)
 	GetSessionByID(ctx context.Context, id pgtype.UUID) (GetSessionByIDRow, error)
 	GetSessionInfo(ctx context.Context, id pgtype.UUID) (GetSessionInfoRow, error)
 	GetSessionOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)

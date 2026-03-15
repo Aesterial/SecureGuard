@@ -52,5 +52,5 @@ pub struct StatsResponse {
     #[prost(message, optional, tag = "1")]
     pub stats: ::core::option::Option<Stats>,
 }
-include!("stats.v1.tonic.rs");
+include!("xyz.secureguard.v1.stats.v1.tonic.rs");
 // @@protoc_insertion_point(module)

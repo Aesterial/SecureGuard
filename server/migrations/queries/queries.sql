@@ -137,6 +137,22 @@ select exists (select 1 from sessions where id = $1);
 -- name: GetSavedStatsLatency :one
 select p50, p90 from statistics where at = $1 limit 1;
 
+-- name: GetServicesTopStats :one
+select services_top from statistics where at = $1 limit 1;
+
+-- name: CreateStatisticsSnapshot :exec
+insert into statistics (
+    p50,
+    p90,
+    services_top,
+    crypt_uses,
+    at
+)
+select $1, $2, $3, $4, $5
+where not exists (
+    select 1 from statistics where at = $5
+);
+
 -- name: GetTotalUsers :one
 select COUNT(*) from users limit 1;
 
@@ -148,3 +164,31 @@ select COUNT(*) from users where admin_access = true limit 1;
 
 -- name: GetTotalActiveSessions :one
 select COUNT(*) from sessions where revoked <> true limit 1;
+
+-- name: GetChoosenPreferencesCrypt :many
+select crypt from preferences;
+
+-- name: GetChoosenPreferencesLanguage :many
+select lang from preferences;
+
+-- name: GetChoosenPreferencesTheme :many
+select theme from preferences;
+
+-- name: CountUsersRegisteredBetween :one
+select COUNT(*)
+from users
+where joined >= $1 and joined < $2;
+
+-- name: CreateActivitySnapshot :exec
+insert into activity (
+    users,
+    registers,
+    at
+)
+select $1, $2, $3
+where not exists (
+    select 1 from activity where at = $3
+);
+
+-- name: GetActivityStatistics :many
+select users, registers, at from activity where at >= $1 AND at < $2;

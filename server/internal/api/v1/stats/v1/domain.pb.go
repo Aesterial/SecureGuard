@@ -22,61 +22,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Fields int32
-
-const (
-	Fields_FIELDS_UNSPECIFIED Fields = 0
-	Fields_FIELDS_ALL         Fields = 1
-	Fields_FIELDS_USERS       Fields = 2
-	Fields_FIELDS_PASSWORDS   Fields = 3
-	Fields_FIELDS_CRYPT       Fields = 4
-)
-
-// Enum value maps for Fields.
-var (
-	Fields_name = map[int32]string{
-		0: "FIELDS_UNSPECIFIED",
-		1: "FIELDS_ALL",
-		2: "FIELDS_USERS",
-		3: "FIELDS_PASSWORDS",
-		4: "FIELDS_CRYPT",
-	}
-	Fields_value = map[string]int32{
-		"FIELDS_UNSPECIFIED": 0,
-		"FIELDS_ALL":         1,
-		"FIELDS_USERS":       2,
-		"FIELDS_PASSWORDS":   3,
-		"FIELDS_CRYPT":       4,
-	}
-)
-
-func (x Fields) Enum() *Fields {
-	p := new(Fields)
-	*p = x
-	return p
-}
-
-func (x Fields) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (Fields) Descriptor() protoreflect.EnumDescriptor {
-	return file_xyz_secureguard_v1_stats_v1_domain_proto_enumTypes[0].Descriptor()
-}
-
-func (Fields) Type() protoreflect.EnumType {
-	return &file_xyz_secureguard_v1_stats_v1_domain_proto_enumTypes[0]
-}
-
-func (x Fields) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use Fields.Descriptor instead.
-func (Fields) EnumDescriptor() ([]byte, []int) {
-	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{0}
-}
-
 type ByDateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Day           *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=day,proto3" json:"day,omitempty"`
@@ -293,20 +238,108 @@ func (x *Latency) GetP90() float64 {
 	return 0
 }
 
-type StatsResponse struct {
+type Stats struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TopServices   map[string]int32       `protobuf:"bytes,1,rep,name=top_services,json=topServices,proto3" json:"top_services,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	ActivityGraph []*GraphPoint          `protobuf:"bytes,3,rep,name=activity_graph,json=activityGraph,proto3" json:"activity_graph,omitempty"`
+	UsersGraph    []*GraphPoint          `protobuf:"bytes,3,rep,name=users_graph,json=usersGraph,proto3" json:"users_graph,omitempty"`
 	RegisterGraph []*GraphPoint          `protobuf:"bytes,2,rep,name=register_graph,json=registerGraph,proto3" json:"register_graph,omitempty"`
-	Crypt         map[string]int32       `protobuf:"bytes,4,rep,name=crypt,proto3" json:"crypt,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	Latency       *Latency               `protobuf:"bytes,5,opt,name=latency,proto3" json:"latency,omitempty"`
+	CryptUses     map[string]int32       `protobuf:"bytes,4,rep,name=crypt_uses,json=cryptUses,proto3" json:"crypt_uses,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	ThemeUses     map[string]int32       `protobuf:"bytes,5,rep,name=theme_uses,json=themeUses,proto3" json:"theme_uses,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	LangUses      map[string]int32       `protobuf:"bytes,6,rep,name=lang_uses,json=langUses,proto3" json:"lang_uses,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	Latency       *Latency               `protobuf:"bytes,7,opt,name=latency,proto3" json:"latency,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Stats) Reset() {
+	*x = Stats{}
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Stats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Stats) ProtoMessage() {}
+
+func (x *Stats) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Stats.ProtoReflect.Descriptor instead.
+func (*Stats) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Stats) GetTopServices() map[string]int32 {
+	if x != nil {
+		return x.TopServices
+	}
+	return nil
+}
+
+func (x *Stats) GetUsersGraph() []*GraphPoint {
+	if x != nil {
+		return x.UsersGraph
+	}
+	return nil
+}
+
+func (x *Stats) GetRegisterGraph() []*GraphPoint {
+	if x != nil {
+		return x.RegisterGraph
+	}
+	return nil
+}
+
+func (x *Stats) GetCryptUses() map[string]int32 {
+	if x != nil {
+		return x.CryptUses
+	}
+	return nil
+}
+
+func (x *Stats) GetThemeUses() map[string]int32 {
+	if x != nil {
+		return x.ThemeUses
+	}
+	return nil
+}
+
+func (x *Stats) GetLangUses() map[string]int32 {
+	if x != nil {
+		return x.LangUses
+	}
+	return nil
+}
+
+func (x *Stats) GetLatency() *Latency {
+	if x != nil {
+		return x.Latency
+	}
+	return nil
+}
+
+type StatsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Stats         *Stats                 `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StatsResponse) Reset() {
 	*x = StatsResponse{}
-	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[4]
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -318,7 +351,7 @@ func (x *StatsResponse) String() string {
 func (*StatsResponse) ProtoMessage() {}
 
 func (x *StatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[4]
+	mi := &file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -331,40 +364,12 @@ func (x *StatsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StatsResponse.ProtoReflect.Descriptor instead.
 func (*StatsResponse) Descriptor() ([]byte, []int) {
-	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{4}
+	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *StatsResponse) GetTopServices() map[string]int32 {
+func (x *StatsResponse) GetStats() *Stats {
 	if x != nil {
-		return x.TopServices
-	}
-	return nil
-}
-
-func (x *StatsResponse) GetActivityGraph() []*GraphPoint {
-	if x != nil {
-		return x.ActivityGraph
-	}
-	return nil
-}
-
-func (x *StatsResponse) GetRegisterGraph() []*GraphPoint {
-	if x != nil {
-		return x.RegisterGraph
-	}
-	return nil
-}
-
-func (x *StatsResponse) GetCrypt() map[string]int32 {
-	if x != nil {
-		return x.Crypt
-	}
-	return nil
-}
-
-func (x *StatsResponse) GetLatency() *Latency {
-	if x != nil {
-		return x.Latency
+		return x.Stats
 	}
 	return nil
 }
@@ -373,7 +378,7 @@ var File_xyz_secureguard_v1_stats_v1_domain_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_stats_v1_domain_proto_rawDesc = "" +
 	"\n" +
-	"(xyz/secureguard/v1/stats/v1/domain.proto\x12\bstats.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"=\n" +
+	"(xyz/secureguard/v1/stats/v1/domain.proto\x12\x1bxyz.secureguard.v1.stats.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"=\n" +
 	"\rByDateRequest\x12,\n" +
 	"\x03day\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x03day\"\x84\x01\n" +
 	"\rTotalResponse\x12\x14\n" +
@@ -387,27 +392,32 @@ const file_xyz_secureguard_v1_stats_v1_domain_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\x05R\x05value\"-\n" +
 	"\aLatency\x12\x10\n" +
 	"\x03p50\x18\x01 \x01(\x01R\x03p50\x12\x10\n" +
-	"\x03p90\x18\x02 \x01(\x01R\x03p90\"\xb7\x03\n" +
-	"\rStatsResponse\x12K\n" +
-	"\ftop_services\x18\x01 \x03(\v2(.stats.v1.StatsResponse.TopServicesEntryR\vtopServices\x12;\n" +
-	"\x0eactivity_graph\x18\x03 \x03(\v2\x14.stats.v1.GraphPointR\ractivityGraph\x12;\n" +
-	"\x0eregister_graph\x18\x02 \x03(\v2\x14.stats.v1.GraphPointR\rregisterGraph\x128\n" +
-	"\x05crypt\x18\x04 \x03(\v2\".stats.v1.StatsResponse.CryptEntryR\x05crypt\x12+\n" +
-	"\alatency\x18\x05 \x01(\v2\x11.stats.v1.LatencyR\alatency\x1a>\n" +
+	"\x03p90\x18\x02 \x01(\x01R\x03p90\"\xa5\x06\n" +
+	"\x05Stats\x12V\n" +
+	"\ftop_services\x18\x01 \x03(\v23.xyz.secureguard.v1.stats.v1.Stats.TopServicesEntryR\vtopServices\x12H\n" +
+	"\vusers_graph\x18\x03 \x03(\v2'.xyz.secureguard.v1.stats.v1.GraphPointR\n" +
+	"usersGraph\x12N\n" +
+	"\x0eregister_graph\x18\x02 \x03(\v2'.xyz.secureguard.v1.stats.v1.GraphPointR\rregisterGraph\x12P\n" +
+	"\n" +
+	"crypt_uses\x18\x04 \x03(\v21.xyz.secureguard.v1.stats.v1.Stats.CryptUsesEntryR\tcryptUses\x12P\n" +
+	"\n" +
+	"theme_uses\x18\x05 \x03(\v21.xyz.secureguard.v1.stats.v1.Stats.ThemeUsesEntryR\tthemeUses\x12M\n" +
+	"\tlang_uses\x18\x06 \x03(\v20.xyz.secureguard.v1.stats.v1.Stats.LangUsesEntryR\blangUses\x12>\n" +
+	"\alatency\x18\a \x01(\v2$.xyz.secureguard.v1.stats.v1.LatencyR\alatency\x1a>\n" +
 	"\x10TopServicesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a8\n" +
-	"\n" +
-	"CryptEntry\x12\x10\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a<\n" +
+	"\x0eCryptUsesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01*j\n" +
-	"\x06Fields\x12\x16\n" +
-	"\x12FIELDS_UNSPECIFIED\x10\x00\x12\x0e\n" +
-	"\n" +
-	"FIELDS_ALL\x10\x01\x12\x10\n" +
-	"\fFIELDS_USERS\x10\x02\x12\x14\n" +
-	"\x10FIELDS_PASSWORDS\x10\x03\x12\x10\n" +
-	"\fFIELDS_CRYPT\x10\x04BAZ?github.com/aesterial/secureguard/internal/api/v1/stats/v1;statsb\x06proto3"
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a<\n" +
+	"\x0eThemeUsesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a;\n" +
+	"\rLangUsesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"I\n" +
+	"\rStatsResponse\x128\n" +
+	"\x05stats\x18\x01 \x01(\v2\".xyz.secureguard.v1.stats.v1.StatsR\x05statsBAZ?github.com/aesterial/secureguard/internal/api/v1/stats/v1;statsb\x06proto3"
 
 var (
 	file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescOnce sync.Once
@@ -421,32 +431,36 @@ func file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescGZIP() []byte {
 	return file_xyz_secureguard_v1_stats_v1_domain_proto_rawDescData
 }
 
-var file_xyz_secureguard_v1_stats_v1_domain_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_xyz_secureguard_v1_stats_v1_domain_proto_goTypes = []any{
-	(Fields)(0),                   // 0: stats.v1.Fields
-	(*ByDateRequest)(nil),         // 1: stats.v1.ByDateRequest
-	(*TotalResponse)(nil),         // 2: stats.v1.TotalResponse
-	(*GraphPoint)(nil),            // 3: stats.v1.GraphPoint
-	(*Latency)(nil),               // 4: stats.v1.Latency
-	(*StatsResponse)(nil),         // 5: stats.v1.StatsResponse
-	nil,                           // 6: stats.v1.StatsResponse.TopServicesEntry
-	nil,                           // 7: stats.v1.StatsResponse.CryptEntry
-	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(*ByDateRequest)(nil),         // 0: xyz.secureguard.v1.stats.v1.ByDateRequest
+	(*TotalResponse)(nil),         // 1: xyz.secureguard.v1.stats.v1.TotalResponse
+	(*GraphPoint)(nil),            // 2: xyz.secureguard.v1.stats.v1.GraphPoint
+	(*Latency)(nil),               // 3: xyz.secureguard.v1.stats.v1.Latency
+	(*Stats)(nil),                 // 4: xyz.secureguard.v1.stats.v1.Stats
+	(*StatsResponse)(nil),         // 5: xyz.secureguard.v1.stats.v1.StatsResponse
+	nil,                           // 6: xyz.secureguard.v1.stats.v1.Stats.TopServicesEntry
+	nil,                           // 7: xyz.secureguard.v1.stats.v1.Stats.CryptUsesEntry
+	nil,                           // 8: xyz.secureguard.v1.stats.v1.Stats.ThemeUsesEntry
+	nil,                           // 9: xyz.secureguard.v1.stats.v1.Stats.LangUsesEntry
+	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
 }
 var file_xyz_secureguard_v1_stats_v1_domain_proto_depIdxs = []int32{
-	8, // 0: stats.v1.ByDateRequest.day:type_name -> google.protobuf.Timestamp
-	8, // 1: stats.v1.GraphPoint.time:type_name -> google.protobuf.Timestamp
-	6, // 2: stats.v1.StatsResponse.top_services:type_name -> stats.v1.StatsResponse.TopServicesEntry
-	3, // 3: stats.v1.StatsResponse.activity_graph:type_name -> stats.v1.GraphPoint
-	3, // 4: stats.v1.StatsResponse.register_graph:type_name -> stats.v1.GraphPoint
-	7, // 5: stats.v1.StatsResponse.crypt:type_name -> stats.v1.StatsResponse.CryptEntry
-	4, // 6: stats.v1.StatsResponse.latency:type_name -> stats.v1.Latency
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	10, // 0: xyz.secureguard.v1.stats.v1.ByDateRequest.day:type_name -> google.protobuf.Timestamp
+	10, // 1: xyz.secureguard.v1.stats.v1.GraphPoint.time:type_name -> google.protobuf.Timestamp
+	6,  // 2: xyz.secureguard.v1.stats.v1.Stats.top_services:type_name -> xyz.secureguard.v1.stats.v1.Stats.TopServicesEntry
+	2,  // 3: xyz.secureguard.v1.stats.v1.Stats.users_graph:type_name -> xyz.secureguard.v1.stats.v1.GraphPoint
+	2,  // 4: xyz.secureguard.v1.stats.v1.Stats.register_graph:type_name -> xyz.secureguard.v1.stats.v1.GraphPoint
+	7,  // 5: xyz.secureguard.v1.stats.v1.Stats.crypt_uses:type_name -> xyz.secureguard.v1.stats.v1.Stats.CryptUsesEntry
+	8,  // 6: xyz.secureguard.v1.stats.v1.Stats.theme_uses:type_name -> xyz.secureguard.v1.stats.v1.Stats.ThemeUsesEntry
+	9,  // 7: xyz.secureguard.v1.stats.v1.Stats.lang_uses:type_name -> xyz.secureguard.v1.stats.v1.Stats.LangUsesEntry
+	3,  // 8: xyz.secureguard.v1.stats.v1.Stats.latency:type_name -> xyz.secureguard.v1.stats.v1.Latency
+	4,  // 9: xyz.secureguard.v1.stats.v1.StatsResponse.stats:type_name -> xyz.secureguard.v1.stats.v1.Stats
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_xyz_secureguard_v1_stats_v1_domain_proto_init() }
@@ -459,14 +473,13 @@ func file_xyz_secureguard_v1_stats_v1_domain_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_xyz_secureguard_v1_stats_v1_domain_proto_rawDesc), len(file_xyz_secureguard_v1_stats_v1_domain_proto_rawDesc)),
-			NumEnums:      1,
-			NumMessages:   7,
+			NumEnums:      0,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_xyz_secureguard_v1_stats_v1_domain_proto_goTypes,
 		DependencyIndexes: file_xyz_secureguard_v1_stats_v1_domain_proto_depIdxs,
-		EnumInfos:         file_xyz_secureguard_v1_stats_v1_domain_proto_enumTypes,
 		MessageInfos:      file_xyz_secureguard_v1_stats_v1_domain_proto_msgTypes,
 	}.Build()
 	File_xyz_secureguard_v1_stats_v1_domain_proto = out.File

@@ -1,21 +1,13 @@
 syntax = "proto3";
 
-package stats.v1;
+package xyz.secureguard.v1.stats.v1;
 
 option go_package = "github.com/aesterial/secureguard/internal/api/v1/stats/v1;stats";
 
 import "google/protobuf/timestamp.proto";
 
-enum Fields {
-    FIELDS_UNSPECIFIED = 0;
-    FIELDS_ALL = 1;
-    FIELDS_USERS = 2;
-    FIELDS_PASSWORDS = 3;
-    FIELDS_CRYPT = 4;
-}
-
 message ByDateRequest {
-    google.protobuf.Timestamp day = 2;
+  google.protobuf.Timestamp day = 2;
 }
 
 message TotalResponse {
@@ -35,10 +27,16 @@ message Latency {
   double p90 = 2;
 }
 
+message Stats {
+  map<string, int32> top_services = 1;
+  repeated GraphPoint users_graph = 3;
+  repeated GraphPoint register_graph = 2;
+  map<string, int32> crypt_uses = 4;
+  map<string, int32> theme_uses = 5;
+  map<string, int32> lang_uses = 6;
+  Latency latency = 7;
+}
+
 message StatsResponse {
-    map<string, int32> top_services = 1;
-    repeated GraphPoint activity_graph = 3;
-    repeated GraphPoint register_graph = 2;
-    map<string, int32> crypt = 4;
-    Latency latency = 5;
+  Stats stats = 1;
 }

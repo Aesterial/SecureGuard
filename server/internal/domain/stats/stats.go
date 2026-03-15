@@ -82,23 +82,23 @@ func (t *Total) Protobuf() *statspb.TotalResponse {
 	}
 }
 
-type CryptUses map[string]int32
 type ServicesTop map[string]int32
 
 type Stats struct {
 	Services ServicesTop
-	Activity GraphPoints
-	Register GraphPoints
-	Crypt    CryptUses
-	Latency  Latency
+	Activity *ActivityStats
+	Selected *PreferencesStats
+	Latency  *Latency
 }
 
-func (s *Stats) Protobuf() *statspb.StatsResponse {
-	return &statspb.StatsResponse{
+func (s *Stats) Protobuf() *statspb.Stats {
+	return &statspb.Stats{
 		TopServices:   s.Services,
-		ActivityGraph: s.Activity.Protobuf(),
-		RegisterGraph: s.Register.Protobuf(),
-		Crypt:         s.Crypt,
+		UsersGraph:    s.Activity.Users.Protobuf(),
+		RegisterGraph: s.Activity.Register.Protobuf(),
+		LangUses:      s.Selected.Lang,
+		CryptUses:     s.Selected.Crypt,
+		ThemeUses:     s.Selected.Theme,
 		Latency:       s.Latency.Protobuf(),
 	}
 }
@@ -120,4 +120,15 @@ func NewTimeRange(at time.Time) TimeRange {
 
 func (t TimeRange) IsZero() bool {
 	return t.Start.IsZero() || t.End.IsZero()
+}
+
+type PreferencesStats struct {
+	Theme map[string]int32
+	Lang  map[string]int32
+	Crypt map[string]int32
+}
+
+type ActivityStats struct {
+	Users    GraphPoints
+	Register GraphPoints
 }
