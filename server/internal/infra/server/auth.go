@@ -74,12 +74,10 @@ func (a *Authentificator) User(ctx context.Context, checkStaff ...bool) (*authdo
 	var err error
 	metadata.Hash, err = a.deviceIdFromContext(ctx)
 	if err != nil {
-		logging.Error("Failed to get info from device context: " + err.Error())
 		return &metadata, err
 	}
 	session, err := a.idFromContext(ctx)
 	if err != nil {
-		logging.Error("failed to get id from context : " + err.Error())
 		return &metadata, err
 	}
 	metadata.SessionID = session
