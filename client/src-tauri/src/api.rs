@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::hash_map::DefaultHasher;
+use std::collections::{hash_map::DefaultHasher, HashMap};
 use std::env;
 use std::hash::{Hash, Hasher};
 use tonic::metadata::MetadataValue;
@@ -40,11 +40,20 @@ pub mod xyz {
                     ));
                 }
             }
+
+            pub mod stats {
+                pub mod v1 {
+                    include!(concat!(
+                        env!("CARGO_MANIFEST_DIR"),
+                        "/../grpc/xyz/secureguard/v1/stats/v1/xyz.secureguard.v1.stats.v1.rs"
+                    ));
+                }
+            }
         }
     }
 }
 
-const DEFAULT_BACKEND: &str = "http://127.0.0.1:8080";
+const DEFAULT_BACKEND: &str = "http://127.0.0.1:50051";
 const DEFAULT_ENCRYPTION_ALGORITHM: &str = "aes256gcm-argon2id";
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -55,6 +64,40 @@ pub struct PasswordEntry {
     pub salt: String,
     pub encryption_algorithm: String,
     pub created_at: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct AuthProfile {
+    pub id: String,
+    pub username: String,
+    pub staff: bool,
+    pub has_preferences: bool,
+    pub light_theme_enabled: bool,
+    pub language: String,
+    pub encryption_algorithm: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct StatsTotal {
+    pub users: i32,
+    pub admins: i32,
+    pub passwords: i32,
+    pub active_sessions: i32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct StatsGraphPoint {
+    pub time: i64,
+    pub value: i32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct AdminStats {
+    pub top_services: HashMap<String, i32>,
+    pub activity_graph: Vec<StatsGraphPoint>,
+    pub register_graph: Vec<StatsGraphPoint>,
+    pub total: StatsTotal,
+    pub crypt: HashMap<String, i32>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -157,7 +200,11 @@ impl ApiClient {
         Ok(())
     }
 
-    pub async fn authorize(&mut self, username: &str, password: &str) -> Result<(), String> {
+    pub async fn authorize(
+        &mut self,
+        username: &str,
+        password: &str,
+    ) -> Result<AuthProfile, String> {
         use xyz::secureguard::v1::login::v1::login_service_client::LoginServiceClient;
         use xyz::secureguard::v1::login::v1::AuthorizeRequest;
 
@@ -169,12 +216,44 @@ impl ApiClient {
         };
         let req = self.with_client_metadata(Request::new(request))?;
         let response = client.authorize(req).await.map_err(map_tonic_error)?;
-        let session = response.into_inner().session;
+        let payload = response.into_inner();
+        let session = payload.session;
         if session.trim().is_empty() {
             return Err("Сервер не вернул сессию".into());
         }
         self.session = Some(session);
-        Ok(())
+        Ok(payload.info.map_or_else(
+            || AuthProfile {
+                id: String::new(),
+                username: username.to_string(),
+                staff: false,
+                has_preferences: false,
+                light_theme_enabled: false,
+                language: String::new(),
+                encryption_algorithm: String::new(),
+            },
+            |info| {
+                let preferences = info.preferences;
+                AuthProfile {
+                    id: info.id,
+                    username: info.username,
+                    staff: info.staff,
+                    has_preferences: preferences.is_some(),
+                    light_theme_enabled: preferences
+                        .as_ref()
+                        .map(|value| map_theme(value.theme))
+                        .unwrap_or(false),
+                    language: preferences
+                        .as_ref()
+                        .map(|value| map_language(value.lang))
+                        .unwrap_or_default(),
+                    encryption_algorithm: preferences
+                        .as_ref()
+                        .map(|value| map_crypt(value.crypto))
+                        .unwrap_or_default(),
+                }
+            },
+        ))
     }
 
     pub async fn logout(&self) -> Result<(), String> {
@@ -238,6 +317,47 @@ impl ApiClient {
         Ok(out)
     }
 
+    pub async fn get_admin_stats(&self) -> Result<AdminStats, String> {
+        use xyz::secureguard::v1::stats::v1::stats_service_client::StatsServiceClient;
+
+        let channel = self.connect().await?;
+        let mut client = StatsServiceClient::new(channel);
+
+        let today_req = self.with_auth_metadata(Request::new(()))?;
+        let today = client.today(today_req).await.map_err(map_tonic_error)?;
+
+        let total_req = self.with_auth_metadata(Request::new(()))?;
+        let total = client.total(total_req).await.map_err(map_tonic_error)?;
+
+        let stats = today.into_inner().stats;
+        let total = total.into_inner();
+
+        Ok(AdminStats {
+            top_services: stats
+                .as_ref()
+                .map(|value| value.top_services.clone())
+                .unwrap_or_default(),
+            activity_graph: stats
+                .as_ref()
+                .map(|value| serialize_graph_points(&value.users_graph))
+                .unwrap_or_default(),
+            register_graph: stats
+                .as_ref()
+                .map(|value| serialize_graph_points(&value.register_graph))
+                .unwrap_or_default(),
+            total: StatsTotal {
+                users: total.users,
+                admins: total.admins,
+                passwords: total.passwords,
+                active_sessions: total.active_sessions,
+            },
+            crypt: stats
+                .as_ref()
+                .map(|value| value.crypt_uses.clone())
+                .unwrap_or_default(),
+        })
+    }
+
     pub async fn add_password(&self, entry: PasswordEntry) -> Result<PasswordEntry, String> {
         use xyz::secureguard::v1::passwords::v1::password_service_client::PasswordServiceClient;
         use xyz::secureguard::v1::passwords::v1::CreateRequest;
@@ -245,21 +365,21 @@ impl ApiClient {
         let channel = self.connect().await?;
         let mut client = PasswordServiceClient::new(channel);
 
-        let metadata = PasswordPayload {
-            id: uuid::Uuid::new_v4().to_string(),
+        let payload = PasswordPayload {
+            id: entry.id.clone(),
             title: entry.title.clone(),
-            encrypted_password: String::new(),
+            encrypted_password: entry.encrypted_password.clone(),
             salt: entry.salt.clone(),
             encryption_algorithm: normalize_encryption(&entry.encryption_algorithm),
             created_at: entry.created_at.clone(),
         };
-        let packed_metadata =
-            serde_json::to_string(&metadata).map_err(|e| format!("Payload: {}", e))?;
+        let packed_payload =
+            serde_json::to_string(&payload).map_err(|e| format!("Payload: {}", e))?;
 
         let request = CreateRequest {
             service_url: entry.title.clone(),
-            login: packed_metadata,
-            pass: entry.encrypted_password.clone(),
+            login: entry.title.clone(),
+            pass: packed_payload,
             salt: entry.salt.clone(),
         };
         let req = self.with_auth_metadata(Request::new(request))?;
@@ -363,6 +483,18 @@ fn normalize_language(value: &str) -> String {
     }
 }
 
+fn serialize_graph_points(
+    points: &[xyz::secureguard::v1::stats::v1::GraphPoint],
+) -> Vec<StatsGraphPoint> {
+    points
+        .iter()
+        .map(|point| StatsGraphPoint {
+            time: timestamp_to_unix_seconds(point.time.clone()),
+            value: point.value,
+        })
+        .collect()
+}
+
 fn decode_password_entry(
     item: &xyz::secureguard::v1::passwords::v1::Password,
     fallback_created_at: String,
@@ -443,22 +575,40 @@ fn fill_payload_defaults(
 }
 
 fn build_fallback_entry_id(item: &xyz::secureguard::v1::passwords::v1::Password) -> String {
-    let mut hasher = DefaultHasher::new();
+    let mut seed = String::new();
 
     if let Some(service) = item.serv.as_ref() {
-        service.name.hash(&mut hasher);
-        service.url.hash(&mut hasher);
+        seed.push_str(&service.name);
+        seed.push('|');
+        seed.push_str(&service.url);
+        seed.push('|');
     }
 
-    item.login.hash(&mut hasher);
-    item.pass.hash(&mut hasher);
+    seed.push_str(&item.login);
+    seed.push('|');
+    seed.push_str(&item.pass);
 
     if let Some(ts) = item.created_at.as_ref() {
-        ts.seconds.hash(&mut hasher);
-        ts.nanos.hash(&mut hasher);
+        seed.push('|');
+        seed.push_str(&ts.seconds.to_string());
+        seed.push('|');
+        seed.push_str(&ts.nanos.to_string());
     }
 
-    format!("sg-{:016x}", hasher.finish())
+    let mut first = DefaultHasher::new();
+    seed.hash(&mut first);
+
+    let mut second = DefaultHasher::new();
+    "fallback".hash(&mut second);
+    seed.hash(&mut second);
+
+    let mut bytes = [0_u8; 16];
+    bytes[..8].copy_from_slice(&first.finish().to_be_bytes());
+    bytes[8..].copy_from_slice(&second.finish().to_be_bytes());
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+    uuid::Uuid::from_bytes(bytes).to_string()
 }
 
 fn timestamp_to_string(value: Option<prost_types::Timestamp>) -> String {
@@ -473,6 +623,36 @@ fn timestamp_to_string(value: Option<prost_types::Timestamp>) -> String {
     String::new()
 }
 
+fn timestamp_to_unix_seconds(value: Option<prost_types::Timestamp>) -> i64 {
+    value.map(|ts| ts.seconds).unwrap_or_default()
+}
+
+fn map_theme(value: i32) -> bool {
+    use xyz::secureguard::v1::users::v1::Theme;
+
+    matches!(Theme::try_from(value).ok(), Some(Theme::White))
+}
+
+fn map_language(value: i32) -> String {
+    use xyz::secureguard::v1::users::v1::Language;
+
+    match Language::try_from(value).ok() {
+        Some(Language::En) => "en".to_string(),
+        Some(Language::Ru) => "ru".to_string(),
+        _ => String::new(),
+    }
+}
+
+fn map_crypt(value: i32) -> String {
+    use xyz::secureguard::v1::users::v1::Crypt;
+
+    match Crypt::try_from(value).ok() {
+        Some(Crypt::Sha256) => "aes256gcm-sha256".to_string(),
+        Some(Crypt::Argon2id) => "aes256gcm-argon2id".to_string(),
+        _ => String::new(),
+    }
+}
+
 fn map_tonic_error(status: Status) -> String {
     if status.code() == Code::Unauthenticated {
         return "Not authenticated".to_string();
@@ -483,6 +663,7 @@ fn map_tonic_error(status: Status) -> String {
     }
 
     match status.code() {
+        Code::PermissionDenied => "Access denied".to_string(),
         Code::Unauthenticated => "Не авторизован".to_string(),
         Code::NotFound => "Не найдено".to_string(),
         Code::AlreadyExists => "Уже существует".to_string(),

@@ -8,7 +8,7 @@ mod crypto;
 mod protection;
 mod screenshot_guard;
 
-use api::{ApiClient, PasswordEntry};
+use api::{AdminStats, ApiClient, AuthProfile, PasswordEntry};
 use crypto::{
     decrypt_password, default_encryption_algorithm, encrypt_password, resolve_encryption_algorithm,
 };
@@ -19,6 +19,7 @@ use std::os::windows::ffi::OsStrExt;
 #[cfg(target_os = "windows")]
 use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex as StdMutex;
 use tauri::{ClipboardManager, Manager, State};
 use tokio::sync::Mutex;
 #[cfg(target_os = "windows")]
@@ -39,6 +40,7 @@ use winreg::RegKey;
 struct AppState {
     authenticated: AtomicBool,
     api: Mutex<ApiClient>,
+    current_user: StdMutex<Option<AuthProfile>>,
 }
 
 #[cfg(target_os = "windows")]
@@ -54,6 +56,9 @@ fn is_not_authenticated_error(message: &str) -> bool {
 fn clear_auth_state(state: &State<'_, AppState>, api: &mut ApiClient) {
     api.clear_session();
     state.authenticated.store(false, Ordering::SeqCst);
+    if let Ok(mut current_user) = state.current_user.lock() {
+        *current_user = None;
+    }
 }
 
 #[tauri::command]
@@ -61,7 +66,7 @@ async fn login(
     state: State<'_, AppState>,
     username: String,
     password: String,
-) -> Result<String, String> {
+) -> Result<AuthProfile, String> {
     let username = username.trim();
     if username.is_empty() || password.trim().is_empty() {
         return Err("Введите логин и пароль".into());
@@ -69,11 +74,13 @@ async fn login(
 
     {
         let mut api = state.api.lock().await;
-        api.authorize(username, &password).await?;
+        let profile = api.authorize(username, &password).await?;
+        if let Ok(mut current_user) = state.current_user.lock() {
+            *current_user = Some(profile.clone());
+        }
+        state.authenticated.store(true, Ordering::SeqCst);
+        return Ok(profile);
     }
-
-    state.authenticated.store(true, Ordering::SeqCst);
-    Ok("OK".into())
 }
 
 #[tauri::command]
@@ -102,6 +109,10 @@ async fn register(
         api.clear_session();
     }
 
+    if let Ok(mut current_user) = state.current_user.lock() {
+        *current_user = None;
+    }
+
     state.authenticated.store(false, Ordering::SeqCst);
     Ok("Аккаунт создан! Войдите.".into())
 }
@@ -120,7 +131,37 @@ async fn logout(state: State<'_, AppState>) -> Result<(), String> {
     }
     state.authenticated.store(false, Ordering::SeqCst);
     api.clear_session();
+    if let Ok(mut current_user) = state.current_user.lock() {
+        *current_user = None;
+    }
     Ok(())
+}
+
+#[tauri::command]
+fn get_session_user(state: State<'_, AppState>) -> Result<Option<AuthProfile>, String> {
+    state
+        .current_user
+        .lock()
+        .map(|user| user.clone())
+        .map_err(|_| "Failed to read session user".to_string())
+}
+
+#[tauri::command]
+async fn get_admin_stats(state: State<'_, AppState>) -> Result<AdminStats, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+    }
+
+    let mut api = state.api.lock().await;
+    match api.get_admin_stats().await {
+        Ok(stats) => Ok(stats),
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(&state, &mut api);
+            }
+            Err(err)
+        }
+    }
 }
 
 #[tauri::command]
@@ -230,7 +271,7 @@ async fn add_password(
     let (encrypted, salt) = encrypt_password(&password, seed_phrase, algorithm)?;
 
     let entry = PasswordEntry {
-        id: String::new(),
+        id: uuid::Uuid::new_v4().to_string(),
         title: title.trim().to_string(),
         encrypted_password: encrypted,
         salt,
@@ -566,11 +607,11 @@ fn to_wide_os(value: &OsStr) -> Vec<u16> {
 }
 
 fn chrono_now() -> String {
-    let now = std::time::SystemTime::now()
+    std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
-        .as_secs();
-    format!("2024-01-01T00:00:{}Z", now % 60)
+        .as_secs()
+        .to_string()
 }
 
 fn main() {
@@ -584,6 +625,7 @@ fn main() {
         .manage(AppState {
             authenticated: AtomicBool::new(false),
             api: Mutex::new(ApiClient::new()),
+            current_user: StdMutex::new(None),
         })
         .setup(|app| {
             let window = app.get_window("main").unwrap();
@@ -594,6 +636,8 @@ fn main() {
             register,
             login,
             logout,
+            get_session_user,
+            get_admin_stats,
             set_theme_preference,
             set_language_preference,
             set_encryption_preference,

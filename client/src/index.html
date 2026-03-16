@@ -305,6 +305,18 @@
                         </div>
                         <div class="dash-actions">
                             <button
+                                class="btn-exit hidden"
+                                id="admin-btn"
+                                title="Админ-панель"
+                            >
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 2l7 4v6c0 4.8-3.1 9.3-7 10.5C8.1 21.3 5 16.8 5 12V6l7-4zm0 3.1L8 7.3V12c0 3.5 2.1 6.8 4 7.9 1.9-1.1 4-4.4 4-7.9V7.3l-4-2.2zM11 8h2v5h-2V8zm0 6h2v2h-2v-2z"
+                                    />
+                                </svg>
+                                <span>Админ-панель</span>
+                            </button>
+                            <button
                                 class="btn-exit"
                                 id="settings-btn"
                                 title="Настройки"
@@ -644,6 +656,117 @@
                                     <span class="switch-slider"></span>
                                 </label>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-admin" class="page">
+                <div class="dash">
+                    <div class="dash-top">
+                        <div class="dash-brand">
+                            <button class="btn-back" id="admin-back-btn">
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z"
+                                    />
+                                </svg>
+                            </button>
+                            <h1>Админ-панель</h1>
+                        </div>
+                        <div class="dash-actions">
+                            <button
+                                class="btn-exit"
+                                id="admin-refresh-btn"
+                                title="Обновить"
+                            >
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M17.7 6.3A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.2L13 11h7V4l-2.3 2.3z"
+                                    />
+                                </svg>
+                                <span>Обновить</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="admin-content">
+                        <div class="admin-note" id="admin-readonly-note">
+                            Только просмотр статистики. Управление
+                            пользователями недоступно.
+                        </div>
+
+                        <div class="admin-grid">
+                            <div class="admin-card">
+                                <span id="admin-total-users-label"
+                                    >Пользователи</span
+                                >
+                                <strong id="admin-total-users">0</strong>
+                            </div>
+                            <div class="admin-card">
+                                <span id="admin-total-admins-label"
+                                    >Администраторы</span
+                                >
+                                <strong id="admin-total-admins">0</strong>
+                            </div>
+                            <div class="admin-card">
+                                <span id="admin-total-passwords-label"
+                                    >Пароли</span
+                                >
+                                <strong id="admin-total-passwords">0</strong>
+                            </div>
+                            <div class="admin-card">
+                                <span id="admin-total-sessions-label"
+                                    >Активные сессии</span
+                                >
+                                <strong id="admin-total-sessions">0</strong>
+                            </div>
+                        </div>
+
+                        <div class="admin-panels">
+                            <section class="admin-panel">
+                                <div class="admin-panel-head">
+                                    <h3 id="admin-activity-title">
+                                        Активность пользователей
+                                    </h3>
+                                </div>
+                                <div
+                                    id="admin-activity-graph"
+                                    class="admin-chart"
+                                ></div>
+                            </section>
+
+                            <section class="admin-panel">
+                                <div class="admin-panel-head">
+                                    <h3 id="admin-register-title">
+                                        Регистрации
+                                    </h3>
+                                </div>
+                                <div
+                                    id="admin-register-graph"
+                                    class="admin-chart"
+                                ></div>
+                            </section>
+
+                            <section class="admin-panel">
+                                <div class="admin-panel-head">
+                                    <h3 id="admin-top-services-title">
+                                        Топ сервисов
+                                    </h3>
+                                </div>
+                                <div
+                                    id="admin-top-services"
+                                    class="admin-bars"
+                                ></div>
+                            </section>
+
+                            <section class="admin-panel">
+                                <div class="admin-panel-head">
+                                    <h3 id="admin-crypt-title">
+                                        Использование шифрования
+                                    </h3>
+                                </div>
+                                <div id="admin-crypt" class="admin-bars"></div>
+                            </section>
                         </div>
                     </div>
                 </div>

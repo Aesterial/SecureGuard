@@ -4,6 +4,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
 var I18N = {
   ru: {
+    "common.admin": "Админ-панель",
+    "admin.title": "Админ-панель",
+    "admin.refresh": "Обновить",
+    "admin.readonly":
+      "Только просмотр статистики. Управление пользователями недоступно.",
+    "admin.totalUsers": "Пользователи",
+    "admin.totalAdmins": "Администраторы",
+    "admin.totalPasswords": "Пароли",
+    "admin.totalSessions": "Активные сессии",
+    "admin.activityGraph": "Активность пользователей",
+    "admin.registerGraph": "Регистрации",
+    "admin.topServices": "Топ сервисов",
+    "admin.cryptUsage": "Использование шифрования",
+    "admin.noData": "Данных пока нет",
+    "error.statsLoad": "Не удалось загрузить статистику",
     "common.username": "Логин",
     "common.password": "Пароль",
     "common.seedPhrase": "Сид-фраза",
@@ -156,6 +171,21 @@ var I18N = {
     "error.commandUnavailable": "Команда недоступна: {command}",
   },
   en: {
+    "common.admin": "Admin panel",
+    "admin.title": "Admin panel",
+    "admin.refresh": "Refresh",
+    "admin.readonly":
+      "Statistics only. User editing and management are not available.",
+    "admin.totalUsers": "Users",
+    "admin.totalAdmins": "Admins",
+    "admin.totalPasswords": "Passwords",
+    "admin.totalSessions": "Active sessions",
+    "admin.activityGraph": "User activity",
+    "admin.registerGraph": "Registrations",
+    "admin.topServices": "Top services",
+    "admin.cryptUsage": "Encryption usage",
+    "admin.noData": "No data yet",
+    "error.statsLoad": "Failed to load statistics",
     "common.username": "Username",
     "common.password": "Password",
     "common.seedPhrase": "Seed phrase",
@@ -352,12 +382,44 @@ function resolveTauriInvoke() {
 
 function createFallbackInvoke() {
   var authenticated = false;
+  var currentUser = null;
   var nextId = 1;
   var entries = [];
   var screenshotGuardEnabled = true;
   var startupEnabled = false;
   var users = {
-    test: { password: "test" },
+    test: { password: "test", staff: true },
+  };
+  var demoStats = {
+    top_services: {
+      "github.com": 12,
+      "gmail.com": 8,
+      "figma.com": 5,
+      "notion.so": 4,
+    },
+    activity_graph: [
+      { time: 1710658800, value: 2 },
+      { time: 1710662400, value: 5 },
+      { time: 1710666000, value: 3 },
+      { time: 1710669600, value: 7 },
+      { time: 1710673200, value: 4 },
+    ],
+    register_graph: [
+      { time: 1710658800, value: 1 },
+      { time: 1710666000, value: 0 },
+      { time: 1710669600, value: 2 },
+      { time: 1710673200, value: 1 },
+    ],
+    total: {
+      users: 24,
+      admins: 2,
+      passwords: 143,
+      active_sessions: 6,
+    },
+    crypt: {
+      argon2id: 18,
+      "sha-256": 6,
+    },
   };
 
   return async function (command, args) {
@@ -373,7 +435,16 @@ function createFallbackInvoke() {
         throw "Неверный логин или пароль";
       }
       authenticated = true;
-      return "OK";
+      currentUser = {
+        id: loginUser,
+        username: loginUser,
+        staff: !!users[loginUser].staff,
+        has_preferences: true,
+        light_theme_enabled: false,
+        language: "ru",
+        encryption_algorithm: ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID,
+      };
+      return currentUser;
     }
 
     if (command === "register") {
@@ -392,18 +463,23 @@ function createFallbackInvoke() {
       if (users[regUser]) {
         throw "Пользователь уже существует";
       }
-      users[regUser] = { password: regPass };
+      users[regUser] = { password: regPass, staff: false };
       return "Аккаунт создан! Теперь войдите.";
     }
 
     if (command === "logout") {
       authenticated = false;
+      currentUser = null;
       entries = [];
       return;
     }
 
     if (command === "is_authenticated") {
       return authenticated;
+    }
+
+    if (command === "get_session_user") {
+      return currentUser;
     }
 
     if (command === "get_screenshot_guard_status") {
@@ -431,6 +507,37 @@ function createFallbackInvoke() {
       }
       startupEnabled = !!args.enabled;
       return startupEnabled;
+    }
+    
+    if (command === "set_theme_preference") {
+      if (!authenticated) {
+        throw "Not authenticated";
+      }
+      return !!args.lightThemeEnabled;
+    }
+    
+    if (command === "set_language_preference") {
+      if (!authenticated) {
+        throw "Not authenticated";
+      }
+      return args.language === "en" ? "en" : "ru";
+    }
+    
+    if (command === "set_encryption_preference") {
+      if (!authenticated) {
+        throw "Not authenticated";
+      }
+      return normalizeEncryptionAlgorithm(args.encryptionAlgorithm);
+    }
+    
+    if (command === "get_admin_stats") {
+      if (!authenticated) {
+        throw "Not authenticated";
+      }
+      if (!currentUser || !currentUser.staff) {
+        throw "Access denied";
+      }
+      return demoStats;
     }
 
     if (!authenticated) {
@@ -520,6 +627,9 @@ function initApp(invoke) {
   var cachedSeedPhrase = "";
   var authHandlingInProgress = false;
   var settingsReturnPage = "dashboard";
+  var currentUser = null;
+  var adminStats = null;
+  var adminStatsLoading = false;
 
   var loaded = loadSettings();
   var appSettings = loaded.settings;
@@ -531,6 +641,7 @@ function initApp(invoke) {
     dashboard: document.getElementById("page-dashboard"),
     add: document.getElementById("page-add"),
     settings: document.getElementById("page-settings"),
+    admin: document.getElementById("page-admin"),
   };
 
   var settingsControls = {
@@ -547,6 +658,19 @@ function initApp(invoke) {
     ),
   };
 
+  var adminControls = {
+    button: document.getElementById("admin-btn"),
+    refresh: document.getElementById("admin-refresh-btn"),
+    totalUsers: document.getElementById("admin-total-users"),
+    totalAdmins: document.getElementById("admin-total-admins"),
+    totalPasswords: document.getElementById("admin-total-passwords"),
+    totalSessions: document.getElementById("admin-total-sessions"),
+    activityGraph: document.getElementById("admin-activity-graph"),
+    registerGraph: document.getElementById("admin-register-graph"),
+    topServices: document.getElementById("admin-top-services"),
+    crypt: document.getElementById("admin-crypt"),
+  };
+
   var modals = {
     weak: document.getElementById("weak-modal"),
     seed: document.getElementById("seed-modal"),
@@ -558,6 +682,54 @@ function initApp(invoke) {
 
   function getLanguage() {
     return appSettings.language === "en" ? "en" : "ru";
+  }
+
+  function normalizeSessionUser(source) {
+    return {
+      id: source && source.id ? String(source.id) : "",
+      username: source && source.username ? String(source.username) : "",
+      staff: !!(source && source.staff),
+      has_preferences: !!(source && source.has_preferences),
+      light_theme_enabled: !!(source && source.light_theme_enabled),
+      language:
+        source && source.language === "en"
+          ? "en"
+          : source && source.language === "ru"
+            ? "ru"
+            : "",
+      encryption_algorithm: normalizeEncryptionAlgorithm(
+        source && source.encryption_algorithm,
+      ),
+    };
+  }
+
+  function setCurrentUser(source) {
+    currentUser = source ? normalizeSessionUser(source) : null;
+    updateAdminVisibility();
+  }
+
+  function applySessionPreferences(profile) {
+    var normalized = profile ? normalizeSessionUser(profile) : null;
+    if (!normalized || !normalized.has_preferences) {
+      return;
+    }
+
+    appSettings.lightThemeEnabled = !!normalized.light_theme_enabled;
+    if (normalized.language) {
+      appSettings.language = normalized.language;
+    }
+    if (normalized.encryption_algorithm) {
+      appSettings.encryptionAlgorithm = normalized.encryption_algorithm;
+    }
+
+    saveSettings();
+    applyTheme();
+    applyTranslations();
+    renderSettings();
+  }
+
+  function canViewAdmin() {
+    return !!(authenticated && currentUser && currentUser.staff);
   }
 
   function t(key, params) {
@@ -814,8 +986,10 @@ function initApp(invoke) {
     setTitle("#register-settings-btn", "common.settings");
 
     setText("#page-dashboard .dash-brand h1", "dashboard.title");
+    setText("#admin-btn span", "common.admin");
     setText("#settings-btn span", "common.settings");
     setText("#logout-btn span", "common.logout");
+    setTitle("#admin-btn", "common.admin");
     setTitle("#settings-btn", "common.settings");
     setTitle("#logout-btn", "common.logout");
     setText("#empty-state p", "dashboard.emptyTitle");
@@ -850,6 +1024,18 @@ function initApp(invoke) {
     setText("#setting-confirm-delete-desc", "settings.confirmDelete.desc");
     setText("#setting-block-context-title", "settings.blockContext.title");
     setText("#setting-block-context-desc", "settings.blockContext.desc");
+    setText("#page-admin .dash-brand h1", "admin.title");
+    setText("#admin-refresh-btn span", "admin.refresh");
+    setTitle("#admin-refresh-btn", "admin.refresh");
+    setText("#admin-readonly-note", "admin.readonly");
+    setText("#admin-total-users-label", "admin.totalUsers");
+    setText("#admin-total-admins-label", "admin.totalAdmins");
+    setText("#admin-total-passwords-label", "admin.totalPasswords");
+    setText("#admin-total-sessions-label", "admin.totalSessions");
+    setText("#admin-activity-title", "admin.activityGraph");
+    setText("#admin-register-title", "admin.registerGraph");
+    setText("#admin-top-services-title", "admin.topServices");
+    setText("#admin-crypt-title", "admin.cryptUsage");
 
     if (
       settingsControls.language &&
@@ -895,6 +1081,9 @@ function initApp(invoke) {
     setPlaceholder("modal-seed", "seedModal.placeholder");
 
     renderAutoLockMinuteOptions();
+    if (adminStats) {
+      renderAdminStats(adminStats);
+    }
   }
 
   function showPage(name, options) {
@@ -1182,6 +1371,187 @@ function initApp(invoke) {
     }
   }
 
+  function updateAdminVisibility() {
+    if (adminControls.button) {
+      adminControls.button.classList.toggle("hidden", !canViewAdmin());
+    }
+    if (!canViewAdmin() && currentPage === "admin") {
+      showPage(authenticated ? "dashboard" : "login");
+    }
+  }
+
+  function normalizeCountMap(source) {
+    var out = {};
+    if (!source || typeof source !== "object") {
+      return out;
+    }
+    Object.keys(source).forEach(function (key) {
+      var value = Number(source[key]);
+      out[String(key)] = isNaN(value) ? 0 : value;
+    });
+    return out;
+  }
+
+  function normalizeGraphPoints(source) {
+    if (!Array.isArray(source)) {
+      return [];
+    }
+    return source
+      .map(function (point) {
+        return {
+          time: Number(point && point.time) || 0,
+          value: Number(point && point.value) || 0,
+        };
+      })
+      .sort(function (a, b) {
+        return a.time - b.time;
+      });
+  }
+
+  function normalizeAdminStats(source) {
+    source = source || {};
+    return {
+      top_services: normalizeCountMap(source.top_services),
+      activity_graph: normalizeGraphPoints(source.activity_graph),
+      register_graph: normalizeGraphPoints(source.register_graph),
+      total: {
+        users: Number(source.total && source.total.users) || 0,
+        admins: Number(source.total && source.total.admins) || 0,
+        passwords: Number(source.total && source.total.passwords) || 0,
+        active_sessions:
+          Number(source.total && source.total.active_sessions) || 0,
+      },
+      crypt: normalizeCountMap(source.crypt),
+    };
+  }
+
+  function formatGraphPointTime(unixSeconds) {
+    if (!unixSeconds) {
+      return "--:--";
+    }
+    return new Date(unixSeconds * 1000).toLocaleTimeString(
+      getLanguage() === "en" ? "en-US" : "ru-RU",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    );
+  }
+
+  function formatAdminLabel(kind, raw) {
+    var value = String(raw || "");
+    if (kind !== "crypt") {
+      return value;
+    }
+    var normalized = value.toLowerCase();
+    if (normalized === "argon2id" || normalized === "aes256gcm-argon2id") {
+      return "Argon2id";
+    }
+    if (normalized === "sha-256" || normalized === "aes256gcm-sha256") {
+      return "SHA-256";
+    }
+    return value;
+  }
+
+  function renderAdminBarList(element, source, kind) {
+    if (!element) {
+      return;
+    }
+    var items = Object.keys(source || {})
+      .map(function (key) {
+        return {
+          label: key,
+          value: Number(source[key]) || 0,
+        };
+      })
+      .sort(function (a, b) {
+        return b.value - a.value;
+      });
+
+    if (!items.length) {
+      element.innerHTML = '<div class="admin-empty">' + esc(t("admin.noData")) + "</div>";
+      return;
+    }
+
+    var max = items[0].value || 1;
+    element.innerHTML = items
+      .map(function (item) {
+        var width = Math.max(8, Math.round((item.value / max) * 100));
+        return (
+          '<div class="admin-bar-row">' +
+          '<div class="admin-bar-label" title="' +
+          esc(formatAdminLabel(kind, item.label)) +
+          '">' +
+          esc(formatAdminLabel(kind, item.label)) +
+          "</div>" +
+          '<div class="admin-bar-value">' +
+          item.value +
+          "</div>" +
+          '<div class="admin-bar-track"><div class="admin-bar-fill" style="width:' +
+          width +
+          '%"></div></div>' +
+          "</div>"
+        );
+      })
+      .join("");
+  }
+
+  function renderAdminChart(element, points) {
+    if (!element) {
+      return;
+    }
+    if (!points || !points.length) {
+      element.innerHTML = '<div class="admin-empty">' + esc(t("admin.noData")) + "</div>";
+      return;
+    }
+
+    var max = 1;
+    for (var i = 0; i < points.length; i += 1) {
+      if (points[i].value > max) {
+        max = points[i].value;
+      }
+    }
+
+    element.innerHTML =
+      '<div class="admin-chart-scroll"><div class="admin-chart-track">' +
+      points
+        .map(function (point) {
+          var height = Math.max(10, Math.round((point.value / max) * 140));
+          var label = formatGraphPointTime(point.time);
+          return (
+            '<div class="admin-chart-col" title="' +
+            esc(label + " • " + point.value) +
+            '">' +
+            '<div class="admin-chart-value">' +
+            point.value +
+            "</div>" +
+            '<div class="admin-chart-bar" style="height:' +
+            height +
+            'px"></div>' +
+            '<div class="admin-chart-label">' +
+            esc(label) +
+            "</div>" +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div></div>";
+  }
+
+  function renderAdminStats(source) {
+    adminStats = normalizeAdminStats(source);
+    adminControls.totalUsers.textContent = String(adminStats.total.users);
+    adminControls.totalAdmins.textContent = String(adminStats.total.admins);
+    adminControls.totalPasswords.textContent = String(adminStats.total.passwords);
+    adminControls.totalSessions.textContent = String(
+      adminStats.total.active_sessions,
+    );
+    renderAdminChart(adminControls.activityGraph, adminStats.activity_graph);
+    renderAdminChart(adminControls.registerGraph, adminStats.register_graph);
+    renderAdminBarList(adminControls.topServices, adminStats.top_services, "service");
+    renderAdminBarList(adminControls.crypt, adminStats.crypt, "crypt");
+  }
+
   function renderSettings() {
     renderAutoLockMinuteOptions();
     settingsControls.screenshotGuard.checked =
@@ -1223,6 +1593,7 @@ function initApp(invoke) {
   async function performLogout(message, type) {
     clearAutoLockTimer();
     setAuthenticated(false);
+    setCurrentUser(null);
     cachedSeedPhrase = "";
 
     try {
@@ -1266,12 +1637,17 @@ function initApp(invoke) {
     if (!authenticated) {
       cachedSeedPhrase = "";
       clearAutoLockTimer();
+      adminStats = null;
       updateSettingsAvailability();
+      updateAdminVisibility();
       return;
     }
+
     updateSettingsAvailability();
+    updateAdminVisibility();
     scheduleAutoLock();
   }
+
 
   async function syncPreference(command, payload, key, fallback) {
     if (!authenticated || preferenceSyncInProgress[key]) {
@@ -1307,6 +1683,38 @@ function initApp(invoke) {
       return "login";
     }
     return settingsReturnPage || (authenticated ? "dashboard" : "login");
+  }
+
+  async function loadAdminStats() {
+    if (!canViewAdmin() || adminStatsLoading) {
+      return;
+    }
+
+    adminStatsLoading = true;
+    if (adminControls.refresh) {
+      adminControls.refresh.disabled = true;
+    }
+
+    try {
+      renderAdminStats(await invoke("get_admin_stats"));
+    } catch (err) {
+      if (!(await handleAuthFailure(err))) {
+        notify(localizeMessage(err, "error.statsLoad"), "err");
+      }
+    } finally {
+      adminStatsLoading = false;
+      if (adminControls.refresh) {
+        adminControls.refresh.disabled = false;
+      }
+    }
+  }
+
+  async function openAdminPage() {
+    if (!canViewAdmin()) {
+      return;
+    }
+    showPage("admin");
+    await loadAdminStats();
   }
 
   async function applyScreenshotGuardSetting(enabled, silent) {
@@ -1737,7 +2145,9 @@ function initApp(invoke) {
       setLoad("login-btn", true);
 
       try {
-        await invoke("login", { username: u, password: p });
+        var profile = await invoke("login", { username: u, password: p });
+        applySessionPreferences(profile);
+        setCurrentUser(profile);
         setAuthenticated(true);
         cachedSeedPhrase = "";
         await syncScreenshotGuardOnStart();
@@ -1842,10 +2252,26 @@ function initApp(invoke) {
       openSettingsPage("dashboard");
     });
 
+  document.getElementById("admin-btn").addEventListener("click", async function () {
+    await openAdminPage();
+  });
+
   document
     .getElementById("settings-back-btn")
     .addEventListener("click", function () {
       showPage(getSettingsReturnPage());
+    });
+
+  document
+    .getElementById("admin-back-btn")
+    .addEventListener("click", function () {
+      showPage("dashboard");
+    });
+
+  document
+    .getElementById("admin-refresh-btn")
+    .addEventListener("click", async function () {
+      await loadAdminStats();
     });
 
   document
@@ -2034,6 +2460,13 @@ function initApp(invoke) {
     }
 
     if (ok) {
+      try {
+        var sessionUser = await invoke("get_session_user");
+        applySessionPreferences(sessionUser);
+        setCurrentUser(sessionUser);
+      } catch (e) {
+        setCurrentUser(null);
+      }
       setAuthenticated(true);
       await syncScreenshotGuardOnStart();
       await syncStartupOnStart();
@@ -2043,6 +2476,7 @@ function initApp(invoke) {
     }
 
     setAuthenticated(false);
+    setCurrentUser(null);
     showPage("login", { instant: true });
   }
 
