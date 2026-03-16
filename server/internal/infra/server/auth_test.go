@@ -47,6 +47,10 @@ func (m *authSessionsRepoMock) Revoke(context.Context, domain.UUID) error {
 	return nil
 }
 
+func (m *authSessionsRepoMock) GetExpired(context.Context) ([]*domain.UUID, error) {
+	return nil, nil
+}
+
 type authUsersRepoMock struct {
 	isAdminFn func(context.Context, domain.UUID) (bool, error)
 }

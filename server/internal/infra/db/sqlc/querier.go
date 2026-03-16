@@ -22,6 +22,7 @@ type Querier interface {
 	GetChoosenPreferencesCrypt(ctx context.Context) ([]string, error)
 	GetChoosenPreferencesLanguage(ctx context.Context) ([]string, error)
 	GetChoosenPreferencesTheme(ctx context.Context) ([]string, error)
+	GetExpiredSessions(ctx context.Context) ([]pgtype.UUID, error)
 	GetIsUserAdmin(ctx context.Context, id pgtype.UUID) (bool, error)
 	GetIsUserExists(ctx context.Context, id pgtype.UUID) (bool, error)
 	GetIsUsernameExists(ctx context.Context, username string) (bool, error)

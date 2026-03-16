@@ -192,3 +192,6 @@ where not exists (
 
 -- name: GetActivityStatistics :many
 select users, registers, at from activity where at >= $1 AND at < $2;
+
+-- name: GetExpiredSessions :many
+select id from sessions where expires < now();

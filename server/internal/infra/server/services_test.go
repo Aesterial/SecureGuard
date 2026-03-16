@@ -157,6 +157,10 @@ func (m *serverSessionsRepoMock) Revoke(ctx context.Context, id domain.UUID) err
 	return nil
 }
 
+func (m *serverSessionsRepoMock) GetExpired(context.Context) ([]*domain.UUID, error) {
+	return nil, nil
+}
+
 type serverPassRepoMock struct {
 	getListFn  func(context.Context, domain.UUID, int32, int32) (passdomain.Passwords, error)
 	getOwnerFn func(context.Context, domain.UUID) (*domain.UUID, error)

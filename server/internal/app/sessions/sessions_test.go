@@ -51,6 +51,9 @@ func (m *sessionsRepoMock) Revoke(ctx context.Context, id domain.UUID) error {
 	}
 	return nil
 }
+func (m *sessionsRepoMock) GetExpired(ctx context.Context) ([]*domain.UUID, error) {
+	return nil, nil
+}
 
 func newSessionUUID() domain.UUID {
 	return domain.ParseUUID(uuid.New())

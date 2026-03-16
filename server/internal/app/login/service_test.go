@@ -96,6 +96,10 @@ func (m *loginSessionsRepoMock) Revoke(context.Context, domain.UUID) error {
 	return nil
 }
 
+func (m *loginSessionsRepoMock) GetExpired(ctx context.Context) ([]*domain.UUID, error) {
+	return nil, nil
+}
+
 func newLoginUUID() domain.UUID {
 	return domain.ParseUUID(uuid.New())
 }

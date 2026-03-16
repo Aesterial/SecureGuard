@@ -70,6 +70,7 @@ func main() {
 
 	usrService := usersapp.NewUserService(usrRepo)
 	sesService := sessionsapp.NewSessionService(sesRepo)
+	sesWorker := sessionsapp.NewWorker(sesRepo)
 	passService := passapp.NewPassService(passRepo)
 	statsService := statsapp.NewStatsService(statsRepo)
 	statsWorker := statsapp.NewPersistenceWorker(statsRepo)
@@ -97,6 +98,7 @@ func main() {
 	passpb.RegisterPasswordServiceServer(server, passServer)
 	statspb.RegisterStatsServiceServer(server, statsServer)
 	statsWorker.Start(ctx)
+	sesWorker.Start(ctx)
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", cfg.Boot.Port))
 	if err != nil {
 		logging.Critical("failed to listen", logging.F("error", err.Error()))

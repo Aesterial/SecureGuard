@@ -101,3 +101,19 @@ func (s *SessionsRepository) Revoke(ctx context.Context, id domain.UUID) error {
 	}
 	return nil
 }
+
+func (s *SessionsRepository) GetExpired(ctx context.Context) ([]*domain.UUID, error) {
+	list, err := s.querier.GetExpiredSessions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	var resp = make([]*domain.UUID, len(list))
+	for i, e := range list {
+		id := domain.ParseUUID(e.Bytes)
+		resp[i] = &id
+	}
+	return resp, nil
+}

@@ -1,0 +1,15 @@
+{
+	email admin@example.com
+}
+
+example.com, www.example.com {
+	tls {
+		issuer acme {
+			dir https://acme-v02.api.letsencrypt.org/directory
+		}
+	}
+
+	encode gzip
+
+	reverse_proxy h2c://backend:{$BOOT_PORT:50051}
+}

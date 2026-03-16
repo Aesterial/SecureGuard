@@ -288,6 +288,30 @@ func (q *Queries) GetChoosenPreferencesTheme(ctx context.Context) ([]string, err
 	return items, nil
 }
 
+const getExpiredSessions = `-- name: GetExpiredSessions :many
+select id from sessions where expires < now()
+`
+
+func (q *Queries) GetExpiredSessions(ctx context.Context) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, getExpiredSessions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []pgtype.UUID{}
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getIsUserAdmin = `-- name: GetIsUserAdmin :one
 select admin_access = true from users where id = $1 limit 1
 `
