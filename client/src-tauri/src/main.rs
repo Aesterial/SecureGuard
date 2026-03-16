@@ -108,8 +108,17 @@ async fn register(
 
 #[tauri::command]
 async fn logout(state: State<'_, AppState>) -> Result<(), String> {
-    state.authenticated.store(false, Ordering::SeqCst);
     let mut api = state.api.lock().await;
+    if api.is_authenticated() {
+        match api.logout().await {
+            Ok(_) => {}
+            Err(err) => {
+                clear_auth_state(&state, &mut api);
+                return Err(err);
+            }
+        }
+    }
+    state.authenticated.store(false, Ordering::SeqCst);
     api.clear_session();
     Ok(())
 }

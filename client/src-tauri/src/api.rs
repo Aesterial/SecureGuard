@@ -177,6 +177,20 @@ impl ApiClient {
         Ok(())
     }
 
+    pub async fn logout(&self) -> Result<(), String> {
+        use xyz::secureguard::v1::login::v1::login_service_client::LoginServiceClient;
+
+        if self.session.is_none() {
+            return Ok(());
+        }
+
+        let channel = self.connect().await?;
+        let mut client = LoginServiceClient::new(channel);
+        let req = self.with_auth_metadata(Request::new(()))?;
+        client.logout(req).await.map_err(map_tonic_error)?;
+        Ok(())
+    }
+
     pub async fn list_passwords(&self) -> Result<Vec<PasswordEntry>, String> {
         use xyz::secureguard::v1::passwords::v1::password_service_client::PasswordServiceClient;
         use xyz::secureguard::v1::RequestWithLimitAndOffset;
