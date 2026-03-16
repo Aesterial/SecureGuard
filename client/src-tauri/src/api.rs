@@ -53,7 +53,7 @@ pub mod xyz {
     }
 }
 
-const DEFAULT_BACKEND: &str = "http://127.0.0.1:50051";
+const DEFAULT_BACKEND: &str = "http://127.0.0.1:8080";
 const DEFAULT_ENCRYPTION_ALGORITHM: &str = "aes256gcm-argon2id";
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
