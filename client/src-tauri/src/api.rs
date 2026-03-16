@@ -268,6 +268,59 @@ impl ApiClient {
         })
     }
 
+    pub async fn change_theme(&self, light_theme_enabled: bool) -> Result<(), String> {
+        use xyz::secureguard::v1::users::v1::user_service_client::UserServiceClient;
+        use xyz::secureguard::v1::users::v1::{ChangeThemeRequest, Theme};
+
+        let channel = self.connect().await?;
+        let mut client = UserServiceClient::new(channel);
+        let request = ChangeThemeRequest {
+            value: if light_theme_enabled {
+                Theme::White as i32
+            } else {
+                Theme::Black as i32
+            },
+        };
+        let req = self.with_auth_metadata(Request::new(request))?;
+        client.change_theme(req).await.map_err(map_tonic_error)?;
+        Ok(())
+    }
+
+    pub async fn change_language(&self, language: &str) -> Result<String, String> {
+        use xyz::secureguard::v1::users::v1::user_service_client::UserServiceClient;
+        use xyz::secureguard::v1::users::v1::{ChangeLanguageRequest, Language};
+
+        let channel = self.connect().await?;
+        let mut client = UserServiceClient::new(channel);
+        let request = ChangeLanguageRequest {
+            value: match normalize_language(language).as_str() {
+                "en" => Language::En as i32,
+                _ => Language::Ru as i32,
+            },
+        };
+        let req = self.with_auth_metadata(Request::new(request))?;
+        client.change_language(req).await.map_err(map_tonic_error)?;
+        Ok(normalize_language(language))
+    }
+
+    pub async fn change_encryption(&self, value: &str) -> Result<String, String> {
+        use xyz::secureguard::v1::users::v1::user_service_client::UserServiceClient;
+        use xyz::secureguard::v1::users::v1::{ChangeCryptRequest, Crypt};
+
+        let normalized = normalize_encryption(value);
+        let channel = self.connect().await?;
+        let mut client = UserServiceClient::new(channel);
+        let request = ChangeCryptRequest {
+            value: match normalized.as_str() {
+                "aes256gcm-sha256" => Crypt::Sha256 as i32,
+                _ => Crypt::Argon2id as i32,
+            },
+        };
+        let req = self.with_auth_metadata(Request::new(request))?;
+        client.change_crypt(req).await.map_err(map_tonic_error)?;
+        Ok(normalized)
+    }
+
     pub async fn delete_password(&self, id: &str) -> Result<(), String> {
         use xyz::secureguard::v1::passwords::v1::password_service_client::PasswordServiceClient;
         use xyz::secureguard::v1::RequestWithId;
@@ -287,6 +340,13 @@ fn normalize_encryption(value: &str) -> String {
         return DEFAULT_ENCRYPTION_ALGORITHM.to_string();
     }
     normalized
+}
+
+fn normalize_language(value: &str) -> String {
+    match value.trim().to_lowercase().as_str() {
+        "en" => "en".to_string(),
+        _ => "ru".to_string(),
+    }
 }
 
 fn decode_password_entry(

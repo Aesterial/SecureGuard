@@ -115,6 +115,69 @@ async fn logout(state: State<'_, AppState>) -> Result<(), String> {
 }
 
 #[tauri::command]
+async fn set_theme_preference(
+    state: State<'_, AppState>,
+    light_theme_enabled: bool,
+) -> Result<bool, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+    }
+
+    let mut api = state.api.lock().await;
+    match api.change_theme(light_theme_enabled).await {
+        Ok(_) => Ok(light_theme_enabled),
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(&state, &mut api);
+            }
+            Err(err)
+        }
+    }
+}
+
+#[tauri::command]
+async fn set_language_preference(
+    state: State<'_, AppState>,
+    language: String,
+) -> Result<String, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+    }
+
+    let mut api = state.api.lock().await;
+    match api.change_language(&language).await {
+        Ok(value) => Ok(value),
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(&state, &mut api);
+            }
+            Err(err)
+        }
+    }
+}
+
+#[tauri::command]
+async fn set_encryption_preference(
+    state: State<'_, AppState>,
+    encryption_algorithm: String,
+) -> Result<String, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+    }
+
+    let mut api = state.api.lock().await;
+    match api.change_encryption(&encryption_algorithm).await {
+        Ok(value) => Ok(value),
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(&state, &mut api);
+            }
+            Err(err)
+        }
+    }
+}
+
+#[tauri::command]
 async fn get_passwords(state: State<'_, AppState>) -> Result<Vec<PasswordEntry>, String> {
     if !state.authenticated.load(Ordering::SeqCst) {
         return Err("Не авторизован".into());
@@ -522,6 +585,9 @@ fn main() {
             register,
             login,
             logout,
+            set_theme_preference,
+            set_language_preference,
+            set_encryption_preference,
             get_passwords,
             add_password,
             copy_password,

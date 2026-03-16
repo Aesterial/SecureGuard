@@ -511,9 +511,15 @@ function initApp(invoke) {
   var authenticated = false;
   var settingsSyncInProgress = false;
   var startupSyncInProgress = false;
+  var preferenceSyncInProgress = {
+    theme: false,
+    language: false,
+    encryption: false,
+  };
   var weakConfirmResolver = null;
   var cachedSeedPhrase = "";
   var authHandlingInProgress = false;
+  var settingsReturnPage = "dashboard";
 
   var loaded = loadSettings();
   var appSettings = loaded.settings;
@@ -787,6 +793,8 @@ function initApp(invoke) {
     setText("#login-btn .btn-t", "login.submit");
     setText("#page-login .link-row span", "login.noAccount");
     setText("#go-register", "login.create");
+    setText("#login-settings-btn span", "common.settings");
+    setTitle("#login-settings-btn", "common.settings");
 
     setText("#page-register .brand p", "register.brandSubtitle");
     setText("#page-register h2", "register.title");
@@ -802,6 +810,8 @@ function initApp(invoke) {
     setText("#reg-btn .btn-t", "register.submit");
     setText("#page-register .link-row span", "register.haveAccount");
     setText("#go-login", "common.login");
+    setText("#register-settings-btn span", "common.settings");
+    setTitle("#register-settings-btn", "common.settings");
 
     setText("#page-dashboard .dash-brand h1", "dashboard.title");
     setText("#settings-btn span", "common.settings");
@@ -1151,6 +1161,27 @@ function initApp(invoke) {
     } catch (e) {}
   }
 
+  function updateSettingsAvailability() {
+    if (settingsControls.screenshotGuard) {
+      settingsControls.screenshotGuard.disabled =
+        !authenticated || settingsSyncInProgress;
+    }
+    if (settingsControls.startupEnabled) {
+      settingsControls.startupEnabled.disabled =
+        !authenticated || startupSyncInProgress;
+    }
+    if (settingsControls.encryptionAlgorithm) {
+      settingsControls.encryptionAlgorithm.disabled =
+        !authenticated || !!preferenceSyncInProgress.encryption;
+    }
+    if (settingsControls.language) {
+      settingsControls.language.disabled = !!preferenceSyncInProgress.language;
+    }
+    if (settingsControls.lightThemeEnabled) {
+      settingsControls.lightThemeEnabled.disabled = !!preferenceSyncInProgress.theme;
+    }
+  }
+
   function renderSettings() {
     renderAutoLockMinuteOptions();
     settingsControls.screenshotGuard.checked =
@@ -1172,6 +1203,7 @@ function initApp(invoke) {
         appSettings.encryptionAlgorithm,
       );
     }
+    updateSettingsAvailability();
   }
 
   function applyTheme() {
@@ -1190,7 +1222,7 @@ function initApp(invoke) {
 
   async function performLogout(message, type) {
     clearAutoLockTimer();
-    authenticated = false;
+    setAuthenticated(false);
     cachedSeedPhrase = "";
 
     try {
@@ -1234,9 +1266,47 @@ function initApp(invoke) {
     if (!authenticated) {
       cachedSeedPhrase = "";
       clearAutoLockTimer();
+      updateSettingsAvailability();
       return;
     }
+    updateSettingsAvailability();
     scheduleAutoLock();
+  }
+
+  async function syncPreference(command, payload, key, fallback) {
+    if (!authenticated || preferenceSyncInProgress[key]) {
+      return false;
+    }
+
+    preferenceSyncInProgress[key] = true;
+    updateSettingsAvailability();
+
+    try {
+      await invoke(command, payload);
+      return true;
+    } catch (err) {
+      if (!(await handleAuthFailure(err))) {
+        notify(localizeMessage(err, fallback || "error.save"), "err");
+      }
+      return false;
+    } finally {
+      preferenceSyncInProgress[key] = false;
+      renderSettings();
+    }
+  }
+
+  function openSettingsPage(returnPage) {
+    settingsReturnPage =
+      returnPage || currentPage || (authenticated ? "dashboard" : "login");
+    renderSettings();
+    showPage("settings");
+  }
+
+  function getSettingsReturnPage() {
+    if (!authenticated && settingsReturnPage === "dashboard") {
+      return "login";
+    }
+    return settingsReturnPage || (authenticated ? "dashboard" : "login");
   }
 
   async function applyScreenshotGuardSetting(enabled, silent) {
@@ -1272,8 +1342,8 @@ function initApp(invoke) {
       }
     }
 
-    settingsControls.screenshotGuard.disabled = false;
     settingsSyncInProgress = false;
+    updateSettingsAvailability();
   }
 
   async function syncScreenshotGuardOnStart() {
@@ -1333,8 +1403,8 @@ function initApp(invoke) {
       }
     }
 
-    settingsControls.startupEnabled.disabled = false;
     startupSyncInProgress = false;
+    updateSettingsAvailability();
   }
 
   async function syncStartupOnStart() {
@@ -1541,14 +1611,23 @@ function initApp(invoke) {
     await applyStartupSetting(settingsControls.startupEnabled.checked, false);
   });
 
-  settingsControls.lightThemeEnabled.addEventListener("change", function () {
+  settingsControls.lightThemeEnabled.addEventListener("change", async function () {
     appSettings.lightThemeEnabled = settingsControls.lightThemeEnabled.checked;
     saveSettings();
     applyTheme();
+    renderSettings();
     notify(
       appSettings.lightThemeEnabled
         ? t("notify.lightThemeOn")
         : t("notify.lightThemeOff"),
+    );
+
+    await syncPreference(
+      "set_theme_preference",
+      {
+        lightThemeEnabled: appSettings.lightThemeEnabled,
+      },
+      "theme",
     );
   });
 
@@ -1601,7 +1680,7 @@ function initApp(invoke) {
   });
 
   if (settingsControls.language) {
-    settingsControls.language.addEventListener("change", function () {
+    settingsControls.language.addEventListener("change", async function () {
       appSettings.language =
         settingsControls.language.value === "en" ? "en" : "ru";
       saveSettings();
@@ -1611,19 +1690,35 @@ function initApp(invoke) {
       if (authenticated) {
         loadPasswords();
       }
+
+      await syncPreference(
+        "set_language_preference",
+        {
+          language: appSettings.language,
+        },
+        "language",
+      );
     });
   }
 
   if (settingsControls.encryptionAlgorithm) {
     settingsControls.encryptionAlgorithm.addEventListener(
       "change",
-      function () {
+      async function () {
         appSettings.encryptionAlgorithm = normalizeEncryptionAlgorithm(
           settingsControls.encryptionAlgorithm.value,
         );
         saveSettings();
         renderSettings();
         notify(t("notify.encryptionChanged"));
+
+        await syncPreference(
+          "set_encryption_preference",
+          {
+            encryptionAlgorithm: appSettings.encryptionAlgorithm,
+          },
+          "encryption",
+        );
       },
     );
   }
@@ -1744,14 +1839,25 @@ function initApp(invoke) {
   document
     .getElementById("settings-btn")
     .addEventListener("click", function () {
-      renderSettings();
-      showPage("settings");
+      openSettingsPage("dashboard");
     });
 
   document
     .getElementById("settings-back-btn")
     .addEventListener("click", function () {
-      showPage("dashboard");
+      showPage(getSettingsReturnPage());
+    });
+
+  document
+    .getElementById("login-settings-btn")
+    .addEventListener("click", function () {
+      openSettingsPage("login");
+    });
+
+  document
+    .getElementById("register-settings-btn")
+    .addEventListener("click", function () {
+      openSettingsPage("register");
     });
 
   document.getElementById("back-btn").addEventListener("click", function () {
