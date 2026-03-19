@@ -1,0 +1,14 @@
+syntax="proto3";
+
+package xyz.secureguard.v1.sessions.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1/sessions/v1";
+
+import "xyz/secureguard/v1/sessions/v1/domain.proto";
+import "xyz/secureguard/v1/types.proto";
+import "google/protobuf/empty.proto";
+
+service SessionsService {
+  rpc GetList(xyz.secureguard.v1.RequestWithBooleanLimitOffset) returns (SessionsListResponse);
+  rpc Revoke(xyz.secureguard.v1.RequestWithID) returns (google.protobuf.Empty);
+}

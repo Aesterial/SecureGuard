@@ -76,6 +76,10 @@ type Password struct {
 	Service  Service
 	Login    string
 	Password string
+	Version  int32
+	Nonce    string
+	Aad      []byte
+	Metadata []byte
 	Created  time.Time
 }
 

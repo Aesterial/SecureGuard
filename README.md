@@ -22,6 +22,14 @@
 - `server/`: Go gRPC backend with layered `domain/app/infra` structure
 - `api/`: protobuf contracts and generated code inputs
 
+## Documentation
+
+Russian project materials prepared for documentation and presentation:
+
+- [docs/PROJECT_DOCS.md](./docs/PROJECT_DOCS.md) — full project documentation
+- [docs/PRESENTATION.md](./docs/PRESENTATION.md) — presentation outline and sample speech text
+- [docs/USER_FAQ.md](./docs/USER_FAQ.md) — end-user FAQ
+
 The current codebase is an active MVP. The desktop app is already usable for the core vault flow, while the backend exposes a wider API surface than the UI currently consumes.
 
 ## Current State

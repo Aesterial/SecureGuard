@@ -3,14 +3,13 @@ package server
 import (
 	"context"
 	"strings"
+	"time"
 
 	logging "github.com/aesterial/secureguard/internal/app/logging"
 	sessionsapp "github.com/aesterial/secureguard/internal/app/sessions"
 	usersapp "github.com/aesterial/secureguard/internal/app/users"
-	"github.com/aesterial/secureguard/internal/domain"
 	authdomain "github.com/aesterial/secureguard/internal/domain/auth"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
-	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -23,7 +22,7 @@ func NewAuthentificator(ses *sessionsapp.Service, usr *usersapp.Service) *Authen
 	return &Authentificator{ses: ses, usr: usr}
 }
 
-func (a *Authentificator) idFromContext(ctx context.Context) (*domain.UUID, error) {
+func (a *Authentificator) idFromContext(ctx context.Context) (*string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, apperrors.InvalidArguments
@@ -34,17 +33,7 @@ func (a *Authentificator) idFromContext(ctx context.Context) (*domain.UUID, erro
 		if !ok || sessionID == "" {
 			continue
 		}
-
-		u, err := uuid.Parse(sessionID)
-		if err != nil {
-			return nil, apperrors.InvalidArguments
-		}
-
-		var raw [16]byte
-		copy(raw[:], u[:])
-
-		id := domain.ParseUUID(raw)
-		return &id, nil
+		return &sessionID, nil
 	}
 
 	return nil, apperrors.InvalidArguments
@@ -81,13 +70,16 @@ func (a *Authentificator) User(ctx context.Context, checkStaff ...bool) (*authdo
 		return &metadata, err
 	}
 	metadata.SessionID = session
-	valid, err := a.ses.IsValid(ctx, *metadata.SessionID, metadata.Hash)
+	valid, err := a.ses.IsValid(ctx, *session, metadata.Hash)
 	if err != nil {
 		logging.Error("failed to check is session valid: " + err.Error())
 		return &metadata, err
 	}
 	if !valid {
 		return &metadata, apperrors.Unauthenticated
+	}
+	if err := a.ses.SetLastSeen(ctx, *session, time.Now()); err != nil {
+		return nil, apperrors.Wrap(err)
 	}
 	owner, err := a.ses.GetOwner(ctx, *metadata.SessionID)
 	if err != nil {

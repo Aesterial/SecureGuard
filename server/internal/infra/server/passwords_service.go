@@ -26,7 +26,7 @@ func NewPasswordsService(pass *passapp.Service, auth *Authentificator) *Password
 }
 
 func (s *PasswordsService) Create(ctx context.Context, req *passpb.CreateRequest) (*passpb.PassDataResponse, error) {
-	if req == nil || req.ServiceUrl == "" || req.Login == "" || req.Pass == "" || req.Salt == "" {
+	if req == nil || req.ServiceUrl == "" || req.Login == "" || req.Ciphertext == "" || req.Nonce == "" || req.Version == 0 {
 		return nil, apperrors.InvalidArguments
 	}
 	auth, err := s.auth.User(ctx)
@@ -34,7 +34,7 @@ func (s *PasswordsService) Create(ctx context.Context, req *passpb.CreateRequest
 		logging.Error("failed to authorize password: " + err.Error())
 		return nil, err
 	}
-	pass, err := s.pass.Create(ctx, *auth.UserID, req.ServiceUrl, req.Login, req.Pass, req.Salt)
+	pass, err := s.pass.Create(ctx, *auth.UserID, req.ServiceUrl, req.Login, req.Ciphertext, req.Version, req.Aad, req.Nonce, req.Metadata)
 	if err != nil {
 		logging.Error("failed to add password: " + err.Error())
 		return nil, apperrors.Wrap(err)

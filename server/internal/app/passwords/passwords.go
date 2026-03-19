@@ -2,6 +2,7 @@ package passapp
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/aesterial/secureguard/internal/domain"
 	passdomain "github.com/aesterial/secureguard/internal/domain/passwords"
@@ -27,11 +28,15 @@ func (s *Service) GetList(ctx context.Context, owner domain.UUID, limit, offset 
 	return list, nil
 }
 
-func (s *Service) Create(ctx context.Context, owner domain.UUID, service string, login string, pass string, salt string) (*passdomain.Password, error) {
-	if service == "" || login == "" || pass == "" || salt == "" {
+func (s *Service) Create(ctx context.Context, owner domain.UUID, service string, login string, pass string, version int32, aad []byte, nonce string, meta string) (*passdomain.Password, error) {
+	if service == "" || login == "" || pass == "" || version <= 0 || aad == nil || nonce == "" || meta == "" {
 		return nil, apperrors.InvalidArguments
 	}
-	password, err := s.pass.Create(ctx, owner, service, login, pass, salt)
+	metadata, err := json.Marshal(meta)
+	if err != nil {
+		return nil, err
+	}
+	password, err := s.pass.Create(ctx, owner, service, login, pass, version, aad, nonce, metadata)
 	if err != nil {
 		return nil, err
 	}

@@ -301,6 +301,110 @@ func (x *RequestWithLimitAndOffset) GetOffset() int32 {
 	return 0
 }
 
+type RequestWithBoolean struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         bool                   `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RequestWithBoolean) Reset() {
+	*x = RequestWithBoolean{}
+	mi := &file_xyz_secureguard_v1_types_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RequestWithBoolean) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RequestWithBoolean) ProtoMessage() {}
+
+func (x *RequestWithBoolean) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_types_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RequestWithBoolean.ProtoReflect.Descriptor instead.
+func (*RequestWithBoolean) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_types_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *RequestWithBoolean) GetValue() bool {
+	if x != nil {
+		return x.Value
+	}
+	return false
+}
+
+type RequestWithBooleanLimitOffset struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Value         bool                   `protobuf:"varint,1,opt,name=value,proto3" json:"value,omitempty"`
+	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	Offset        int32                  `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RequestWithBooleanLimitOffset) Reset() {
+	*x = RequestWithBooleanLimitOffset{}
+	mi := &file_xyz_secureguard_v1_types_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RequestWithBooleanLimitOffset) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RequestWithBooleanLimitOffset) ProtoMessage() {}
+
+func (x *RequestWithBooleanLimitOffset) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_types_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RequestWithBooleanLimitOffset.ProtoReflect.Descriptor instead.
+func (*RequestWithBooleanLimitOffset) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_types_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *RequestWithBooleanLimitOffset) GetValue() bool {
+	if x != nil {
+		return x.Value
+	}
+	return false
+}
+
+func (x *RequestWithBooleanLimitOffset) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *RequestWithBooleanLimitOffset) GetOffset() int32 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
 var File_xyz_secureguard_v1_types_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_types_proto_rawDesc = "" +
@@ -319,7 +423,13 @@ const file_xyz_secureguard_v1_types_proto_rawDesc = "" +
 	"\x06offset\x18\x01 \x01(\x05R\x06offset\"I\n" +
 	"\x19RequestWithLimitAndOffset\x12\x14\n" +
 	"\x05limit\x18\x01 \x01(\x05R\x05limit\x12\x16\n" +
-	"\x06offset\x18\x02 \x01(\x05R\x06offsetB2Z0github.com/aesterial/secureguard/internal/api/v1b\x06proto3"
+	"\x06offset\x18\x02 \x01(\x05R\x06offset\"*\n" +
+	"\x12RequestWithBoolean\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\bR\x05value\"c\n" +
+	"\x1dRequestWithBooleanLimitOffset\x12\x14\n" +
+	"\x05value\x18\x01 \x01(\bR\x05value\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x16\n" +
+	"\x06offset\x18\x03 \x01(\x05R\x06offsetB2Z0github.com/aesterial/secureguard/internal/api/v1b\x06proto3"
 
 var (
 	file_xyz_secureguard_v1_types_proto_rawDescOnce sync.Once
@@ -333,14 +443,16 @@ func file_xyz_secureguard_v1_types_proto_rawDescGZIP() []byte {
 	return file_xyz_secureguard_v1_types_proto_rawDescData
 }
 
-var file_xyz_secureguard_v1_types_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_xyz_secureguard_v1_types_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_xyz_secureguard_v1_types_proto_goTypes = []any{
-	(*RequestWithID)(nil),             // 0: xyz.secureguard.v1.RequestWithID
-	(*RequestWithIdAndValue)(nil),     // 1: xyz.secureguard.v1.RequestWithIdAndValue
-	(*RequestWithValue)(nil),          // 2: xyz.secureguard.v1.RequestWithValue
-	(*RequestWithLimit)(nil),          // 3: xyz.secureguard.v1.RequestWithLimit
-	(*RequestWithOffset)(nil),         // 4: xyz.secureguard.v1.RequestWithOffset
-	(*RequestWithLimitAndOffset)(nil), // 5: xyz.secureguard.v1.RequestWithLimitAndOffset
+	(*RequestWithID)(nil),                 // 0: xyz.secureguard.v1.RequestWithID
+	(*RequestWithIdAndValue)(nil),         // 1: xyz.secureguard.v1.RequestWithIdAndValue
+	(*RequestWithValue)(nil),              // 2: xyz.secureguard.v1.RequestWithValue
+	(*RequestWithLimit)(nil),              // 3: xyz.secureguard.v1.RequestWithLimit
+	(*RequestWithOffset)(nil),             // 4: xyz.secureguard.v1.RequestWithOffset
+	(*RequestWithLimitAndOffset)(nil),     // 5: xyz.secureguard.v1.RequestWithLimitAndOffset
+	(*RequestWithBoolean)(nil),            // 6: xyz.secureguard.v1.RequestWithBoolean
+	(*RequestWithBooleanLimitOffset)(nil), // 7: xyz.secureguard.v1.RequestWithBooleanLimitOffset
 }
 var file_xyz_secureguard_v1_types_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -361,7 +473,7 @@ func file_xyz_secureguard_v1_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_xyz_secureguard_v1_types_proto_rawDesc), len(file_xyz_secureguard_v1_types_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

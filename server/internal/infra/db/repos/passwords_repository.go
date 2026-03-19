@@ -21,6 +21,20 @@ func NewPasswordsRepository(querier dbsqlc.Querier) *PasswordsRepository {
 
 var _ passdomain.Repository = (*PasswordsRepository)(nil)
 
+func (s *PasswordsRepository) parsePassword(row dbsqlc.Password) *passdomain.Password {
+	return &passdomain.Password{
+		ID:       domain.ParseUUID(row.ID.Bytes),
+		Service:  passdomain.ParseService(row.Service),
+		Login:    row.Login,
+		Password: row.Ciphertext,
+		Version:  row.Version,
+		Nonce:    row.Nonce,
+		Aad:      row.Aad,
+		Metadata: row.Metadata,
+		Created:  row.CreatedAt.Time,
+	}
+}
+
 func (s *PasswordsRepository) isUserExists(ctx context.Context, usr domain.UUID) (bool, error) {
 	exists, err := s.querier.GetIsUserExists(ctx, usr.PG())
 	if err != nil {
@@ -61,13 +75,7 @@ func (s *PasswordsRepository) GetInfo(ctx context.Context, target domain.UUID) (
 	if err != nil {
 		return nil, err
 	}
-	return &passdomain.Password{
-		ID:       target,
-		Service:  passdomain.ParseService(info.Service),
-		Login:    info.Login,
-		Password: info.Pass,
-		Created:  info.CreatedAt.Time,
-	}, nil
+	return s.parsePassword(info), nil
 }
 
 func (s *PasswordsRepository) GetList(ctx context.Context, target domain.UUID, limit, offset int32) (passdomain.Passwords, error) {
@@ -84,13 +92,7 @@ func (s *PasswordsRepository) GetList(ctx context.Context, target domain.UUID, l
 	}
 	var result = make(passdomain.Passwords, len(list), len(list))
 	for i, element := range list {
-		result[i] = &passdomain.Password{
-			ID:       domain.ParseUUID(element.ID.Bytes),
-			Service:  passdomain.ParseService(element.Service),
-			Login:    element.Login,
-			Password: element.Pass,
-			Created:  element.CreatedAt.Time,
-		}
+		result[i] = s.parsePassword(element)
 	}
 	return result, nil
 }
@@ -104,7 +106,7 @@ func (s *PasswordsRepository) GetOwner(ctx context.Context, id domain.UUID) (*do
 	return &owner, nil
 }
 
-func (s *PasswordsRepository) Create(ctx context.Context, target domain.UUID, service string, login string, pass string, salt string) (*passdomain.Password, error) {
+func (s *PasswordsRepository) Create(ctx context.Context, target domain.UUID, service string, login string, pass string, version int32, aad []byte, nonce string, metadata []byte) (*passdomain.Password, error) {
 	if service == "" || login == "" || pass == "" {
 		return nil, apperrors.InvalidArguments
 	}
@@ -116,11 +118,11 @@ func (s *PasswordsRepository) Create(ctx context.Context, target domain.UUID, se
 		return nil, apperrors.NotFound
 	}
 
-	p, err := s.querier.CreatePassword(ctx, dbsqlc.CreatePasswordParams{Owner: target.PG(), Service: service, Login: login, Pass: pass, Salt: salt})
+	p, err := s.querier.CreatePassword(ctx, dbsqlc.CreatePasswordParams{Owner: target.PG(), Service: service, Login: login, Ciphertext: pass, Version: version, Nonce: nonce, Aad: aad, Metadata: metadata})
 	if err != nil {
 		return nil, err
 	}
-	return &passdomain.Password{ID: domain.ParseUUID(p.ID.Bytes), Service: passdomain.ParseService(p.Service), Login: p.Login, Password: p.Pass, Created: p.CreatedAt.Time}, nil
+	return s.parsePassword(p), nil
 }
 
 func (s *PasswordsRepository) Update(ctx context.Context, target domain.UUID, update passdomain.Target, value string, salt string) (*passdomain.Password, error) {
@@ -133,11 +135,11 @@ func (s *PasswordsRepository) Update(ctx context.Context, target domain.UUID, up
 	}
 	switch update {
 	case passdomain.LoginTarget:
-		err = s.querier.UpdatePasswordLogin(ctx, dbsqlc.UpdatePasswordLoginParams{Login: value, ID: target.PG(), Salt: salt})
+		err = s.querier.UpdatePasswordLogin(ctx, dbsqlc.UpdatePasswordLoginParams{Login: value, ID: target.PG()})
 	case passdomain.PassTarget:
-		err = s.querier.UpdatePasswordPass(ctx, dbsqlc.UpdatePasswordPassParams{Pass: value, ID: target.PG(), Salt: salt})
+		err = s.querier.UpdatePasswordPass(ctx, dbsqlc.UpdatePasswordPassParams{Ciphertext: value, ID: target.PG()})
 	case passdomain.ServiceTarget:
-		err = s.querier.UpdatePasswordService(ctx, dbsqlc.UpdatePasswordServiceParams{Service: value, ID: target.PG(), Salt: salt})
+		err = s.querier.UpdatePasswordService(ctx, dbsqlc.UpdatePasswordServiceParams{Service: value, ID: target.PG()})
 	default:
 		return nil, apperrors.InvalidArguments
 	}

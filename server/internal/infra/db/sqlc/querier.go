@@ -14,26 +14,28 @@ type Querier interface {
 	CountUsersRegisteredBetween(ctx context.Context, arg CountUsersRegisteredBetweenParams) (int64, error)
 	CreateActivitySnapshot(ctx context.Context, arg CreateActivitySnapshotParams) error
 	CreatePassword(ctx context.Context, arg CreatePasswordParams) (Password, error)
-	CreateSession(ctx context.Context, arg CreateSessionParams) (pgtype.UUID, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (string, error)
 	CreateStatisticsSnapshot(ctx context.Context, arg CreateStatisticsSnapshotParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	CreateUserKey(ctx context.Context, arg CreateUserKeyParams) error
 	DeletePassword(ctx context.Context, id pgtype.UUID) error
 	GetActivityStatistics(ctx context.Context, arg GetActivityStatisticsParams) ([]GetActivityStatisticsRow, error)
 	GetChoosenPreferencesCrypt(ctx context.Context) ([]string, error)
 	GetChoosenPreferencesLanguage(ctx context.Context) ([]string, error)
 	GetChoosenPreferencesTheme(ctx context.Context) ([]string, error)
-	GetExpiredSessions(ctx context.Context) ([]pgtype.UUID, error)
+	GetExpiredSessions(ctx context.Context) ([]string, error)
 	GetIsUserAdmin(ctx context.Context, id pgtype.UUID) (bool, error)
 	GetIsUserExists(ctx context.Context, id pgtype.UUID) (bool, error)
 	GetIsUsernameExists(ctx context.Context, username string) (bool, error)
+	GetListSessionsByOwner(ctx context.Context, arg GetListSessionsByOwnerParams) ([]Session, error)
 	GetListUsers(ctx context.Context, arg GetListUsersParams) ([]User, error)
-	GetPasswordByID(ctx context.Context, id pgtype.UUID) (GetPasswordByIDRow, error)
+	GetPasswordByID(ctx context.Context, id pgtype.UUID) (Password, error)
 	GetPasswordOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
 	GetSavedStatsLatency(ctx context.Context, at pgtype.Timestamptz) (GetSavedStatsLatencyRow, error)
 	GetServicesTopStats(ctx context.Context, at pgtype.Timestamptz) ([]byte, error)
-	GetSessionByID(ctx context.Context, id pgtype.UUID) (GetSessionByIDRow, error)
-	GetSessionInfo(ctx context.Context, id pgtype.UUID) (GetSessionInfoRow, error)
-	GetSessionOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	GetSessionByID(ctx context.Context, id string) (GetSessionByIDRow, error)
+	GetSessionInfo(ctx context.Context, id string) (GetSessionInfoRow, error)
+	GetSessionOwner(ctx context.Context, id string) (pgtype.UUID, error)
 	GetTotalActiveSessions(ctx context.Context) (int64, error)
 	GetTotalAdmins(ctx context.Context) (int64, error)
 	GetTotalPasswords(ctx context.Context) (int64, error)
@@ -46,17 +48,17 @@ type Querier interface {
 	InitPreferences(ctx context.Context, owner pgtype.UUID) error
 	IsPasswordExists(ctx context.Context, id pgtype.UUID) (bool, error)
 	IsPreferencesExists(ctx context.Context, owner pgtype.UUID) (bool, error)
-	IsSessionExists(ctx context.Context, id pgtype.UUID) (bool, error)
-	ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]ListPasswordsByOwnerRow, error)
-	ListSessionsByOwner(ctx context.Context, arg ListSessionsByOwnerParams) ([]ListSessionsByOwnerRow, error)
-	RevokeSession(ctx context.Context, id pgtype.UUID) error
+	IsSessionExists(ctx context.Context, id string) (bool, error)
+	ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]Password, error)
+	RevokeSession(ctx context.Context, id string) error
+	SetLastSeenSession(ctx context.Context, arg SetLastSeenSessionParams) error
+	UpdateMasterKey(ctx context.Context, arg UpdateMasterKeyParams) error
 	UpdatePasswordLogin(ctx context.Context, arg UpdatePasswordLoginParams) error
 	UpdatePasswordPass(ctx context.Context, arg UpdatePasswordPassParams) error
 	UpdatePasswordService(ctx context.Context, arg UpdatePasswordServiceParams) error
 	UpdatePreferenceCrypt(ctx context.Context, arg UpdatePreferenceCryptParams) error
 	UpdatePreferenceLanguage(ctx context.Context, arg UpdatePreferenceLanguageParams) error
 	UpdatePreferenceTheme(ctx context.Context, arg UpdatePreferenceThemeParams) error
-	UpdateSeedPhrase(ctx context.Context, arg UpdateSeedPhraseParams) error
 }
 
 var _ Querier = (*Queries)(nil)

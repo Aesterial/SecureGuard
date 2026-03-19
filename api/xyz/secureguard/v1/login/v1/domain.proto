@@ -7,17 +7,26 @@ option go_package = "github.com/aesterial/secureguard/internal/api/v1/login/v1;l
 import "xyz/secureguard/v1/users/v1/domain.proto";
 
 message AuthorizeRequest {
-    string username = 1;
-    string password = 2;
+  string username = 1;
+  string password = 2;
+  string master_key = 3;
 }
 
 message RegisterRequest {
-    string username = 1;
-    string password = 2;
-    string phraze = 3;
+  message kdf {
+    int32 version = 1;
+    int64 memory = 2;
+    int32 iterations = 3;
+    int32 parallelism = 4;
+  }
+  string username = 1;
+  string password = 2;
+  string master_key = 3;
+  string salt = 4;
+  kdf    kdf_params = 5;
 }
 
 message LoginResponse {
-    xyz.secureguard.v1.users.v1.UserSelf info = 1;
-    string session = 2;
+  xyz.secureguard.v1.users.v1.UserSelf info = 1;
+  string session = 2;
 }

@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (s *Service) Authorize(ctx context.Context, required logindomain.AuthorizeRequire, hash string) (*domain.UUID, *domain.UUID, error) {
+func (s *Service) Authorize(ctx context.Context, required logindomain.AuthorizeRequire, hash string) (*domain.UUID, *string, error) {
 	if !required.IsCredentialsValid() {
 		return nil, nil, apperrors.InvalidArguments
 	}

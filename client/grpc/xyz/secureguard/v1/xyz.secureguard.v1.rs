@@ -34,4 +34,18 @@ pub struct RequestWithLimitAndOffset {
     #[prost(int32, tag = "2")]
     pub offset: i32,
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RequestWithBoolean {
+    #[prost(bool, tag = "1")]
+    pub value: bool,
+}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RequestWithBooleanLimitOffset {
+    #[prost(bool, tag = "1")]
+    pub value: bool,
+    #[prost(int32, tag = "2")]
+    pub limit: i32,
+    #[prost(int32, tag = "3")]
+    pub offset: i32,
+}
 // @@protoc_insertion_point(module)

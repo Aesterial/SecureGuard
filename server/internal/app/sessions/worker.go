@@ -40,11 +40,11 @@ func (w *Worker) loop(ctx context.Context) {
 			}
 
 			for _, e := range list {
-				if e == nil {
+				if e == "" {
 					continue
 				}
 
-				if err := w.repo.Revoke(ctx, *e); err != nil {
+				if err := w.repo.Revoke(ctx, e); err != nil {
 					logging.Error("failed to revoke session", logging.F("error", err.Error()))
 				}
 			}

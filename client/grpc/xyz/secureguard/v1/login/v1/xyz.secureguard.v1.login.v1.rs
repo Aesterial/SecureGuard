@@ -6,6 +6,8 @@ pub struct AuthorizeRequest {
     pub username: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub password: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub master_key: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct RegisterRequest {
@@ -14,7 +16,25 @@ pub struct RegisterRequest {
     #[prost(string, tag = "2")]
     pub password: ::prost::alloc::string::String,
     #[prost(string, tag = "3")]
-    pub phraze: ::prost::alloc::string::String,
+    pub master_key: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub salt: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "5")]
+    pub kdf_params: ::core::option::Option<register_request::Kdf>,
+}
+/// Nested message and enum types in `RegisterRequest`.
+pub mod register_request {
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct Kdf {
+        #[prost(int32, tag = "1")]
+        pub version: i32,
+        #[prost(int64, tag = "2")]
+        pub memory: i64,
+        #[prost(int32, tag = "3")]
+        pub iterations: i32,
+        #[prost(int32, tag = "4")]
+        pub parallelism: i32,
+    }
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct LoginResponse {

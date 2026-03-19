@@ -22,6 +22,11 @@ type Kafka struct {
 	ClientID string
 }
 
+type Crypt struct {
+	Pepper        string
+	SessionLength int
+}
+
 type Boot struct {
 	Port int
 }
@@ -31,6 +36,7 @@ type Config struct {
 	Boot     Boot
 	Logging  Logging
 	Kafka    Kafka
+	Crypt    Crypt
 
 	Debug  bool
 	Loaded bool

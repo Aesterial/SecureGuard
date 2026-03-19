@@ -9,6 +9,7 @@ import (
 	loginapp "github.com/aesterial/secureguard/internal/app/login"
 	userapp "github.com/aesterial/secureguard/internal/app/users"
 	logindomain "github.com/aesterial/secureguard/internal/domain/login"
+	usersdomain "github.com/aesterial/secureguard/internal/domain/users"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -25,7 +26,7 @@ func NewLoginService(usr *userapp.Service, login *loginapp.Service, auth *Authen
 }
 
 func (s *LoginService) Register(ctx context.Context, req *loginpb.RegisterRequest) (*loginpb.LoginResponse, error) {
-	if req == nil || len(req.Password) < 8 || len(req.Username) < 3 || req.Phraze == "" {
+	if req == nil || len(req.Password) < 8 || len(req.Username) < 3 {
 		return nil, apperrors.InvalidArguments
 	}
 	auth, err := s.auth.User(ctx)
@@ -43,7 +44,7 @@ func (s *LoginService) Register(ctx context.Context, req *loginpb.RegisterReques
 	if exists {
 		return nil, apperrors.Conflict
 	}
-	id, session, err := s.login.Register(ctx, logindomain.RegisterRequire{Phrase: req.Phraze, Require: logindomain.Require{Username: req.Username, Password: req.Password}}, auth.Hash)
+	id, session, err := s.login.Register(ctx, logindomain.RegisterRequire{MasterKey: req.MasterKey, Salt: req.Salt, Require: logindomain.Require{Username: req.Username, Password: req.Password}}, auth.Hash, usersdomain.KDFparams{Version: req.KdfParams.GetVersion(), Memory: req.KdfParams.GetMemory(), Iterations: req.KdfParams.GetIterations(), Parallelism: req.KdfParams.GetParallelism()})
 	if err != nil {
 		logging.Error("register failed", logging.F("error", err.Error()))
 		return nil, apperrors.Wrap(err)
@@ -53,7 +54,7 @@ func (s *LoginService) Register(ctx context.Context, req *loginpb.RegisterReques
 		logging.Error("register failed while loading user", logging.F("error", err.Error()))
 		return nil, apperrors.Wrap(err)
 	}
-	return &loginpb.LoginResponse{Info: usr.ProtobufSelf(), Session: session.String()}, nil
+	return &loginpb.LoginResponse{Info: usr.ProtobufSelf(), Session: *session}, nil
 }
 
 func (s *LoginService) Authorize(ctx context.Context, req *loginpb.AuthorizeRequest) (*loginpb.LoginResponse, error) {
@@ -85,7 +86,7 @@ func (s *LoginService) Authorize(ctx context.Context, req *loginpb.AuthorizeRequ
 		logging.Error("authorize failed while loading user", logging.F("error", err.Error()))
 		return nil, apperrors.Wrap(err)
 	}
-	return &loginpb.LoginResponse{Info: usr.ProtobufSelf(), Session: session.String()}, nil
+	return &loginpb.LoginResponse{Info: usr.ProtobufSelf(), Session: *session}, nil
 }
 
 func (s *LoginService) Logout(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {

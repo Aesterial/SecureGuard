@@ -57,19 +57,25 @@ insert into passwords (
     owner,
     service,
     login,
-    pass,
-    salt
+    ciphertext,
+    version,
+    nonce,
+    aad,
+    metadata
 )
-values ($1, $2, $3, $4, $5)
-returning id, owner, service, login, pass, salt, created_at
+values ($1, $2, $3, $4, $5, $6, $7, $8)
+returning id, owner, service, login, ciphertext, version, nonce, aad, metadata, created_at
 `
 
 type CreatePasswordParams struct {
-	Owner   pgtype.UUID `json:"owner"`
-	Service string      `json:"service"`
-	Login   string      `json:"login"`
-	Pass    string      `json:"pass"`
-	Salt    string      `json:"salt"`
+	Owner      pgtype.UUID `json:"owner"`
+	Service    string      `json:"service"`
+	Login      string      `json:"login"`
+	Ciphertext string      `json:"ciphertext"`
+	Version    int32       `json:"version"`
+	Nonce      string      `json:"nonce"`
+	Aad        []byte      `json:"aad"`
+	Metadata   []byte      `json:"metadata"`
 }
 
 func (q *Queries) CreatePassword(ctx context.Context, arg CreatePasswordParams) (Password, error) {
@@ -77,8 +83,11 @@ func (q *Queries) CreatePassword(ctx context.Context, arg CreatePasswordParams) 
 		arg.Owner,
 		arg.Service,
 		arg.Login,
-		arg.Pass,
-		arg.Salt,
+		arg.Ciphertext,
+		arg.Version,
+		arg.Nonce,
+		arg.Aad,
+		arg.Metadata,
 	)
 	var i Password
 	err := row.Scan(
@@ -86,25 +95,29 @@ func (q *Queries) CreatePassword(ctx context.Context, arg CreatePasswordParams) 
 		&i.Owner,
 		&i.Service,
 		&i.Login,
-		&i.Pass,
-		&i.Salt,
+		&i.Ciphertext,
+		&i.Version,
+		&i.Nonce,
+		&i.Aad,
+		&i.Metadata,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const createSession = `-- name: CreateSession :one
-insert into sessions (owner, client_hash) values ($1, $2) returning id
+insert into sessions (id, owner, client_hash) values ($1, $2, $3) returning id
 `
 
 type CreateSessionParams struct {
+	ID         string      `json:"id"`
 	Owner      pgtype.UUID `json:"owner"`
 	ClientHash string      `json:"client_hash"`
 }
 
-func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (pgtype.UUID, error) {
-	row := q.db.QueryRow(ctx, createSession, arg.Owner, arg.ClientHash)
-	var id pgtype.UUID
+func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (string, error) {
+	row := q.db.QueryRow(ctx, createSession, arg.ID, arg.Owner, arg.ClientHash)
+	var id string
 	err := row.Scan(&id)
 	return id, err
 }
@@ -145,31 +158,53 @@ func (q *Queries) CreateStatisticsSnapshot(ctx context.Context, arg CreateStatis
 const createUser = `-- name: CreateUser :one
 insert into users (
     username,
-    password,
-    seed_phrase
+    password
 )
-values ($1, $2, $3)
-returning id, username, password, seed_phrase, admin_access, joined
+values ($1, $2)
+returning id, username, password, admin_access, joined
 `
 
 type CreateUserParams struct {
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	SeedPhrase string `json:"seed_phrase"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.Password, arg.SeedPhrase)
+	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.Password)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.Password,
-		&i.SeedPhrase,
 		&i.AdminAccess,
 		&i.Joined,
 	)
 	return i, err
+}
+
+const createUserKey = `-- name: CreateUserKey :exec
+insert into users_keys (master_key, salt, version, memory, iterations, parallelism) values ($1, $2, $3, $4, $5, $6)
+`
+
+type CreateUserKeyParams struct {
+	MasterKey   string `json:"master_key"`
+	Salt        string `json:"salt"`
+	Version     int32  `json:"version"`
+	Memory      int64  `json:"memory"`
+	Iterations  int32  `json:"iterations"`
+	Parallelism int32  `json:"parallelism"`
+}
+
+func (q *Queries) CreateUserKey(ctx context.Context, arg CreateUserKeyParams) error {
+	_, err := q.db.Exec(ctx, createUserKey,
+		arg.MasterKey,
+		arg.Salt,
+		arg.Version,
+		arg.Memory,
+		arg.Iterations,
+		arg.Parallelism,
+	)
+	return err
 }
 
 const deletePassword = `-- name: DeletePassword :exec
@@ -292,15 +327,15 @@ const getExpiredSessions = `-- name: GetExpiredSessions :many
 select id from sessions where expires < now()
 `
 
-func (q *Queries) GetExpiredSessions(ctx context.Context) ([]pgtype.UUID, error) {
+func (q *Queries) GetExpiredSessions(ctx context.Context) ([]string, error) {
 	rows, err := q.db.Query(ctx, getExpiredSessions)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []pgtype.UUID{}
+	items := []string{}
 	for rows.Next() {
-		var id pgtype.UUID
+		var id string
 		if err := rows.Scan(&id); err != nil {
 			return nil, err
 		}
@@ -345,8 +380,52 @@ func (q *Queries) GetIsUsernameExists(ctx context.Context, username string) (boo
 	return exists, err
 }
 
+const getListSessionsByOwner = `-- name: GetListSessionsByOwner :many
+select id, owner, client_hash, revoked, revoked_at, created, expires, last_seen
+from sessions
+where owner = $1
+order by created desc
+limit $2
+offset $3
+`
+
+type GetListSessionsByOwnerParams struct {
+	Owner  pgtype.UUID `json:"owner"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+}
+
+func (q *Queries) GetListSessionsByOwner(ctx context.Context, arg GetListSessionsByOwnerParams) ([]Session, error) {
+	rows, err := q.db.Query(ctx, getListSessionsByOwner, arg.Owner, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Session{}
+	for rows.Next() {
+		var i Session
+		if err := rows.Scan(
+			&i.ID,
+			&i.Owner,
+			&i.ClientHash,
+			&i.Revoked,
+			&i.RevokedAt,
+			&i.Created,
+			&i.Expires,
+			&i.LastSeen,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getListUsers = `-- name: GetListUsers :many
-select id, username, password, seed_phrase, admin_access, joined
+select id, username, password, admin_access, joined
 from users
 order by joined desc
 limit $1
@@ -371,7 +450,6 @@ func (q *Queries) GetListUsers(ctx context.Context, arg GetListUsersParams) ([]U
 			&i.ID,
 			&i.Username,
 			&i.Password,
-			&i.SeedPhrase,
 			&i.AdminAccess,
 			&i.Joined,
 		); err != nil {
@@ -386,30 +464,25 @@ func (q *Queries) GetListUsers(ctx context.Context, arg GetListUsersParams) ([]U
 }
 
 const getPasswordByID = `-- name: GetPasswordByID :one
-select id, owner, service, login, pass, created_at
+select id, owner, service, login, ciphertext, version, nonce, aad, metadata, created_at
 from passwords
 where id = $1
 limit 1
 `
 
-type GetPasswordByIDRow struct {
-	ID        pgtype.UUID        `json:"id"`
-	Owner     pgtype.UUID        `json:"owner"`
-	Service   string             `json:"service"`
-	Login     string             `json:"login"`
-	Pass      string             `json:"pass"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-}
-
-func (q *Queries) GetPasswordByID(ctx context.Context, id pgtype.UUID) (GetPasswordByIDRow, error) {
+func (q *Queries) GetPasswordByID(ctx context.Context, id pgtype.UUID) (Password, error) {
 	row := q.db.QueryRow(ctx, getPasswordByID, id)
-	var i GetPasswordByIDRow
+	var i Password
 	err := row.Scan(
 		&i.ID,
 		&i.Owner,
 		&i.Service,
 		&i.Login,
-		&i.Pass,
+		&i.Ciphertext,
+		&i.Version,
+		&i.Nonce,
+		&i.Aad,
+		&i.Metadata,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -461,14 +534,14 @@ limit 1
 `
 
 type GetSessionByIDRow struct {
-	ID         pgtype.UUID        `json:"id"`
+	ID         string             `json:"id"`
 	Owner      pgtype.UUID        `json:"owner"`
 	ClientHash string             `json:"client_hash"`
 	Created    pgtype.Timestamptz `json:"created"`
 	Revoked    bool               `json:"revoked"`
 }
 
-func (q *Queries) GetSessionByID(ctx context.Context, id pgtype.UUID) (GetSessionByIDRow, error) {
+func (q *Queries) GetSessionByID(ctx context.Context, id string) (GetSessionByIDRow, error) {
 	row := q.db.QueryRow(ctx, getSessionByID, id)
 	var i GetSessionByIDRow
 	err := row.Scan(
@@ -493,7 +566,7 @@ type GetSessionInfoRow struct {
 	Expires    pgtype.Timestamptz `json:"expires"`
 }
 
-func (q *Queries) GetSessionInfo(ctx context.Context, id pgtype.UUID) (GetSessionInfoRow, error) {
+func (q *Queries) GetSessionInfo(ctx context.Context, id string) (GetSessionInfoRow, error) {
 	row := q.db.QueryRow(ctx, getSessionInfo, id)
 	var i GetSessionInfoRow
 	err := row.Scan(
@@ -510,7 +583,7 @@ const getSessionOwner = `-- name: GetSessionOwner :one
 select owner from sessions where id = $1 limit 1
 `
 
-func (q *Queries) GetSessionOwner(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+func (q *Queries) GetSessionOwner(ctx context.Context, id string) (pgtype.UUID, error) {
 	row := q.db.QueryRow(ctx, getSessionOwner, id)
 	var owner pgtype.UUID
 	err := row.Scan(&owner)
@@ -562,7 +635,7 @@ func (q *Queries) GetTotalUsers(ctx context.Context) (int64, error) {
 }
 
 const getUserByID = `-- name: GetUserByID :one
-select id, username, password, seed_phrase, admin_access, joined
+select id, username, password, admin_access, joined
 from users
 where id = $1
 limit 1
@@ -575,7 +648,6 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 		&i.ID,
 		&i.Username,
 		&i.Password,
-		&i.SeedPhrase,
 		&i.AdminAccess,
 		&i.Joined,
 	)
@@ -583,7 +655,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-select id, username, password, seed_phrase, admin_access, joined
+select id, username, password, admin_access, joined
 from users
 where username = $1
 limit 1
@@ -596,7 +668,6 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.ID,
 		&i.Username,
 		&i.Password,
-		&i.SeedPhrase,
 		&i.AdminAccess,
 		&i.Joined,
 	)
@@ -626,18 +697,19 @@ func (q *Queries) GetUserPasswordByUsername(ctx context.Context, username string
 }
 
 const getUserPreferences = `-- name: GetUserPreferences :one
-select theme, lang from preferences where owner = $1 limit 1
+select theme, lang, crypt from preferences where owner = $1 limit 1
 `
 
 type GetUserPreferencesRow struct {
 	Theme string `json:"theme"`
 	Lang  string `json:"lang"`
+	Crypt string `json:"crypt"`
 }
 
 func (q *Queries) GetUserPreferences(ctx context.Context, owner pgtype.UUID) (GetUserPreferencesRow, error) {
 	row := q.db.QueryRow(ctx, getUserPreferences, owner)
 	var i GetUserPreferencesRow
-	err := row.Scan(&i.Theme, &i.Lang)
+	err := row.Scan(&i.Theme, &i.Lang, &i.Crypt)
 	return i, err
 }
 
@@ -676,7 +748,7 @@ const isSessionExists = `-- name: IsSessionExists :one
 select exists (select 1 from sessions where id = $1)
 `
 
-func (q *Queries) IsSessionExists(ctx context.Context, id pgtype.UUID) (bool, error) {
+func (q *Queries) IsSessionExists(ctx context.Context, id string) (bool, error) {
 	row := q.db.QueryRow(ctx, isSessionExists, id)
 	var exists bool
 	err := row.Scan(&exists)
@@ -684,7 +756,7 @@ func (q *Queries) IsSessionExists(ctx context.Context, id pgtype.UUID) (bool, er
 }
 
 const listPasswordsByOwner = `-- name: ListPasswordsByOwner :many
-select id, owner, service, login, pass, created_at
+select id, owner, service, login, ciphertext, version, nonce, aad, metadata, created_at
 from passwords
 where owner = $1
 order by created_at desc
@@ -698,30 +770,25 @@ type ListPasswordsByOwnerParams struct {
 	Offset int32       `json:"offset"`
 }
 
-type ListPasswordsByOwnerRow struct {
-	ID        pgtype.UUID        `json:"id"`
-	Owner     pgtype.UUID        `json:"owner"`
-	Service   string             `json:"service"`
-	Login     string             `json:"login"`
-	Pass      string             `json:"pass"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-}
-
-func (q *Queries) ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]ListPasswordsByOwnerRow, error) {
+func (q *Queries) ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByOwnerParams) ([]Password, error) {
 	rows, err := q.db.Query(ctx, listPasswordsByOwner, arg.Owner, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListPasswordsByOwnerRow{}
+	items := []Password{}
 	for rows.Next() {
-		var i ListPasswordsByOwnerRow
+		var i Password
 		if err := rows.Scan(
 			&i.ID,
 			&i.Owner,
 			&i.Service,
 			&i.Login,
-			&i.Pass,
+			&i.Ciphertext,
+			&i.Version,
+			&i.Nonce,
+			&i.Aad,
+			&i.Metadata,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -734,106 +801,82 @@ func (q *Queries) ListPasswordsByOwner(ctx context.Context, arg ListPasswordsByO
 	return items, nil
 }
 
-const listSessionsByOwner = `-- name: ListSessionsByOwner :many
-select id, owner, client_hash, created, revoked
-from sessions
-where owner = $1
-order by created desc
-limit $2
-offset $3
-`
-
-type ListSessionsByOwnerParams struct {
-	Owner  pgtype.UUID `json:"owner"`
-	Limit  int32       `json:"limit"`
-	Offset int32       `json:"offset"`
-}
-
-type ListSessionsByOwnerRow struct {
-	ID         pgtype.UUID        `json:"id"`
-	Owner      pgtype.UUID        `json:"owner"`
-	ClientHash string             `json:"client_hash"`
-	Created    pgtype.Timestamptz `json:"created"`
-	Revoked    bool               `json:"revoked"`
-}
-
-func (q *Queries) ListSessionsByOwner(ctx context.Context, arg ListSessionsByOwnerParams) ([]ListSessionsByOwnerRow, error) {
-	rows, err := q.db.Query(ctx, listSessionsByOwner, arg.Owner, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListSessionsByOwnerRow{}
-	for rows.Next() {
-		var i ListSessionsByOwnerRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Owner,
-			&i.ClientHash,
-			&i.Created,
-			&i.Revoked,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const revokeSession = `-- name: RevokeSession :exec
-update sessions set revoked = true where id = $1
+update sessions set revoked = true, revoked_at = now() where id = $1
 `
 
-func (q *Queries) RevokeSession(ctx context.Context, id pgtype.UUID) error {
+func (q *Queries) RevokeSession(ctx context.Context, id string) error {
 	_, err := q.db.Exec(ctx, revokeSession, id)
 	return err
 }
 
+const setLastSeenSession = `-- name: SetLastSeenSession :exec
+update sessions set last_seen = $1 where id = $2
+`
+
+type SetLastSeenSessionParams struct {
+	LastSeen pgtype.Timestamptz `json:"last_seen"`
+	ID       string             `json:"id"`
+}
+
+func (q *Queries) SetLastSeenSession(ctx context.Context, arg SetLastSeenSessionParams) error {
+	_, err := q.db.Exec(ctx, setLastSeenSession, arg.LastSeen, arg.ID)
+	return err
+}
+
+const updateMasterKey = `-- name: UpdateMasterKey :exec
+update users_keys set master_key = $1 where owner = $2
+`
+
+type UpdateMasterKeyParams struct {
+	MasterKey string      `json:"master_key"`
+	Owner     pgtype.UUID `json:"owner"`
+}
+
+func (q *Queries) UpdateMasterKey(ctx context.Context, arg UpdateMasterKeyParams) error {
+	_, err := q.db.Exec(ctx, updateMasterKey, arg.MasterKey, arg.Owner)
+	return err
+}
+
 const updatePasswordLogin = `-- name: UpdatePasswordLogin :exec
-update passwords set login = $1, salt = $2 where id = $3
+update passwords set login = $1 where id = $2
 `
 
 type UpdatePasswordLoginParams struct {
 	Login string      `json:"login"`
-	Salt  string      `json:"salt"`
 	ID    pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) UpdatePasswordLogin(ctx context.Context, arg UpdatePasswordLoginParams) error {
-	_, err := q.db.Exec(ctx, updatePasswordLogin, arg.Login, arg.Salt, arg.ID)
+	_, err := q.db.Exec(ctx, updatePasswordLogin, arg.Login, arg.ID)
 	return err
 }
 
 const updatePasswordPass = `-- name: UpdatePasswordPass :exec
-update passwords set pass = $1, salt = $2 where id = $3
+update passwords set ciphertext = $1 where id = $2
 `
 
 type UpdatePasswordPassParams struct {
-	Pass string      `json:"pass"`
-	Salt string      `json:"salt"`
-	ID   pgtype.UUID `json:"id"`
+	Ciphertext string      `json:"ciphertext"`
+	ID         pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) UpdatePasswordPass(ctx context.Context, arg UpdatePasswordPassParams) error {
-	_, err := q.db.Exec(ctx, updatePasswordPass, arg.Pass, arg.Salt, arg.ID)
+	_, err := q.db.Exec(ctx, updatePasswordPass, arg.Ciphertext, arg.ID)
 	return err
 }
 
 const updatePasswordService = `-- name: UpdatePasswordService :exec
-update passwords set service = $1, salt = $2 where id = $3
+update passwords set service = $1 where id = $2
 `
 
 type UpdatePasswordServiceParams struct {
 	Service string      `json:"service"`
-	Salt    string      `json:"salt"`
 	ID      pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) UpdatePasswordService(ctx context.Context, arg UpdatePasswordServiceParams) error {
-	_, err := q.db.Exec(ctx, updatePasswordService, arg.Service, arg.Salt, arg.ID)
+	_, err := q.db.Exec(ctx, updatePasswordService, arg.Service, arg.ID)
 	return err
 }
 
@@ -876,19 +919,5 @@ type UpdatePreferenceThemeParams struct {
 
 func (q *Queries) UpdatePreferenceTheme(ctx context.Context, arg UpdatePreferenceThemeParams) error {
 	_, err := q.db.Exec(ctx, updatePreferenceTheme, arg.Theme, arg.Owner)
-	return err
-}
-
-const updateSeedPhrase = `-- name: UpdateSeedPhrase :exec
-update users set seed_phrase = $1 where id = $2
-`
-
-type UpdateSeedPhraseParams struct {
-	SeedPhrase string      `json:"seed_phrase"`
-	ID         pgtype.UUID `json:"id"`
-}
-
-func (q *Queries) UpdateSeedPhrase(ctx context.Context, arg UpdateSeedPhraseParams) error {
-	_, err := q.db.Exec(ctx, updateSeedPhrase, arg.SeedPhrase, arg.ID)
 	return err
 }
