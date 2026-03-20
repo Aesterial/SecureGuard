@@ -44,7 +44,7 @@ select password from users where id = $1 limit 1;
 select password from users where username = $1 limit 1;
 
 -- name: CreateUserKey :exec
-insert into users_keys (master_key, salt, version, memory, iterations, parallelism) values ($1, $2, $3, $4, $5, $6);
+insert into users_keys (owner, master_key, salt, version, memory, iterations, parallelism) values ($1, $2, $3, $4, $5, $6, $7);
 
 -- name: CreatePassword :one
 insert into passwords (

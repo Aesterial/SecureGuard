@@ -183,20 +183,22 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 }
 
 const createUserKey = `-- name: CreateUserKey :exec
-insert into users_keys (master_key, salt, version, memory, iterations, parallelism) values ($1, $2, $3, $4, $5, $6)
+insert into users_keys (owner, master_key, salt, version, memory, iterations, parallelism) values ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type CreateUserKeyParams struct {
-	MasterKey   string `json:"master_key"`
-	Salt        string `json:"salt"`
-	Version     int32  `json:"version"`
-	Memory      int64  `json:"memory"`
-	Iterations  int32  `json:"iterations"`
-	Parallelism int32  `json:"parallelism"`
+	Owner       pgtype.UUID `json:"owner"`
+	MasterKey   string      `json:"master_key"`
+	Salt        string      `json:"salt"`
+	Version     int32       `json:"version"`
+	Memory      int64       `json:"memory"`
+	Iterations  int32       `json:"iterations"`
+	Parallelism int32       `json:"parallelism"`
 }
 
 func (q *Queries) CreateUserKey(ctx context.Context, arg CreateUserKeyParams) error {
 	_, err := q.db.Exec(ctx, createUserKey,
+		arg.Owner,
 		arg.MasterKey,
 		arg.Salt,
 		arg.Version,

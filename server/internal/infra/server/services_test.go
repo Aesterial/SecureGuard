@@ -326,7 +326,7 @@ func TestLoginServiceRegisterSuccess(t *testing.T) {
 		Password:  "password-123",
 		MasterKey: "master-key",
 		Salt:      "salt-value",
-		KdfParams: &loginpb.RegisterRequestKdf{
+		KdfParams: &loginpb.RegisterRequest_Kdf{
 			Version:     1,
 			Memory:      64,
 			Iterations:  3,

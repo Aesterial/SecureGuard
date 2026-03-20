@@ -90,7 +90,7 @@ func (s *PasswordsRepository) GetList(ctx context.Context, target domain.UUID, l
 	if err != nil {
 		return nil, err
 	}
-	var result = make(passdomain.Passwords, len(list), len(list))
+	var result = make(passdomain.Passwords, len(list))
 	for i, element := range list {
 		result[i] = s.parsePassword(element)
 	}

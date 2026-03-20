@@ -17,12 +17,12 @@ type Session struct {
 	LastSeen  *time.Time
 }
 
-func (s *Session) rvProtobuf() *sessionspb.SessionRevokeInfo {
+func (s *Session) rvProtobuf() *sessionspb.Session_RevokeInfo {
 	var revokedAt *timestamppb.Timestamp = nil
 	if s.Revoked {
 		revokedAt = timestamppb.New(*s.RevokedAt)
 	}
-	return &sessionspb.SessionRevokeInfo{
+	return &sessionspb.Session_RevokeInfo{
 		Revoked:   s.Revoked,
 		RevokedAt: revokedAt,
 	}

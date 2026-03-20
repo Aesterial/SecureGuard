@@ -13,7 +13,7 @@ message AuthorizeRequest {
 }
 
 message RegisterRequest {
-  message kdf {
+  message Kdf {
     int32 version = 1;
     int64 memory = 2;
     int32 iterations = 3;
@@ -23,7 +23,7 @@ message RegisterRequest {
   string password = 2;
   string master_key = 3;
   string salt = 4;
-  kdf    kdf_params = 5;
+  Kdf    kdf_params = 5;
 }
 
 message LoginResponse {

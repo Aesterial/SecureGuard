@@ -7,13 +7,13 @@ option go_package = "github.com/aesterial/secureguard/internal/api/v1/sessions/v
 import "google/protobuf/timestamp.proto";
 
 message Session {
-  message revoke_info {
+  message RevokeInfo {
     bool revoked = 1;
     google.protobuf.Timestamp revoked_at = 2;
   }
   string id = 1;
   string hash = 2;
-  optional revoke_info revoke = 3;
+  optional RevokeInfo revoke = 3;
   google.protobuf.Timestamp created_at = 4;
   google.protobuf.Timestamp expires_at = 5;
   optional google.protobuf.Timestamp last_seen = 6;

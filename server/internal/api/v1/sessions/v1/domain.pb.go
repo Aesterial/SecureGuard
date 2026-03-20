@@ -26,7 +26,7 @@ type Session struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Hash          string                 `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
-	Revoke        *SessionRevokeInfo     `protobuf:"bytes,3,opt,name=revoke,proto3,oneof" json:"revoke,omitempty"`
+	Revoke        *Session_RevokeInfo    `protobuf:"bytes,3,opt,name=revoke,proto3,oneof" json:"revoke,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	LastSeen      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=last_seen,json=lastSeen,proto3,oneof" json:"last_seen,omitempty"`
@@ -78,7 +78,7 @@ func (x *Session) GetHash() string {
 	return ""
 }
 
-func (x *Session) GetRevoke() *SessionRevokeInfo {
+func (x *Session) GetRevoke() *Session_RevokeInfo {
 	if x != nil {
 		return x.Revoke
 	}
@@ -150,7 +150,7 @@ func (x *SessionsListResponse) GetList() []*Session {
 	return nil
 }
 
-type SessionRevokeInfo struct {
+type Session_RevokeInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Revoked       bool                   `protobuf:"varint,1,opt,name=revoked,proto3" json:"revoked,omitempty"`
 	RevokedAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=revoked_at,json=revokedAt,proto3" json:"revoked_at,omitempty"`
@@ -158,20 +158,20 @@ type SessionRevokeInfo struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SessionRevokeInfo) Reset() {
-	*x = SessionRevokeInfo{}
+func (x *Session_RevokeInfo) Reset() {
+	*x = Session_RevokeInfo{}
 	mi := &file_xyz_secureguard_v1_sessions_v1_domain_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SessionRevokeInfo) String() string {
+func (x *Session_RevokeInfo) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SessionRevokeInfo) ProtoMessage() {}
+func (*Session_RevokeInfo) ProtoMessage() {}
 
-func (x *SessionRevokeInfo) ProtoReflect() protoreflect.Message {
+func (x *Session_RevokeInfo) ProtoReflect() protoreflect.Message {
 	mi := &file_xyz_secureguard_v1_sessions_v1_domain_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -183,19 +183,19 @@ func (x *SessionRevokeInfo) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SessionRevokeInfo.ProtoReflect.Descriptor instead.
-func (*SessionRevokeInfo) Descriptor() ([]byte, []int) {
+// Deprecated: Use Session_RevokeInfo.ProtoReflect.Descriptor instead.
+func (*Session_RevokeInfo) Descriptor() ([]byte, []int) {
 	return file_xyz_secureguard_v1_sessions_v1_domain_proto_rawDescGZIP(), []int{0, 0}
 }
 
-func (x *SessionRevokeInfo) GetRevoked() bool {
+func (x *Session_RevokeInfo) GetRevoked() bool {
 	if x != nil {
 		return x.Revoked
 	}
 	return false
 }
 
-func (x *SessionRevokeInfo) GetRevokedAt() *timestamppb.Timestamp {
+func (x *Session_RevokeInfo) GetRevokedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.RevokedAt
 	}
@@ -206,17 +206,18 @@ var File_xyz_secureguard_v1_sessions_v1_domain_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_sessions_v1_domain_proto_rawDesc = "" +
 	"\n" +
-	"+xyz/secureguard/v1/sessions/v1/domain.proto\x12\x1exyz.secureguard.v1.sessions.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb0\x03\n" +
+	"+xyz/secureguard/v1/sessions/v1/domain.proto\x12\x1exyz.secureguard.v1.sessions.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xae\x03\n" +
 	"\aSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04hash\x18\x02 \x01(\tR\x04hash\x12P\n" +
-	"\x06revoke\x18\x03 \x01(\v23.xyz.secureguard.v1.sessions.v1.Session.revoke_infoH\x00R\x06revoke\x88\x01\x01\x129\n" +
+	"\x04hash\x18\x02 \x01(\tR\x04hash\x12O\n" +
+	"\x06revoke\x18\x03 \x01(\v22.xyz.secureguard.v1.sessions.v1.Session.RevokeInfoH\x00R\x06revoke\x88\x01\x01\x129\n" +
 	"\n" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12<\n" +
-	"\tlast_seen\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampH\x01R\blastSeen\x88\x01\x01\x1ab\n" +
-	"\vrevoke_info\x12\x18\n" +
+	"\tlast_seen\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampH\x01R\blastSeen\x88\x01\x01\x1aa\n" +
+	"\n" +
+	"RevokeInfo\x12\x18\n" +
 	"\arevoked\x18\x01 \x01(\bR\arevoked\x129\n" +
 	"\n" +
 	"revoked_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\trevokedAtB\t\n" +
@@ -242,16 +243,16 @@ var file_xyz_secureguard_v1_sessions_v1_domain_proto_msgTypes = make([]protoimpl
 var file_xyz_secureguard_v1_sessions_v1_domain_proto_goTypes = []any{
 	(*Session)(nil),               // 0: xyz.secureguard.v1.sessions.v1.Session
 	(*SessionsListResponse)(nil),  // 1: xyz.secureguard.v1.sessions.v1.SessionsListResponse
-	(*SessionRevokeInfo)(nil),     // 2: xyz.secureguard.v1.sessions.v1.Session.revoke_info
+	(*Session_RevokeInfo)(nil),    // 2: xyz.secureguard.v1.sessions.v1.Session.RevokeInfo
 	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
 }
 var file_xyz_secureguard_v1_sessions_v1_domain_proto_depIdxs = []int32{
-	2, // 0: xyz.secureguard.v1.sessions.v1.Session.revoke:type_name -> xyz.secureguard.v1.sessions.v1.Session.revoke_info
+	2, // 0: xyz.secureguard.v1.sessions.v1.Session.revoke:type_name -> xyz.secureguard.v1.sessions.v1.Session.RevokeInfo
 	3, // 1: xyz.secureguard.v1.sessions.v1.Session.created_at:type_name -> google.protobuf.Timestamp
 	3, // 2: xyz.secureguard.v1.sessions.v1.Session.expires_at:type_name -> google.protobuf.Timestamp
 	3, // 3: xyz.secureguard.v1.sessions.v1.Session.last_seen:type_name -> google.protobuf.Timestamp
 	0, // 4: xyz.secureguard.v1.sessions.v1.SessionsListResponse.list:type_name -> xyz.secureguard.v1.sessions.v1.Session
-	3, // 5: xyz.secureguard.v1.sessions.v1.Session.revoke_info.revoked_at:type_name -> google.protobuf.Timestamp
+	3, // 5: xyz.secureguard.v1.sessions.v1.Session.RevokeInfo.revoked_at:type_name -> google.protobuf.Timestamp
 	6, // [6:6] is the sub-list for method output_type
 	6, // [6:6] is the sub-list for method input_type
 	6, // [6:6] is the sub-list for extension type_name

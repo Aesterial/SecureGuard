@@ -88,7 +88,7 @@ type RegisterRequest struct {
 	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	MasterKey     string                 `protobuf:"bytes,3,opt,name=master_key,json=masterKey,proto3" json:"master_key,omitempty"`
 	Salt          string                 `protobuf:"bytes,4,opt,name=salt,proto3" json:"salt,omitempty"`
-	KdfParams     *RegisterRequestKdf    `protobuf:"bytes,5,opt,name=kdf_params,json=kdfParams,proto3" json:"kdf_params,omitempty"`
+	KdfParams     *RegisterRequest_Kdf   `protobuf:"bytes,5,opt,name=kdf_params,json=kdfParams,proto3" json:"kdf_params,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -151,7 +151,7 @@ func (x *RegisterRequest) GetSalt() string {
 	return ""
 }
 
-func (x *RegisterRequest) GetKdfParams() *RegisterRequestKdf {
+func (x *RegisterRequest) GetKdfParams() *RegisterRequest_Kdf {
 	if x != nil {
 		return x.KdfParams
 	}
@@ -210,7 +210,7 @@ func (x *LoginResponse) GetSession() string {
 	return ""
 }
 
-type RegisterRequestKdf struct {
+type RegisterRequest_Kdf struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Version       int32                  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
 	Memory        int64                  `protobuf:"varint,2,opt,name=memory,proto3" json:"memory,omitempty"`
@@ -220,20 +220,20 @@ type RegisterRequestKdf struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RegisterRequestKdf) Reset() {
-	*x = RegisterRequestKdf{}
+func (x *RegisterRequest_Kdf) Reset() {
+	*x = RegisterRequest_Kdf{}
 	mi := &file_xyz_secureguard_v1_login_v1_domain_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RegisterRequestKdf) String() string {
+func (x *RegisterRequest_Kdf) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RegisterRequestKdf) ProtoMessage() {}
+func (*RegisterRequest_Kdf) ProtoMessage() {}
 
-func (x *RegisterRequestKdf) ProtoReflect() protoreflect.Message {
+func (x *RegisterRequest_Kdf) ProtoReflect() protoreflect.Message {
 	mi := &file_xyz_secureguard_v1_login_v1_domain_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -245,33 +245,33 @@ func (x *RegisterRequestKdf) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RegisterRequestKdf.ProtoReflect.Descriptor instead.
-func (*RegisterRequestKdf) Descriptor() ([]byte, []int) {
+// Deprecated: Use RegisterRequest_Kdf.ProtoReflect.Descriptor instead.
+func (*RegisterRequest_Kdf) Descriptor() ([]byte, []int) {
 	return file_xyz_secureguard_v1_login_v1_domain_proto_rawDescGZIP(), []int{1, 0}
 }
 
-func (x *RegisterRequestKdf) GetVersion() int32 {
+func (x *RegisterRequest_Kdf) GetVersion() int32 {
 	if x != nil {
 		return x.Version
 	}
 	return 0
 }
 
-func (x *RegisterRequestKdf) GetMemory() int64 {
+func (x *RegisterRequest_Kdf) GetMemory() int64 {
 	if x != nil {
 		return x.Memory
 	}
 	return 0
 }
 
-func (x *RegisterRequestKdf) GetIterations() int32 {
+func (x *RegisterRequest_Kdf) GetIterations() int32 {
 	if x != nil {
 		return x.Iterations
 	}
 	return 0
 }
 
-func (x *RegisterRequestKdf) GetParallelism() int32 {
+func (x *RegisterRequest_Kdf) GetParallelism() int32 {
 	if x != nil {
 		return x.Parallelism
 	}
@@ -295,8 +295,8 @@ const file_xyz_secureguard_v1_login_v1_domain_proto_rawDesc = "" +
 	"master_key\x18\x03 \x01(\tR\tmasterKey\x12\x12\n" +
 	"\x04salt\x18\x04 \x01(\tR\x04salt\x12O\n" +
 	"\n" +
-	"kdf_params\x18\x05 \x01(\v20.xyz.secureguard.v1.login.v1.RegisterRequest.kdfR\tkdfParams\x1ay\n" +
-	"\x03kdf\x12\x18\n" +
+	"kdf_params\x18\x05 \x01(\v20.xyz.secureguard.v1.login.v1.RegisterRequest.KdfR\tkdfParams\x1ay\n" +
+	"\x03Kdf\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\x05R\aversion\x12\x16\n" +
 	"\x06memory\x18\x02 \x01(\x03R\x06memory\x12\x1e\n" +
 	"\n" +
@@ -321,14 +321,14 @@ func file_xyz_secureguard_v1_login_v1_domain_proto_rawDescGZIP() []byte {
 
 var file_xyz_secureguard_v1_login_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_xyz_secureguard_v1_login_v1_domain_proto_goTypes = []any{
-	(*AuthorizeRequest)(nil),   // 0: xyz.secureguard.v1.login.v1.AuthorizeRequest
-	(*RegisterRequest)(nil),    // 1: xyz.secureguard.v1.login.v1.RegisterRequest
-	(*LoginResponse)(nil),      // 2: xyz.secureguard.v1.login.v1.LoginResponse
-	(*RegisterRequestKdf)(nil), // 3: xyz.secureguard.v1.login.v1.RegisterRequest.kdf
-	(*v1.UserSelf)(nil),        // 4: xyz.secureguard.v1.users.v1.UserSelf
+	(*AuthorizeRequest)(nil),    // 0: xyz.secureguard.v1.login.v1.AuthorizeRequest
+	(*RegisterRequest)(nil),     // 1: xyz.secureguard.v1.login.v1.RegisterRequest
+	(*LoginResponse)(nil),       // 2: xyz.secureguard.v1.login.v1.LoginResponse
+	(*RegisterRequest_Kdf)(nil), // 3: xyz.secureguard.v1.login.v1.RegisterRequest.Kdf
+	(*v1.UserSelf)(nil),         // 4: xyz.secureguard.v1.users.v1.UserSelf
 }
 var file_xyz_secureguard_v1_login_v1_domain_proto_depIdxs = []int32{
-	3, // 0: xyz.secureguard.v1.login.v1.RegisterRequest.kdf_params:type_name -> xyz.secureguard.v1.login.v1.RegisterRequest.kdf
+	3, // 0: xyz.secureguard.v1.login.v1.RegisterRequest.kdf_params:type_name -> xyz.secureguard.v1.login.v1.RegisterRequest.Kdf
 	4, // 1: xyz.secureguard.v1.login.v1.LoginResponse.info:type_name -> xyz.secureguard.v1.users.v1.UserSelf
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type

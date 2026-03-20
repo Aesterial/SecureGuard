@@ -231,7 +231,7 @@ func (u *UserRepository) CreateUserKey(ctx context.Context, target domain.UUID, 
 	if key == "" {
 		return apperrors.InvalidArguments
 	}
-	err := u.querier.CreateUserKey(ctx, dbsqlc.CreateUserKeyParams{MasterKey: key, Salt: salt, Version: kdf.Version, Memory: kdf.Memory, Iterations: kdf.Iterations, Parallelism: kdf.Parallelism})
+	err := u.querier.CreateUserKey(ctx, dbsqlc.CreateUserKeyParams{Owner: target.PG(), MasterKey: key, Salt: salt, Version: kdf.Version, Memory: kdf.Memory, Iterations: kdf.Iterations, Parallelism: kdf.Parallelism})
 	if err != nil {
 		return err
 	}
