@@ -69,21 +69,19 @@ func (a *Authentificator) User(ctx context.Context, checkStaff ...bool) (*authdo
 	if err != nil {
 		return &metadata, err
 	}
-	metadata.SessionID = session
-	valid, err := a.ses.IsValid(ctx, *session, metadata.Hash)
+	valid, session, err := a.ses.IsValid(ctx, *session, metadata.Hash)
 	if err != nil {
-		logging.Error("failed to check is session valid: " + err.Error())
 		return &metadata, err
 	}
 	if !valid {
 		return &metadata, apperrors.Unauthenticated
 	}
-	if err := a.ses.SetLastSeen(ctx, *session, time.Now()); err != nil {
+	metadata.SessionID = session
+	if err := a.ses.SetLastSeen(ctx, *metadata.SessionID, time.Now()); err != nil {
 		return nil, apperrors.Wrap(err)
 	}
 	owner, err := a.ses.GetOwner(ctx, *metadata.SessionID)
 	if err != nil {
-		logging.Error("failed to get owner: " + err.Error())
 		return &metadata, err
 	}
 	if owner == nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/aesterial/secureguard/internal/domain"
 	sessionsdomain "github.com/aesterial/secureguard/internal/domain/sessions"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
+	"github.com/aesterial/secureguard/internal/shared/logging"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -37,32 +38,34 @@ func (s *Service) encodeToken(token string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func (s *Service) IsValid(ctx context.Context, id string, hash string) (bool, error) {
+func (s *Service) IsValid(ctx context.Context, id string, hash string) (bool, *string, error) {
 	token := s.encodeToken(id)
 	exists, err := s.ses.IsExists(ctx, token)
 	if err != nil {
-		return false, err
+		logging.Error("session is not exists", logging.F("error", err.Error()))
+		return false, nil, err
 	}
 	if !exists {
-		return false, apperrors.NotFound
+		logging.Error("session is not exists (nf)", logging.F("error", err.Error()))
+		return false, nil, apperrors.NotFound
 	}
 	session, err := s.ses.GetInfo(ctx, token)
 	if err != nil {
-		return false, err
+		return false, nil, err
 	}
 	if session == nil {
-		return false, apperrors.NotFound
+		return false, nil, apperrors.NotFound
 	}
 	if session.Revoked {
-		return false, nil
+		return false, nil, nil
 	}
 	if time.Now().After(session.Expires) {
-		return false, nil
+		return false, nil, nil
 	}
 	if session.Hash != hash {
-		return false, apperrors.Unauthenticated
+		return false, nil, apperrors.Unauthenticated
 	}
-	return true, nil
+	return true, &token, nil
 }
 
 func (s *Service) Info(ctx context.Context, id string) (*sessionsdomain.Session, error) {

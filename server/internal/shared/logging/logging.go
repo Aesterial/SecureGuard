@@ -24,7 +24,7 @@ const (
 	LevelCritical = loggingapp.LevelCritical
 )
 
-var ErrReaderDisabled = loggingapp.ErrReaderDisabled
+var ReaderDisabledErr = loggingapp.ErrReaderDisabled
 
 // F formats given key and value to [loggingdomain.Field]
 func F(key string, value any) Field {
