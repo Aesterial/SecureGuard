@@ -238,6 +238,17 @@ func (u *UserRepository) CreateUserKey(ctx context.Context, target domain.UUID, 
 	return nil
 }
 
+func (u *UserRepository) ChangeUserKey(ctx context.Context, target domain.UUID, key string, kdf usersdomain.KDFparams) error {
+	if key == "" {
+		return apperrors.InvalidArguments
+	}
+	err := u.querier.UpdateUserKey(ctx, dbsqlc.UpdateUserKeyParams{MasterKey: key, Version: kdf.Version, Memory: kdf.Memory, Iterations: kdf.Iterations, Parallelism: kdf.Parallelism, Owner: target.PG()})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *UserRepository) IsUserAdmin(ctx context.Context, id domain.UUID) (bool, error) {
 	active, err := u.querier.GetIsUserAdmin(ctx, id.PG())
 	if err != nil {

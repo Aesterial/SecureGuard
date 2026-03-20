@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	typespb "github.com/aesterial/secureguard/internal/api/v1"
 	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
 	"github.com/aesterial/secureguard/internal/domain"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -265,4 +266,13 @@ type KDFparams struct {
 	Memory      int64
 	Iterations  int32
 	Parallelism int32
+}
+
+func ParseKdfParams(kdf *typespb.Kdf) KDFparams {
+	return KDFparams{
+		Version:     kdf.GetVersion(),
+		Memory:      kdf.GetMemory(),
+		Iterations:  kdf.GetIterations(),
+		Parallelism: kdf.GetParallelism(),
+	}
 }

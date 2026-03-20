@@ -5,6 +5,7 @@ package xyz.secureguard.v1.login.v1;
 option go_package = "github.com/aesterial/secureguard/internal/api/v1/login/v1;login";
 
 import "xyz/secureguard/v1/users/v1/domain.proto";
+import "xyz/secureguard/v1/types.proto";
 
 message AuthorizeRequest {
   string username = 1;
@@ -13,17 +14,11 @@ message AuthorizeRequest {
 }
 
 message RegisterRequest {
-  message Kdf {
-    int32 version = 1;
-    int64 memory = 2;
-    int32 iterations = 3;
-    int32 parallelism = 4;
-  }
   string username = 1;
   string password = 2;
   string master_key = 3;
   string salt = 4;
-  Kdf    kdf_params = 5;
+  xyz.secureguard.v1.Kdf    kdf_params = 5;
 }
 
 message LoginResponse {

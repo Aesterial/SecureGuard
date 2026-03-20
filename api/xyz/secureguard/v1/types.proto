@@ -39,3 +39,15 @@ message RequestWithBooleanLimitOffset {
   int32 limit = 2;
   int32 offset = 3;
 }
+
+message Kdf {
+  int32 version = 1;
+  int64 memory = 2;
+  int32 iterations = 3;
+  int32 parallelism = 4;
+}
+
+message RequestWithValueAndKdf {
+  Kdf kdf = 1;
+  string value = 2;
+}

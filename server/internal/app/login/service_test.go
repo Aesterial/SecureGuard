@@ -80,6 +80,9 @@ func (m *loginUsersRepoMock) CreateUserKey(ctx context.Context, target domain.UU
 	}
 	return nil
 }
+func (m *loginUsersRepoMock) ChangeUserKey(context.Context, domain.UUID, string, usersdomain.KDFparams) error {
+	return nil
+}
 
 type loginSessionsRepoMock struct {
 	createFn func(context.Context, string, domain.UUID, string) (*string, error)

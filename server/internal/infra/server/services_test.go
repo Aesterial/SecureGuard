@@ -124,6 +124,9 @@ func (m *serverUsersRepoMock) CreateUserKey(ctx context.Context, target domain.U
 	}
 	return nil
 }
+func (m *serverUsersRepoMock) ChangeUserKey(context.Context, domain.UUID, string, usersdomain.KDFparams) error {
+	return nil
+}
 
 type serverSessionsRepoMock struct {
 	getOwnerFn    func(context.Context, string) (*domain.UUID, error)
@@ -326,7 +329,7 @@ func TestLoginServiceRegisterSuccess(t *testing.T) {
 		Password:  "password-123",
 		MasterKey: "master-key",
 		Salt:      "salt-value",
-		KdfParams: &loginpb.RegisterRequest_Kdf{
+		KdfParams: &typespb.Kdf{
 			Version:     1,
 			Memory:      64,
 			Iterations:  3,

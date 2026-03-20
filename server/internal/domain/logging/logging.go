@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 )
@@ -113,13 +114,7 @@ func (q Query) Matches(entry Entry) bool {
 		return false
 	}
 	if len(q.Levels) > 0 {
-		matchedLevel := false
-		for _, level := range q.Levels {
-			if entry.Level == level {
-				matchedLevel = true
-				break
-			}
-		}
+		matchedLevel := slices.Contains(q.Levels, entry.Level)
 		if !matchedLevel {
 			return false
 		}

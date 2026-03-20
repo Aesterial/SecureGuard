@@ -112,6 +112,9 @@ func (m *authUsersRepoMock) Create(context.Context, string, string, string) (*us
 func (m *authUsersRepoMock) CreateUserKey(context.Context, domain.UUID, string, string, usersdomain.KDFparams) error {
 	return nil
 }
+func (m *authUsersRepoMock) ChangeUserKey(context.Context, domain.UUID, string, usersdomain.KDFparams) error {
+	return nil
+}
 
 func newAuthUUID() domain.UUID {
 	return domain.ParseUUID(uuid.New())

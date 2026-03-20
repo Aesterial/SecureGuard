@@ -59,6 +59,7 @@ type Querier interface {
 	UpdatePreferenceCrypt(ctx context.Context, arg UpdatePreferenceCryptParams) error
 	UpdatePreferenceLanguage(ctx context.Context, arg UpdatePreferenceLanguageParams) error
 	UpdatePreferenceTheme(ctx context.Context, arg UpdatePreferenceThemeParams) error
+	UpdateUserKey(ctx context.Context, arg UpdateUserKeyParams) error
 }
 
 var _ Querier = (*Queries)(nil)

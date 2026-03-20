@@ -10,6 +10,7 @@ import (
 	domain "github.com/aesterial/secureguard/internal/domain"
 	usersdomain "github.com/aesterial/secureguard/internal/domain/users"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
+	"github.com/aesterial/secureguard/internal/shared/logging"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -107,6 +108,18 @@ func (s *Service) ChangeTheme(ctx context.Context, target domain.UUID, set userp
 			return apperrors.InvalidArguments
 		}
 		return err
+	}
+	return nil
+}
+
+func (s *Service) ChangeUserKey(ctx context.Context, target domain.UUID, key string, kdf usersdomain.KDFparams) error {
+	if key == "" {
+		return apperrors.InvalidArguments
+	}
+	err := s.usr.ChangeUserKey(ctx, target, key, kdf)
+	if err != nil {
+		logging.Error("failed to change user key", logging.F("error", err.Error()))
+		return apperrors.Wrap(err)
 	}
 	return nil
 }

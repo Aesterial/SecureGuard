@@ -2,7 +2,7 @@ package statsdomain
 
 import (
 	"math"
-	"sort"
+	"slices"
 	"time"
 
 	statspb "github.com/aesterial/secureguard/internal/api/v1/stats/v1"
@@ -20,10 +20,7 @@ func percentile(sorted []float32, p float64) float64 {
 		return 0
 	}
 
-	idx := int(math.Ceil(p*float64(n))) - 1
-	if idx < 0 {
-		idx = 0
-	}
+	idx := max(int(math.Ceil(p*float64(n)))-1, 0)
 	if idx >= n {
 		idx = n - 1
 	}
@@ -38,9 +35,7 @@ func NewLatency(list []float32) Latency {
 	}
 
 	sorted := append([]float32(nil), list...)
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i] < sorted[j]
-	})
+	slices.Sort(sorted)
 
 	return Latency{
 		P50: percentile(sorted, 0.50),

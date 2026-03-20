@@ -26,6 +26,7 @@ const (
 	UserService_ChangeTheme_FullMethodName    = "/xyz.secureguard.v1.users.v1.UserService/ChangeTheme"
 	UserService_ChangeLanguage_FullMethodName = "/xyz.secureguard.v1.users.v1.UserService/ChangeLanguage"
 	UserService_ChangeCrypt_FullMethodName    = "/xyz.secureguard.v1.users.v1.UserService/ChangeCrypt"
+	UserService_ChangeKey_FullMethodName      = "/xyz.secureguard.v1.users.v1.UserService/ChangeKey"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -37,6 +38,7 @@ type UserServiceClient interface {
 	ChangeTheme(ctx context.Context, in *ChangeThemeRequest, opts ...grpc.CallOption) (*ChangeThemeResponse, error)
 	ChangeLanguage(ctx context.Context, in *ChangeLanguageRequest, opts ...grpc.CallOption) (*ChangeLanguageResponse, error)
 	ChangeCrypt(ctx context.Context, in *ChangeCryptRequest, opts ...grpc.CallOption) (*ChangeCryptResponse, error)
+	ChangeKey(ctx context.Context, in *v1.RequestWithValueAndKdf, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type userServiceClient struct {
@@ -97,6 +99,16 @@ func (c *userServiceClient) ChangeCrypt(ctx context.Context, in *ChangeCryptRequ
 	return out, nil
 }
 
+func (c *userServiceClient) ChangeKey(ctx context.Context, in *v1.RequestWithValueAndKdf, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, UserService_ChangeKey_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations should embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -106,6 +118,7 @@ type UserServiceServer interface {
 	ChangeTheme(context.Context, *ChangeThemeRequest) (*ChangeThemeResponse, error)
 	ChangeLanguage(context.Context, *ChangeLanguageRequest) (*ChangeLanguageResponse, error)
 	ChangeCrypt(context.Context, *ChangeCryptRequest) (*ChangeCryptResponse, error)
+	ChangeKey(context.Context, *v1.RequestWithValueAndKdf) (*emptypb.Empty, error)
 }
 
 // UnimplementedUserServiceServer should be embedded to have
@@ -129,6 +142,9 @@ func (UnimplementedUserServiceServer) ChangeLanguage(context.Context, *ChangeLan
 }
 func (UnimplementedUserServiceServer) ChangeCrypt(context.Context, *ChangeCryptRequest) (*ChangeCryptResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ChangeCrypt not implemented")
+}
+func (UnimplementedUserServiceServer) ChangeKey(context.Context, *v1.RequestWithValueAndKdf) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method ChangeKey not implemented")
 }
 func (UnimplementedUserServiceServer) testEmbeddedByValue() {}
 
@@ -240,6 +256,24 @@ func _UserService_ChangeCrypt_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_ChangeKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.RequestWithValueAndKdf)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ChangeKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ChangeKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ChangeKey(ctx, req.(*v1.RequestWithValueAndKdf))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -266,6 +300,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ChangeCrypt",
 			Handler:    _UserService_ChangeCrypt_Handler,
+		},
+		{
+			MethodName: "ChangeKey",
+			Handler:    _UserService_ChangeKey_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -3,9 +3,11 @@ package server
 import (
 	"context"
 
+	typespb "github.com/aesterial/secureguard/internal/api/v1"
 	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
 	logging "github.com/aesterial/secureguard/internal/app/logging"
 	userapp "github.com/aesterial/secureguard/internal/app/users"
+	usersdomain "github.com/aesterial/secureguard/internal/domain/users"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -83,4 +85,19 @@ func (u *UserService) ChangeLanguage(ctx context.Context, req *userpb.ChangeLang
 		return nil, apperrors.Wrap(err)
 	}
 	return &userpb.ChangeLanguageResponse{Result: req.Value}, nil
+}
+
+func (u *UserService) ChangeKey(ctx context.Context, req *typespb.RequestWithValueAndKdf) (*emptypb.Empty, error) {
+	if req == nil || req.GetValue() == "" {
+		return nil, apperrors.InvalidArguments
+	}
+	auth, err := u.auth.User(ctx)
+	if err != nil {
+		return nil, apperrors.Wrap(err)
+	}
+	err = u.usr.ChangeUserKey(ctx, *auth.UserID, req.GetValue(), usersdomain.ParseKdfParams(req.GetKdf()))
+	if err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
 }

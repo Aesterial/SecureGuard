@@ -44,7 +44,7 @@ func (s *LoginService) Register(ctx context.Context, req *loginpb.RegisterReques
 	if exists {
 		return nil, apperrors.Conflict
 	}
-	id, session, err := s.login.Register(ctx, logindomain.RegisterRequire{MasterKey: req.MasterKey, Salt: req.Salt, Require: logindomain.Require{Username: req.Username, Password: req.Password}}, auth.Hash, usersdomain.KDFparams{Version: req.KdfParams.GetVersion(), Memory: req.KdfParams.GetMemory(), Iterations: req.KdfParams.GetIterations(), Parallelism: req.KdfParams.GetParallelism()})
+	id, session, err := s.login.Register(ctx, logindomain.RegisterRequire{MasterKey: req.MasterKey, Salt: req.Salt, Require: logindomain.Require{Username: req.Username, Password: req.Password}}, auth.Hash, usersdomain.ParseKdfParams(req.KdfParams))
 	if err != nil {
 		logging.Error("register failed", logging.F("error", err.Error()))
 		return nil, apperrors.Wrap(err)

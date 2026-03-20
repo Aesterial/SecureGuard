@@ -923,3 +923,28 @@ func (q *Queries) UpdatePreferenceTheme(ctx context.Context, arg UpdatePreferenc
 	_, err := q.db.Exec(ctx, updatePreferenceTheme, arg.Theme, arg.Owner)
 	return err
 }
+
+const updateUserKey = `-- name: UpdateUserKey :exec
+update users_keys set master_key = $1, version = $2, memory = $3, iterations = $4, parallelism = $5 where owner = $6
+`
+
+type UpdateUserKeyParams struct {
+	MasterKey   string      `json:"master_key"`
+	Version     int32       `json:"version"`
+	Memory      int64       `json:"memory"`
+	Iterations  int32       `json:"iterations"`
+	Parallelism int32       `json:"parallelism"`
+	Owner       pgtype.UUID `json:"owner"`
+}
+
+func (q *Queries) UpdateUserKey(ctx context.Context, arg UpdateUserKeyParams) error {
+	_, err := q.db.Exec(ctx, updateUserKey,
+		arg.MasterKey,
+		arg.Version,
+		arg.Memory,
+		arg.Iterations,
+		arg.Parallelism,
+		arg.Owner,
+	)
+	return err
+}

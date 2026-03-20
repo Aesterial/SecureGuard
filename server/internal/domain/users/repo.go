@@ -22,4 +22,5 @@ type Repository interface {
 	ChangePhrase(ctx context.Context, target domain.UUID, set string) error
 	Create(ctx context.Context, username string, passwordHash, seedHash string) (*User, error)
 	CreateUserKey(ctx context.Context, target domain.UUID, key string, salt string, kdf KDFparams) error
+	ChangeUserKey(ctx context.Context, target domain.UUID, key string, kdf KDFparams) error
 }

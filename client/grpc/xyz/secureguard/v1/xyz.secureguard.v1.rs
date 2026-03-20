@@ -48,4 +48,22 @@ pub struct RequestWithBooleanLimitOffset {
     #[prost(int32, tag = "3")]
     pub offset: i32,
 }
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Kdf {
+    #[prost(int32, tag = "1")]
+    pub version: i32,
+    #[prost(int64, tag = "2")]
+    pub memory: i64,
+    #[prost(int32, tag = "3")]
+    pub iterations: i32,
+    #[prost(int32, tag = "4")]
+    pub parallelism: i32,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RequestWithValueAndKdf {
+    #[prost(message, optional, tag = "1")]
+    pub kdf: ::core::option::Option<Kdf>,
+    #[prost(string, tag = "2")]
+    pub value: ::prost::alloc::string::String,
+}
 // @@protoc_insertion_point(module)
