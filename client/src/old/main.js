@@ -1159,10 +1159,13 @@ function initApp(invoke) {
     if (instant || !currentPage) {
       Object.keys(pages).forEach(function (key) {
         if (pages[key]) {
-          pages[key].classList.remove("active", "page-enter", "page-exit");
-          pages[key].style.cssText = "";
+          pages[key].classList.remove("active");
+          pages[key].style.opacity = "";
+          pages[key].style.transform = "";
+          pages[key].style.transition = "";
         }
       });
+
       pages[name].classList.add("active");
       currentPage = name;
       isAnimating = false;
@@ -1173,25 +1176,34 @@ function initApp(invoke) {
 
     var oldPage = pages[currentPage];
     var newPage = pages[name];
-
     if (oldPage) {
-      oldPage.classList.add("page-exit");
+      oldPage.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+      oldPage.style.opacity = "0";
+      oldPage.style.transform = "translateX(-20px)";
     }
 
     setTimeout(function () {
       if (oldPage) {
-        oldPage.classList.remove("active", "page-exit");
+        oldPage.classList.remove("active");
+        oldPage.style.opacity = "";
+        oldPage.style.transform = "";
+        oldPage.style.transition = "";
       }
-
-      newPage.classList.add("active", "page-enter");
+      newPage.style.opacity = "0";
+      newPage.style.transform = "translateX(20px)";
+      newPage.classList.add("active");
+      void newPage.offsetWidth;
+      newPage.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+      newPage.style.opacity = "1";
+      newPage.style.transform = "translateX(0)";
 
       currentPage = name;
 
       setTimeout(function () {
-        newPage.classList.remove("page-enter");
+        newPage.style.transition = "";
         isAnimating = false;
-      }, 500);
-    }, 300);
+      }, 300);
+    }, 250);
   }
 
   function showModal(name) {
@@ -2037,14 +2049,7 @@ function initApp(invoke) {
       if (!entries || entries.length === 0) {
         list.innerHTML =
           '<div class="empty">' +
-          '<div class="empty-icon" aria-hidden="true">' +
-          '<svg viewBox="0 0 24 24" fill="none">' +
-          '<path d="M8 10V7.75C8 5.13 9.79 3 12 3s4 2.13 4 4.75V10" />' +
-          '<rect x="5" y="10" width="14" height="11" rx="3" />' +
-          '<path d="M12 14.25v2.75" />' +
-          '<circle cx="12" cy="14" r="1.1" fill="currentColor" stroke="none" />' +
-          '</svg>' +
-          '</div>' +
+          '<svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.8-2.2-5-5-5S7 3.2 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.7 1.4-3.1 3.1-3.1s3.1 1.4 3.1 3.1v2z"/></svg>' +
           "<p>" +
           t("dashboard.emptyTitle") +
           "</p>" +
@@ -2681,3 +2686,4 @@ function initApp(invoke) {
 
   init();
 }
+

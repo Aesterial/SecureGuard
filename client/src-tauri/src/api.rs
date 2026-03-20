@@ -1,24 +1,24 @@
 use serde::{Deserialize, Serialize};
-use std::collections::{hash_map::DefaultHasher, HashMap};
 use std::env;
-use std::hash::{Hash, Hasher};
 use tonic::metadata::MetadataValue;
+use std::collections::HashMap;
 use tonic::transport::{Channel, Endpoint};
 use tonic::{Code, Request, Status};
+use zeroize::{Zeroize, Zeroizing};
 
 pub mod xyz {
     pub mod secureguard {
         pub mod v1 {
             include!(concat!(
                 env!("CARGO_MANIFEST_DIR"),
-                "/../grpc/xyz/secureguard/v1/xyz.secureguard.v1.rs"
+                "/../grpc/secureguard/v1/mod.rs"
             ));
 
             pub mod users {
                 pub mod v1 {
                     include!(concat!(
                         env!("CARGO_MANIFEST_DIR"),
-                        "/../grpc/xyz/secureguard/v1/users/v1/xyz.secureguard.v1.users.v1.rs"
+                        "/../grpc/secureguard/v1/users/v1.rs"
                     ));
                 }
             }
@@ -27,7 +27,7 @@ pub mod xyz {
                 pub mod v1 {
                     include!(concat!(
                         env!("CARGO_MANIFEST_DIR"),
-                        "/../grpc/xyz/secureguard/v1/login/v1/xyz.secureguard.v1.login.v1.rs"
+                        "/../grpc/secureguard/v1/login/v1.rs"
                     ));
                 }
             }
@@ -36,7 +36,7 @@ pub mod xyz {
                 pub mod v1 {
                     include!(concat!(
                         env!("CARGO_MANIFEST_DIR"),
-                        "/../grpc/xyz/secureguard/v1/passwords/v1/xyz.secureguard.v1.passwords.v1.rs"
+                        "/../grpc/secureguard/v1/passwords/v1.rs"
                     ));
                 }
             }
@@ -45,7 +45,7 @@ pub mod xyz {
                 pub mod v1 {
                     include!(concat!(
                         env!("CARGO_MANIFEST_DIR"),
-                        "/../grpc/xyz/secureguard/v1/stats/v1/xyz.secureguard.v1.stats.v1.rs"
+                        "/../grpc/secureguard/v1/stats/v1.rs"
                     ));
                 }
             }
@@ -53,7 +53,22 @@ pub mod xyz {
     }
 }
 
+use self::xyz::secureguard::v1 as shared_contract_v1;
+use self::xyz::secureguard::v1::login::v1 as login_contract_v1;
+use self::xyz::secureguard::v1::passwords::v1 as passwords_contract_v1;
+use self::xyz::secureguard::v1::stats::v1 as stats_contract_v1;
+use self::xyz::secureguard::v1::users::v1 as users_contract_v1;
+
+
+#[cfg(debug_assertions)]
 const DEFAULT_BACKEND: &str = "http://127.0.0.1:8080";
+#[cfg(not(debug_assertions))]
+const DEFAULT_BACKEND: &str = "";
+
+
+
+
+
 const DEFAULT_ENCRYPTION_ALGORITHM: &str = "aes256gcm-argon2id";
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -122,16 +137,17 @@ struct PasswordPayload {
 pub struct ApiClient {
     backend: String,
     client_hash: String,
-    session: Option<String>,
+    session: Option<Zeroizing<String>>,
 }
 
 impl ApiClient {
     pub fn new() -> Self {
-        let backend = env::var("SECUREGUARD_GRPC_ENDPOINT")
-            .ok()
-            .filter(|v| !v.trim().is_empty())
-            .or_else(|| env::var("SECUREGUARD_BACKEND").ok())
-            .unwrap_or_else(|| DEFAULT_BACKEND.to_string());
+      let backend = env::var("SECUREGUARD_GRPC_ENDPOINT")
+          .ok()
+          .filter(|v| !v.trim().is_empty())
+          .or_else(|| env::var("SECUREGUARD_BACKEND").ok())
+          .filter(|v| !v.trim().is_empty())
+          .unwrap_or_else(|| DEFAULT_BACKEND.to_string());
 
         let client_hash = format!(
             "tauri-{}-{}",
@@ -151,12 +167,29 @@ impl ApiClient {
     }
 
     pub fn clear_session(&mut self) {
-        self.session = None;
+        if let Some(mut s) = self.session.take() {
+            s.zeroize();
+        }
     }
 
     async fn connect(&self) -> Result<Channel, String> {
         let endpoint = Endpoint::from_shared(self.backend.clone())
             .map_err(|e| format!("Backend endpoint: {}", e))?;
+    
+        #[cfg(not(debug_assertions))]
+        {
+            if !self.backend.starts_with("https://") {
+                return Err("Production requires TLS endpoint (https://)".into());
+            }
+            return endpoint
+                .tls_config(tonic::transport::ClientTlsConfig::new())
+                .map_err(|e| format!("TLS config: {}", e))?
+                .connect()
+                .await
+                .map_err(|e| format!("Backend connection: {}", e));
+        }
+    
+        #[cfg(debug_assertions)]
         endpoint
             .connect()
             .await
@@ -184,21 +217,29 @@ impl ApiClient {
         &mut self,
         username: &str,
         password: &str,
-        seed_phrase: &str,
+        wrapped_master_key: &str,
+        wrapping_salt: &str,
     ) -> Result<(), String> {
-        use xyz::secureguard::v1::login::v1::login_service_client::LoginServiceClient;
-        use xyz::secureguard::v1::login::v1::RegisterRequest;
-
+        use login_contract_v1::login_service_client::LoginServiceClient;
+        use login_contract_v1::register_request::Kdf;
+        use login_contract_v1::RegisterRequest;
+    
         let channel = self.connect().await?;
         let mut client = LoginServiceClient::new(channel);
         let request = RegisterRequest {
             username: username.to_string(),
             password: password.to_string(),
-            phraze: seed_phrase.to_string(),
+            master_key: wrapped_master_key.to_string(),
+            salt: wrapping_salt.to_string(),
+            kdf_params: Some(Kdf {
+                version: 19,
+                memory: 65536,
+                iterations: 3,
+                parallelism: 4,
+            }),
         };
         let req = self.with_client_metadata(Request::new(request))?;
         client.register(req).await.map_err(map_tonic_error)?;
-
         self.session = None;
         Ok(())
     }
@@ -208,23 +249,23 @@ impl ApiClient {
         username: &str,
         password: &str,
     ) -> Result<AuthProfile, String> {
-        use xyz::secureguard::v1::login::v1::login_service_client::LoginServiceClient;
-        use xyz::secureguard::v1::login::v1::AuthorizeRequest;
-
+        use login_contract_v1::login_service_client::LoginServiceClient;
+        use login_contract_v1::AuthorizeRequest;
+    
         let channel = self.connect().await?;
         let mut client = LoginServiceClient::new(channel);
         let request = AuthorizeRequest {
             username: username.to_string(),
             password: password.to_string(),
+            master_key: String::new(),
         };
         let req = self.with_client_metadata(Request::new(request))?;
         let response = client.authorize(req).await.map_err(map_tonic_error)?;
         let payload = response.into_inner();
-        let session = payload.session;
-        if session.trim().is_empty() {
+        if payload.session.trim().is_empty() {
             return Err("Сервер не вернул сессию".into());
         }
-        self.session = Some(session);
+        self.session = Some(Zeroizing::new(payload.session));
         Ok(payload.info.map_or_else(
             || AuthProfile {
                 id: String::new(),
@@ -244,15 +285,15 @@ impl ApiClient {
                     has_preferences: preferences.is_some(),
                     light_theme_enabled: preferences
                         .as_ref()
-                        .map(|value| map_theme(value.theme))
+                        .map(|p| map_theme(p.theme))
                         .unwrap_or(false),
                     language: preferences
                         .as_ref()
-                        .map(|value| map_language(value.lang))
+                        .map(|p| map_language(p.lang))
                         .unwrap_or_default(),
                     encryption_algorithm: preferences
                         .as_ref()
-                        .map(|value| map_crypt(value.crypto))
+                        .map(|p| map_crypt(p.crypto))
                         .unwrap_or_default(),
                 }
             },
@@ -260,7 +301,7 @@ impl ApiClient {
     }
 
     pub async fn logout(&self) -> Result<(), String> {
-        use xyz::secureguard::v1::login::v1::login_service_client::LoginServiceClient;
+        use login_contract_v1::login_service_client::LoginServiceClient;
 
         if self.session.is_none() {
             return Ok(());
@@ -274,8 +315,8 @@ impl ApiClient {
     }
 
     pub async fn list_passwords(&self) -> Result<Vec<PasswordEntry>, String> {
-        use xyz::secureguard::v1::passwords::v1::password_service_client::PasswordServiceClient;
-        use xyz::secureguard::v1::RequestWithLimitAndOffset;
+        use passwords_contract_v1::password_service_client::PasswordServiceClient;
+        use shared_contract_v1::RequestWithLimitAndOffset;
 
         let channel = self.connect().await?;
         let mut client = PasswordServiceClient::new(channel);
@@ -289,7 +330,11 @@ impl ApiClient {
                 offset,
             };
             let req = self.with_auth_metadata(Request::new(request))?;
-            let response = client.list(req).await.map_err(map_tonic_error)?;
+            let response = match client.list(req).await {
+                Ok(response) => response,
+                Err(status) if status.code() == Code::NotFound => break,
+                Err(status) => return Err(map_tonic_error(status)),
+            };
             let payload = response.into_inner();
             let batch_len = payload.list.len() as i32;
 
@@ -322,7 +367,7 @@ impl ApiClient {
     }
 
     pub async fn get_admin_stats(&self) -> Result<AdminStats, String> {
-        use xyz::secureguard::v1::stats::v1::stats_service_client::StatsServiceClient;
+        use stats_contract_v1::stats_service_client::StatsServiceClient;
 
         let channel = self.connect().await?;
         let mut client = StatsServiceClient::new(channel);
@@ -363,29 +408,30 @@ impl ApiClient {
     }
 
     pub async fn add_password(&self, entry: PasswordEntry) -> Result<PasswordEntry, String> {
-        use xyz::secureguard::v1::passwords::v1::password_service_client::PasswordServiceClient;
-        use xyz::secureguard::v1::passwords::v1::CreateRequest;
-
+        use passwords_contract_v1::password_service_client::PasswordServiceClient;
+        use passwords_contract_v1::CreateRequest;
+    
         let channel = self.connect().await?;
         let mut client = PasswordServiceClient::new(channel);
-
-        let payload = PasswordPayload {
-            id: entry.id.clone(),
-            title: entry.title.clone(),
-            encrypted_password: entry.encrypted_password.clone(),
-            salt: entry.salt.clone(),
-            wrapped_master_key: entry.wrapped_master_key.clone(),
-            encryption_algorithm: normalize_encryption(&entry.encryption_algorithm),
-            created_at: entry.created_at.clone(),
-        };
-        let packed_payload =
-            serde_json::to_string(&payload).map_err(|e| format!("Payload: {}", e))?;
-
+    
+        let meta = serde_json::json!({
+            "id": entry.id,
+            "title": entry.title,
+            "salt": entry.salt,
+            "wrapped_master_key": entry.wrapped_master_key,
+            "encryption_algorithm": normalize_encryption(&entry.encryption_algorithm),
+            "created_at": entry.created_at,
+        })
+        .to_string();
+    
         let request = CreateRequest {
             service_url: entry.title.clone(),
-            login: entry.title.clone(),
-            pass: packed_payload,
-            salt: entry.salt.clone(),
+            login: meta,
+            ciphertext: entry.encrypted_password.clone(),
+            version: 1,
+            nonce: "inline-v1".to_string(),
+            aad: vec![1],
+            metadata: "{\"format\":\"inline-v1\"}".to_string(),
         };
         let req = self.with_auth_metadata(Request::new(request))?;
         let response = client.create(req).await.map_err(map_tonic_error)?;
@@ -393,10 +439,10 @@ impl ApiClient {
             .into_inner()
             .info
             .ok_or("Сервер не вернул данные записи")?;
-
+    
         let fallback_created_at = timestamp_to_string(info.created_at.clone());
         let decoded = decode_password_entry(&info, fallback_created_at);
-
+    
         Ok(PasswordEntry {
             id: decoded.id,
             title: decoded.title,
@@ -409,8 +455,8 @@ impl ApiClient {
     }
 
     pub async fn change_theme(&self, light_theme_enabled: bool) -> Result<(), String> {
-        use xyz::secureguard::v1::users::v1::user_service_client::UserServiceClient;
-        use xyz::secureguard::v1::users::v1::{ChangeThemeRequest, Theme};
+        use users_contract_v1::user_service_client::UserServiceClient;
+        use users_contract_v1::{ChangeThemeRequest, Theme};
 
         let channel = self.connect().await?;
         let mut client = UserServiceClient::new(channel);
@@ -427,8 +473,8 @@ impl ApiClient {
     }
 
     pub async fn change_language(&self, language: &str) -> Result<String, String> {
-        use xyz::secureguard::v1::users::v1::user_service_client::UserServiceClient;
-        use xyz::secureguard::v1::users::v1::{ChangeLanguageRequest, Language};
+        use users_contract_v1::user_service_client::UserServiceClient;
+        use users_contract_v1::{ChangeLanguageRequest, Language};
 
         let channel = self.connect().await?;
         let mut client = UserServiceClient::new(channel);
@@ -444,8 +490,8 @@ impl ApiClient {
     }
 
     pub async fn change_encryption(&self, value: &str) -> Result<String, String> {
-        use xyz::secureguard::v1::users::v1::user_service_client::UserServiceClient;
-        use xyz::secureguard::v1::users::v1::{ChangeCryptRequest, Crypt};
+        use users_contract_v1::user_service_client::UserServiceClient;
+        use users_contract_v1::{ChangeCryptRequest, Crypt};
 
         let normalized = normalize_encryption(value);
         let channel = self.connect().await?;
@@ -462,8 +508,8 @@ impl ApiClient {
     }
 
     pub async fn delete_password(&self, id: &str) -> Result<(), String> {
-        use xyz::secureguard::v1::passwords::v1::password_service_client::PasswordServiceClient;
-        use xyz::secureguard::v1::RequestWithId;
+        use passwords_contract_v1::password_service_client::PasswordServiceClient;
+        use shared_contract_v1::RequestWithId;
 
         let channel = self.connect().await?;
         let mut client = PasswordServiceClient::new(channel);
@@ -490,7 +536,7 @@ fn normalize_language(value: &str) -> String {
 }
 
 fn serialize_graph_points(
-    points: &[xyz::secureguard::v1::stats::v1::GraphPoint],
+    points: &[stats_contract_v1::GraphPoint],
 ) -> Vec<StatsGraphPoint> {
     points
         .iter()
@@ -502,7 +548,7 @@ fn serialize_graph_points(
 }
 
 fn decode_password_entry(
-    item: &xyz::secureguard::v1::passwords::v1::Password,
+    item: &passwords_contract_v1::Password,
     fallback_created_at: String,
 ) -> PasswordPayload {
     if let Ok(mut payload) = serde_json::from_str::<PasswordPayload>(&item.pass) {
@@ -525,29 +571,28 @@ fn decode_password_entry(
         created_at: fallback_created_at,
     };
 
-    if let Ok(metadata) = serde_json::from_str::<PasswordPayload>(&item.login) {
-        if !metadata.id.trim().is_empty() {
-            payload.id = metadata.id;
+    if let Ok(meta) = serde_json::from_str::<PasswordPayload>(&item.login) {
+        if !meta.id.trim().is_empty() {
+            payload.id = meta.id;
         }
-        if !metadata.title.trim().is_empty() {
-            payload.title = metadata.title;
+        if !meta.title.trim().is_empty() {
+            payload.title = meta.title;
         }
-        if !metadata.salt.trim().is_empty() {
-            payload.salt = metadata.salt;
+        if !meta.salt.trim().is_empty() {
+            payload.salt = meta.salt;
         }
-        if !metadata.wrapped_master_key.trim().is_empty() {
-            payload.wrapped_master_key = metadata.wrapped_master_key;
+        if !meta.wrapped_master_key.trim().is_empty() {
+            payload.wrapped_master_key = meta.wrapped_master_key;
         }
-        if !metadata.encryption_algorithm.trim().is_empty() {
-            payload.encryption_algorithm = metadata.encryption_algorithm;
+        if !meta.encryption_algorithm.trim().is_empty() {
+            payload.encryption_algorithm = meta.encryption_algorithm;
         }
-        if !metadata.created_at.trim().is_empty() {
-            payload.created_at = metadata.created_at;
+        if !meta.created_at.trim().is_empty() {
+            payload.created_at = meta.created_at;
         }
     }
 
     if payload.salt.trim().is_empty() {
-        // Backward compatibility: legacy entries stored salt directly in login.
         payload.salt = item.login.clone();
     }
 
@@ -556,7 +601,7 @@ fn decode_password_entry(
 }
 
 fn fill_payload_defaults(
-    item: &xyz::secureguard::v1::passwords::v1::Password,
+    item: &passwords_contract_v1::Password,
     payload: &mut PasswordPayload,
     fallback_created_at: String,
 ) {
@@ -587,37 +632,30 @@ fn fill_payload_defaults(
     }
 }
 
-fn build_fallback_entry_id(item: &xyz::secureguard::v1::passwords::v1::Password) -> String {
-    let mut seed = String::new();
+fn build_fallback_entry_id(item: &passwords_contract_v1::Password) -> String {
+    use sha2::{Digest, Sha256};
+
+    let mut hasher = Sha256::new();
 
     if let Some(service) = item.serv.as_ref() {
-        seed.push_str(&service.name);
-        seed.push('|');
-        seed.push_str(&service.url);
-        seed.push('|');
+        hasher.update(service.name.as_bytes());
+        hasher.update(b"|");
+        hasher.update(service.url.as_bytes());
+        hasher.update(b"|");
     }
 
-    seed.push_str(&item.login);
-    seed.push('|');
-    seed.push_str(&item.pass);
+    hasher.update(item.login.as_bytes());
+    hasher.update(b"|");
+    hasher.update(item.pass.as_bytes());
 
     if let Some(ts) = item.created_at.as_ref() {
-        seed.push('|');
-        seed.push_str(&ts.seconds.to_string());
-        seed.push('|');
-        seed.push_str(&ts.nanos.to_string());
+        hasher.update(ts.seconds.to_be_bytes());
+        hasher.update(ts.nanos.to_be_bytes());
     }
 
-    let mut first = DefaultHasher::new();
-    seed.hash(&mut first);
-
-    let mut second = DefaultHasher::new();
-    "fallback".hash(&mut second);
-    seed.hash(&mut second);
-
-    let mut bytes = [0_u8; 16];
-    bytes[..8].copy_from_slice(&first.finish().to_be_bytes());
-    bytes[8..].copy_from_slice(&second.finish().to_be_bytes());
+    let digest = hasher.finalize();
+    let mut bytes = [0u8; 16];
+    bytes.copy_from_slice(&digest[..16]);
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
@@ -641,13 +679,13 @@ fn timestamp_to_unix_seconds(value: Option<prost_types::Timestamp>) -> i64 {
 }
 
 fn map_theme(value: i32) -> bool {
-    use xyz::secureguard::v1::users::v1::Theme;
+    use users_contract_v1::Theme;
 
     matches!(Theme::try_from(value).ok(), Some(Theme::White))
 }
 
 fn map_language(value: i32) -> String {
-    use xyz::secureguard::v1::users::v1::Language;
+    use users_contract_v1::Language;
 
     match Language::try_from(value).ok() {
         Some(Language::En) => "en".to_string(),
@@ -657,7 +695,7 @@ fn map_language(value: i32) -> String {
 }
 
 fn map_crypt(value: i32) -> String {
-    use xyz::secureguard::v1::users::v1::Crypt;
+    use users_contract_v1::Crypt;
 
     match Crypt::try_from(value).ok() {
         Some(Crypt::Sha256) => "aes256gcm-sha256".to_string(),

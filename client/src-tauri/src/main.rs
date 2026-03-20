@@ -28,6 +28,8 @@ struct AppState {
     authenticated: AtomicBool,
     api: Mutex<ApiClient>,
     current_user: StdMutex<Option<AuthProfile>>,
+    vault_envelope: StdMutex<Option<MasterKeyEnvelope>>,
+    password_cache: StdMutex<Option<Vec<PasswordEntry>>>,
 }
 
 #[cfg(target_os = "windows")]
@@ -49,6 +51,24 @@ fn clear_auth_state(state: &State<'_, AppState>, api: &mut ApiClient) {
     if let Ok(mut current_user) = state.current_user.lock() {
         *current_user = None;
     }
+    if let Ok(mut envelope) = state.vault_envelope.lock() {
+        if let Some(mut e) = envelope.take() {
+            e.wrapped_master_key.zeroize();
+            e.wrapping_salt.zeroize();
+        }
+    }
+    if let Ok(mut cache) = state.password_cache.lock() {
+        *cache = None;
+    }
+}
+
+fn current_user_has_preferences(state: &State<'_, AppState>) -> bool {
+    state
+        .current_user
+        .lock()
+        .ok()
+        .and_then(|user| user.as_ref().map(|profile| profile.has_preferences))
+        .unwrap_or(false)
 }
 
 fn sanitize_clipboard_timeout_seconds(value: Option<u64>) -> u64 {
@@ -88,31 +108,39 @@ async fn register(
     seed_phrase: String,
 ) -> Result<String, String> {
     let password = Zeroizing::new(password);
-    let seed_phrase = Zeroizing::new(seed_phrase);
-    let username = username.trim();
-    let seed_phrase = seed_phrase.trim();
+    let mut seed = Zeroizing::new(seed_phrase);
 
-    if username.is_empty() || username.len() < 3 {
+    let username = username.trim().to_string();
+    if username.len() < 3 {
         return Err("Логин минимум 3 символа".into());
     }
     if password.len() < 8 {
         return Err("Пароль минимум 8 символов".into());
     }
-    if seed_phrase.split_whitespace().count() < 1 {
+
+    let trimmed = seed.trim().to_string();
+    if trimmed.split_whitespace().count() < 1 {
         return Err("Seed phrase must contain at least 1 word".into());
     }
 
+    let envelope = prepare_master_key_envelope(&trimmed, default_encryption_algorithm())?;
+    seed.zeroize();
+
     {
         let mut api = state.api.lock().await;
-        api.register(username, password.as_str(), seed_phrase)
-            .await?;
+        api.register(
+            &username,
+            password.as_str(),
+            &envelope.wrapped_master_key,
+            &envelope.wrapping_salt,
+        )
+        .await?;
         api.clear_session();
     }
 
     if let Ok(mut current_user) = state.current_user.lock() {
         *current_user = None;
     }
-
     state.authenticated.store(false, Ordering::SeqCst);
     Ok("Аккаунт создан! Войдите.".into())
 }
@@ -125,11 +153,10 @@ async fn prepare_local_master_key_envelope(
     let seed_phrase = Zeroizing::new(seed_phrase);
     let seed_phrase = seed_phrase.trim();
     if seed_phrase.is_empty() {
-        return Err("Р’РІРµРґРёС‚Рµ СЃРёРґ-С„СЂР°Р·Сѓ".into());
+        return Err("Введите сид-фразу".into());
     }
-
     let selected_algorithm = resolve_encryption_algorithm(&encryption_algorithm)
-        .ok_or("РќРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ Р°Р»РіРѕСЂРёС‚Рј С€РёС„СЂРѕРІР°РЅРёСЏ")?;
+        .ok_or("Неподдерживаемый алгоритм шифрования")?;
     prepare_master_key_envelope(seed_phrase, selected_algorithm)
 }
 
@@ -137,19 +164,9 @@ async fn prepare_local_master_key_envelope(
 async fn logout(state: State<'_, AppState>) -> Result<(), String> {
     let mut api = state.api.lock().await;
     if api.is_authenticated() {
-        match api.logout().await {
-            Ok(_) => {}
-            Err(err) => {
-                clear_auth_state(&state, &mut api);
-                return Err(err);
-            }
-        }
+        let _ = api.logout().await;
     }
-    state.authenticated.store(false, Ordering::SeqCst);
-    api.clear_session();
-    if let Ok(mut current_user) = state.current_user.lock() {
-        *current_user = None;
-    }
+    clear_auth_state(&state, &mut api);
     Ok(())
 }
 
@@ -162,12 +179,95 @@ fn get_session_user(state: State<'_, AppState>) -> Result<Option<AuthProfile>, S
         .map_err(|_| "Failed to read session user".to_string())
 }
 
+
+#[tauri::command]
+fn store_vault_envelope(
+    state: State<'_, AppState>,
+    wrapped_master_key: String,
+    wrapping_salt: String,
+    encryption_algorithm: String,
+) -> Result<(), String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("Не авторизован".into());
+    }
+    let mut envelope = state
+        .vault_envelope
+        .lock()
+        .map_err(|_| "State lock failed")?;
+    *envelope = Some(MasterKeyEnvelope {
+        wrapped_master_key,
+        wrapping_salt,
+        encryption_algorithm,
+    });
+    Ok(())
+}
+
+#[tauri::command]
+fn get_vault_envelope(
+    state: State<'_, AppState>,
+) -> Result<Option<MasterKeyEnvelope>, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("Не авторизован".into());
+    }
+    state
+        .vault_envelope
+        .lock()
+        .map(|e| e.clone())
+        .map_err(|_| "State lock failed".to_string())
+}
+
+#[tauri::command]
+async fn rotate_seed_phrase(
+    state: State<'_, AppState>,
+    old_seed_phrase: String,
+    new_seed_phrase: String,
+) -> Result<(), String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("Не авторизован".into());
+    }
+
+    let old_seed = Zeroizing::new(old_seed_phrase);
+    let new_seed = Zeroizing::new(new_seed_phrase);
+
+    let old_seed = old_seed.trim();
+    let new_seed = new_seed.trim();
+
+    if old_seed.is_empty() || new_seed.is_empty() {
+        return Err("Введите старую и новую сид-фразы".into());
+    }
+    if old_seed == new_seed {
+        return Err("Новая сид-фраза совпадает со старой".into());
+    }
+
+    let current_envelope = state
+        .vault_envelope
+        .lock()
+        .map_err(|_| "State lock failed")?
+        .clone()
+        .ok_or("Vault не разблокирован")?;
+
+    let mut master_key = unwrap_master_key(
+        &current_envelope.wrapped_master_key,
+        &current_envelope.wrapping_salt,
+        old_seed,
+        &current_envelope.encryption_algorithm,
+    )?;
+
+    let new_envelope = wrap_master_key(&master_key, new_seed, &current_envelope.encryption_algorithm)?;
+    master_key.zeroize();
+
+    if let Ok(mut env) = state.vault_envelope.lock() {
+        *env = Some(new_envelope.clone());
+    }
+
+    Ok(())
+}
+
 #[tauri::command]
 async fn get_admin_stats(state: State<'_, AppState>) -> Result<AdminStats, String> {
     if !state.authenticated.load(Ordering::SeqCst) {
-        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+        return Err("Не авторизован".into());
     }
-
     let mut api = state.api.lock().await;
     match api.get_admin_stats().await {
         Ok(stats) => Ok(stats),
@@ -186,9 +286,11 @@ async fn set_theme_preference(
     light_theme_enabled: bool,
 ) -> Result<bool, String> {
     if !state.authenticated.load(Ordering::SeqCst) {
-        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+        return Err("Не авторизован".into());
     }
-
+    if !current_user_has_preferences(&state) {
+        return Ok(light_theme_enabled);
+    }
     let mut api = state.api.lock().await;
     match api.change_theme(light_theme_enabled).await {
         Ok(_) => Ok(light_theme_enabled),
@@ -207,9 +309,15 @@ async fn set_language_preference(
     language: String,
 ) -> Result<String, String> {
     if !state.authenticated.load(Ordering::SeqCst) {
-        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+        return Err("Не авторизован".into());
     }
-
+    if !current_user_has_preferences(&state) {
+        return Ok(if language.trim().eq_ignore_ascii_case("en") {
+            "en".to_string()
+        } else {
+            "ru".to_string()
+        });
+    }
     let mut api = state.api.lock().await;
     match api.change_language(&language).await {
         Ok(value) => Ok(value),
@@ -228,9 +336,13 @@ async fn set_encryption_preference(
     encryption_algorithm: String,
 ) -> Result<String, String> {
     if !state.authenticated.load(Ordering::SeqCst) {
-        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+        return Err("Не авторизован".into());
     }
-
+    if !current_user_has_preferences(&state) {
+        return Ok(resolve_encryption_algorithm(&encryption_algorithm)
+            .unwrap_or(default_encryption_algorithm())
+            .to_string());
+    }
     let mut api = state.api.lock().await;
     match api.change_encryption(&encryption_algorithm).await {
         Ok(value) => Ok(value),
@@ -250,7 +362,12 @@ async fn get_passwords(state: State<'_, AppState>) -> Result<Vec<PasswordEntry>,
     }
     let mut api = state.api.lock().await;
     match api.list_passwords().await {
-        Ok(entries) => Ok(entries),
+        Ok(entries) => {
+            if let Ok(mut cache) = state.password_cache.lock() {
+                *cache = Some(entries.clone());
+            }
+            Ok(entries)
+        }
         Err(err) => {
             if is_not_authenticated_error(&err) {
                 clear_auth_state(&state, &mut api);
@@ -289,34 +406,12 @@ async fn add_password(
 
     let selected_algorithm = resolve_encryption_algorithm(&encryption_algorithm)
         .ok_or("Неподдерживаемый алгоритм шифрования")?;
-    let existing_entries = {
-        let mut api = state.api.lock().await;
-        match api.list_passwords().await {
-            Ok(entries) => entries,
-            Err(err) => {
-                if is_not_authenticated_error(&err) {
-                    clear_auth_state(&state, &mut api);
-                }
-                return Err(err);
-            }
-        }
-    };
 
-    let envelope_from_entries = existing_entries.iter().find_map(|entry| {
-        if entry.wrapped_master_key.trim().is_empty() || entry.salt.trim().is_empty() {
-            return None;
-        }
-
-        Some(MasterKeyEnvelope {
-            wrapped_master_key: entry.wrapped_master_key.clone(),
-            wrapping_salt: entry.salt.clone(),
-            encryption_algorithm: if entry.encryption_algorithm.trim().is_empty() {
-                default_encryption_algorithm().to_string()
-            } else {
-                entry.encryption_algorithm.clone()
-            },
-        })
-    });
+    let envelope_from_state = state
+        .vault_envelope
+        .lock()
+        .ok()
+        .and_then(|e| e.clone());
 
     let envelope_from_local = match (local_wrapped_master_key, local_wrapping_salt) {
         (Some(wrapped_master_key), Some(wrapping_salt))
@@ -326,19 +421,18 @@ async fn add_password(
                 wrapped_master_key,
                 wrapping_salt,
                 encryption_algorithm: local_wrapping_algorithm
-                    .and_then(|value| {
-                        resolve_encryption_algorithm(&value).map(|item| item.to_string())
-                    })
+                    .and_then(|v| resolve_encryption_algorithm(&v).map(|s| s.to_string()))
                     .unwrap_or_else(|| selected_algorithm.to_string()),
             })
         }
         _ => None,
     };
 
-    let mut master_key = if let Some(envelope) = envelope_from_entries
+    let resolved_envelope = envelope_from_state
         .as_ref()
-        .or(envelope_from_local.as_ref())
-    {
+        .or(envelope_from_local.as_ref());
+
+    let mut master_key = if let Some(envelope) = resolved_envelope {
         unwrap_master_key(
             &envelope.wrapped_master_key,
             &envelope.wrapping_salt,
@@ -352,6 +446,12 @@ async fn add_password(
     let encrypted_password = encrypt_password_with_master_key(password.as_str(), &master_key)?;
     let entry_envelope = wrap_master_key(&master_key, seed_phrase, selected_algorithm)?;
     master_key.zeroize();
+
+    if let Ok(mut state_env) = state.vault_envelope.lock() {
+        if state_env.is_none() {
+            *state_env = Some(entry_envelope.clone());
+        }
+    }
 
     let entry = PasswordEntry {
         id: uuid::Uuid::new_v4().to_string(),
@@ -388,20 +488,33 @@ async fn copy_password(
     }
 
     let entry = {
-        let mut api = state.api.lock().await;
-        let list = match api.list_passwords().await {
-            Ok(list) => list,
-            Err(err) => {
-                if is_not_authenticated_error(&err) {
-                    clear_auth_state(&state, &mut api);
+        let cached = state
+            .password_cache
+            .lock()
+            .ok()
+            .and_then(|c| c.clone())
+            .and_then(|list| list.into_iter().find(|e| e.id == entry_id));
+
+        if let Some(e) = cached {
+            e
+        } else {
+            let mut api = state.api.lock().await;
+            let list = match api.list_passwords().await {
+                Ok(l) => l,
+                Err(err) => {
+                    if is_not_authenticated_error(&err) {
+                        clear_auth_state(&state, &mut api);
+                    }
+                    return Err(err);
                 }
-                return Err(err);
+            };
+            if let Ok(mut cache) = state.password_cache.lock() {
+                *cache = Some(list.clone());
             }
-        };
-        list.iter()
-            .find(|e| e.id == entry_id)
-            .cloned()
-            .ok_or("Запись не найдена")?
+            list.into_iter()
+                .find(|e| e.id == entry_id)
+                .ok_or_else(|| "Запись не найдена".to_string())?
+        }
     };
 
     let seed_phrase = Zeroizing::new(seed_phrase);
@@ -424,12 +537,12 @@ async fn copy_password(
             seed_phrase,
             algorithm,
         )?;
-        let decrypted = Zeroizing::new(decrypt_password_with_master_key(
+        let result = Zeroizing::new(decrypt_password_with_master_key(
             &entry.encrypted_password,
             &master_key,
         )?);
         master_key.zeroize();
-        decrypted
+        result
     } else {
         Zeroizing::new(decrypt_password(
             &entry.encrypted_password,
@@ -445,9 +558,9 @@ async fn copy_password(
         .map_err(|e| format!("Буфер обмена: {}", e))?;
 
     let handle = app_handle.clone();
-    let clipboard_timeout_seconds = sanitize_clipboard_timeout_seconds(clipboard_timeout_seconds);
+    let timeout = sanitize_clipboard_timeout_seconds(clipboard_timeout_seconds);
     tokio::spawn(async move {
-        tokio::time::sleep(tokio::time::Duration::from_secs(clipboard_timeout_seconds)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(timeout)).await;
         let _ = handle.clipboard_manager().write_text("");
     });
 
@@ -461,7 +574,14 @@ async fn delete_password(state: State<'_, AppState>, entry_id: String) -> Result
     }
     let mut api = state.api.lock().await;
     match api.delete_password(&entry_id).await {
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            if let Ok(mut cache) = state.password_cache.lock() {
+                if let Some(ref mut list) = *cache {
+                    list.retain(|e| e.id != entry_id);
+                }
+            }
+            Ok(())
+        }
         Err(err) => {
             if is_not_authenticated_error(&err) {
                 clear_auth_state(&state, &mut api);
@@ -586,6 +706,8 @@ fn main() {
             authenticated: AtomicBool::new(false),
             api: Mutex::new(ApiClient::new()),
             current_user: StdMutex::new(None),
+            vault_envelope: StdMutex::new(None),
+            password_cache: StdMutex::new(None),
         })
         .setup(|app| {
             let window = app.get_window("main").unwrap();
@@ -611,6 +733,9 @@ fn main() {
             set_screenshot_guard_enabled,
             get_startup_status,
             set_startup_enabled,
+            store_vault_envelope,
+            get_vault_envelope,
+            rotate_seed_phrase,
         ])
         .run(tauri::generate_context!())
         .expect("Ошибка запуска приложения");

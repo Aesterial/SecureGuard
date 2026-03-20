@@ -4,7 +4,6 @@ use aes_gcm::{
 };
 use argon2::{self, Argon2};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
-use bcrypt::{hash, verify, DEFAULT_COST};
 use rand::{rngs::OsRng, RngCore};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -37,24 +36,6 @@ pub fn resolve_encryption_algorithm(value: &str) -> Option<&'static str> {
     }
 }
 
-pub fn encrypt_password(
-    plaintext: &str,
-    seed_phrase: &str,
-    encryption_algorithm: &str,
-) -> Result<(String, String), String> {
-    let algorithm = resolve_encryption_algorithm(encryption_algorithm)
-        .ok_or("Unsupported encryption algorithm".to_string())?;
-
-    let mut salt = [0u8; 16];
-    OsRng.fill_bytes(&mut salt);
-
-    let mut key = derive_key_from_seed(seed_phrase, &salt, algorithm)?;
-    let ciphertext = encrypt_bytes_with_key(plaintext.as_bytes(), &key)?;
-
-    key.zeroize();
-
-    Ok((ciphertext, BASE64.encode(salt)))
-}
 
 pub fn decrypt_password(
     encrypted_b64: &str,
@@ -154,20 +135,6 @@ pub fn decrypt_password_with_master_key(
 ) -> Result<String, String> {
     let plaintext = decrypt_bytes_with_key(encrypted_b64, master_key)?;
     decode_secret_utf8(plaintext)
-}
-
-pub fn hash_account_password(password: &str) -> Result<String, String> {
-    hash(password, DEFAULT_COST).map_err(|e| format!("Bcrypt hash: {}", e))
-}
-
-pub fn verify_account_password(password: &str, password_hash: &str) -> Result<bool, String> {
-    verify(password, password_hash).map_err(|e| format!("Bcrypt verify: {}", e))
-}
-
-pub fn hash_seed_phrase(seed_phrase: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(seed_phrase.as_bytes());
-    hex::encode(hasher.finalize())
 }
 
 fn derive_key_from_seed(
