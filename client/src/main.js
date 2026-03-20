@@ -41,8 +41,9 @@ var I18N = {
     "register.title": "Регистрация",
     "register.confirmPassword": "Подтвердите пароль",
     "register.seedInfo":
-      "Сид-фраза — это резервный ключ для восстановления доступа. Если вы забудете пароль, используйте сид-фразу.",
-    "register.warn": "Сохраните сид-фразу. Потеря приведёт к потере доступа.",
+      "Сид-фраза используется только локально для шифрования и расшифровки ваших паролей. Сервер не хранит и не возвращает её в исходном виде.",
+    "register.warn":
+      "Запишите сид-фразу и храните локально. Без неё расшифровать данные не получится.",
     "register.submit": "Создать аккаунт",
     "register.haveAccount": "Уже есть аккаунт?",
     "register.usernamePlaceholder": "Минимум 3 символа",
@@ -59,7 +60,7 @@ var I18N = {
     "add.name": "Название",
     "add.namePlaceholder": "Gmail, GitHub, VK...",
     "add.passwordPlaceholder": "Пароль для аккаунта",
-    "add.seedPlaceholder": "Или сид-фраза для аккаунта",
+    "add.seedPlaceholder": "Локальная сид-фраза для шифрования",
     "add.save": "Сохранить и закрыть",
 
     "settings.title": "Настройки",
@@ -112,7 +113,8 @@ var I18N = {
     "weak.use": "Использовать",
 
     "seedModal.title": "Введите сид-фразу",
-    "seedModal.desc": "Она необходима для отображения записи",
+    "seedModal.desc":
+      "Нужна локальная сид-фраза для расшифровки и копирования записи",
     "seedModal.placeholder": "Введите сид-фразу",
     "seedModal.copy": "Скопировать",
 
@@ -206,8 +208,9 @@ var I18N = {
     "register.title": "Sign up",
     "register.confirmPassword": "Confirm password",
     "register.seedInfo":
-      "Seed phrase is a secret phrase used to encrypt passwords. If you lose it, data recovery is impossible.",
-    "register.warn": "Write this phrase down. Recovery is impossible.",
+      "The seed phrase is used locally to encrypt and decrypt your passwords. The server does not store or return the raw phrase.",
+    "register.warn":
+      "Write this phrase down and keep it locally. Without it, your data cannot be decrypted.",
     "register.submit": "Create account",
     "register.haveAccount": "Already have an account?",
     "register.usernamePlaceholder": "At least 3 characters",
@@ -222,7 +225,7 @@ var I18N = {
     "add.name": "Name",
     "add.namePlaceholder": "Gmail, GitHub, VK...",
     "add.passwordPlaceholder": "Password to store",
-    "add.seedPlaceholder": "Your seed phrase for encryption",
+    "add.seedPlaceholder": "Your local seed phrase for encryption",
     "add.save": "Encrypt and save",
     "settings.title": "Settings",
     "settings.language.title": "Language",
@@ -231,7 +234,7 @@ var I18N = {
     "settings.language.en": "English",
     "settings.encryption.title": "Encryption algorithm",
     "settings.encryption.desc":
-      "Choose how passwords are encrypted using the seed phrase.",
+      "Choose how passwords are encrypted with your local seed phrase.",
     "settings.encryption.argon2id": "AES-256-GCM + Argon2id (recommended)",
     "settings.encryption.sha256": "AES-256-GCM + SHA-256 (fast)",
     "settings.screenshotGuard.title": "Screenshot Guard",
@@ -263,7 +266,8 @@ var I18N = {
     "weak.seedTip": "Seed phrase is too simple. Use more unique words.",
     "weak.use": "Use anyway",
     "seedModal.title": "Enter seed phrase",
-    "seedModal.desc": "Required to reveal this entry",
+    "seedModal.desc":
+      "Required to decrypt and copy this entry with your local seed phrase",
     "seedModal.placeholder": "Your seed phrase",
     "seedModal.copy": "Copy",
     "deleteModal.title": "Delete entry?",
@@ -339,8 +343,10 @@ var MESSAGE_KEY_BY_TEXT = {
 };
 
 var SETTINGS_KEY = "secureguard.settings.v1";
+var MASTER_KEY_ENVELOPES_KEY = "secureguard.master-keys.v1";
 var ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID = "aes256gcm-argon2id";
 var ENCRYPTION_ALGORITHM_AES256_GCM_SHA256 = "aes256gcm-sha256";
+var DEFAULT_CLIPBOARD_TIMEOUT_SECONDS = 30;
 
 var DEFAULT_SETTINGS = {
   screenshotGuardEnabled: true,
@@ -348,6 +354,7 @@ var DEFAULT_SETTINGS = {
   startupEnabled: false,
   autoLockEnabled: false,
   autoLockMinutes: 5,
+  clipboardTimeoutSeconds: DEFAULT_CLIPBOARD_TIMEOUT_SECONDS,
   confirmDelete: true,
   blockContextMenu: true,
   language: "ru",
@@ -467,6 +474,16 @@ function createFallbackInvoke() {
       return "Аккаунт создан! Теперь войдите.";
     }
 
+    if (command === "prepare_local_master_key_envelope") {
+      return {
+        wrapped_master_key: "local-envelope",
+        wrapping_salt: "local-salt",
+        encryption_algorithm: normalizeEncryptionAlgorithm(
+          args.encryptionAlgorithm,
+        ),
+      };
+    }
+
     if (command === "logout") {
       authenticated = false;
       currentUser = null;
@@ -551,6 +568,7 @@ function createFallbackInvoke() {
           title: entry.title,
           encrypted_password: entry.encrypted_password,
           salt: entry.salt,
+          wrapped_master_key: entry.wrapped_master_key || "",
           encryption_algorithm:
             entry.encryption_algorithm ||
             ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID,
@@ -573,7 +591,8 @@ function createFallbackInvoke() {
         id: String(nextId++),
         title: title,
         encrypted_password: password,
-        salt: "local",
+        salt: args.localWrappingSalt || "local",
+        wrapped_master_key: args.localWrappedMasterKey || "",
         encryption_algorithm: encryptionAlgorithm,
         created_at: new Date().toISOString(),
         _plain: password,
@@ -624,7 +643,6 @@ function initApp(invoke) {
     encryption: false,
   };
   var weakConfirmResolver = null;
-  var cachedSeedPhrase = "";
   var authHandlingInProgress = false;
   var settingsReturnPage = "dashboard";
   var currentUser = null;
@@ -650,6 +668,7 @@ function initApp(invoke) {
     startupEnabled: document.getElementById("setting-startup-enabled"),
     autoLockEnabled: document.getElementById("setting-auto-lock-enabled"),
     autoLockMinutes: document.getElementById("setting-auto-lock-minutes"),
+    clipboardTimeout: document.getElementById("setting-clipboard-timeout"),
     confirmDelete: document.getElementById("setting-confirm-delete"),
     blockContextMenu: document.getElementById("setting-block-context-menu"),
     language: document.getElementById("setting-language"),
@@ -770,6 +789,37 @@ function initApp(invoke) {
     }
 
     return minutes + " " + word;
+  }
+
+  function getClipboardTimeoutLabel(seconds) {
+    if (getLanguage() === "en") {
+      return seconds + "s";
+    }
+
+    return seconds + " с.";
+  }
+
+  function getPasswordCopiedMessage() {
+    if (getLanguage() === "en") {
+      return "Password copied! Clipboard clears in " + appSettings.clipboardTimeoutSeconds + "s";
+    }
+
+    return (
+      "Пароль скопирован! Очистка через " +
+      appSettings.clipboardTimeoutSeconds +
+      " с."
+    );
+  }
+
+  function getClipboardTimeoutChangedMessage() {
+    if (getLanguage() === "en") {
+      return "Clipboard timeout: " + getClipboardTimeoutLabel(appSettings.clipboardTimeoutSeconds);
+    }
+
+    return (
+      "Таймаут буфера обмена: " +
+      getClipboardTimeoutLabel(appSettings.clipboardTimeoutSeconds)
+    );
   }
 
   function localizeMessage(raw, fallbackKey) {
@@ -1020,6 +1070,17 @@ function initApp(invoke) {
       "settings.autoLockMinutes.title",
     );
     setText("#setting-auto-lock-minutes-desc", "settings.autoLockMinutes.desc");
+    if (getLanguage() === "en") {
+      document.getElementById("setting-clipboard-timeout-title").textContent =
+        "Clipboard timeout";
+      document.getElementById("setting-clipboard-timeout-desc").textContent =
+        "How many seconds to keep a copied password in the clipboard before it is cleared.";
+    } else {
+      document.getElementById("setting-clipboard-timeout-title").textContent =
+        "Таймаут буфера обмена";
+      document.getElementById("setting-clipboard-timeout-desc").textContent =
+        "Через сколько секунд очищать буфер обмена после копирования пароля.";
+    }
     setText("#setting-confirm-delete-title", "settings.confirmDelete.title");
     setText("#setting-confirm-delete-desc", "settings.confirmDelete.desc");
     setText("#setting-block-context-title", "settings.blockContext.title");
@@ -1294,6 +1355,7 @@ function initApp(invoke) {
       startupEnabled: DEFAULT_SETTINGS.startupEnabled,
       autoLockEnabled: DEFAULT_SETTINGS.autoLockEnabled,
       autoLockMinutes: DEFAULT_SETTINGS.autoLockMinutes,
+      clipboardTimeoutSeconds: DEFAULT_SETTINGS.clipboardTimeoutSeconds,
       confirmDelete: DEFAULT_SETTINGS.confirmDelete,
       blockContextMenu: DEFAULT_SETTINGS.blockContextMenu,
       language: DEFAULT_SETTINGS.language,
@@ -1322,6 +1384,15 @@ function initApp(invoke) {
       out.autoLockMinutes = minutes;
     }
 
+    var clipboardTimeoutSeconds = Number(source.clipboardTimeoutSeconds);
+    if (
+      !isNaN(clipboardTimeoutSeconds) &&
+      clipboardTimeoutSeconds >= 5 &&
+      clipboardTimeoutSeconds <= 300
+    ) {
+      out.clipboardTimeoutSeconds = clipboardTimeoutSeconds;
+    }
+
     return out;
   }
 
@@ -1348,6 +1419,100 @@ function initApp(invoke) {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
       hasStoredSettings = true;
     } catch (e) {}
+  }
+
+  function loadMasterKeyEnvelopes() {
+    try {
+      var raw = localStorage.getItem(MASTER_KEY_ENVELOPES_KEY);
+      if (!raw) {
+        return {};
+      }
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveMasterKeyEnvelope(username, envelope) {
+    var normalizedUsername = String(username || "").trim();
+    if (!normalizedUsername || !envelope || typeof envelope !== "object") {
+      return;
+    }
+
+    var wrappedMasterKey = String(
+      envelope.wrapped_master_key || envelope.wrappedMasterKey || "",
+    ).trim();
+    var wrappingSalt = String(
+      envelope.wrapping_salt || envelope.wrappingSalt || "",
+    ).trim();
+    var encryptionAlgorithm = normalizeEncryptionAlgorithm(
+      envelope.encryption_algorithm || envelope.encryptionAlgorithm,
+    );
+
+    if (!wrappedMasterKey || !wrappingSalt) {
+      return;
+    }
+
+    var envelopes = loadMasterKeyEnvelopes();
+    envelopes[normalizedUsername] = {
+      wrapped_master_key: wrappedMasterKey,
+      wrapping_salt: wrappingSalt,
+      encryption_algorithm: encryptionAlgorithm,
+    };
+
+    try {
+      localStorage.setItem(MASTER_KEY_ENVELOPES_KEY, JSON.stringify(envelopes));
+    } catch (e) {}
+  }
+
+  function getStoredMasterKeyEnvelope(username) {
+    var normalizedUsername = String(username || "").trim();
+    if (!normalizedUsername) {
+      return null;
+    }
+
+    var envelopes = loadMasterKeyEnvelopes();
+    var envelope = envelopes[normalizedUsername];
+    if (!envelope || typeof envelope !== "object") {
+      return null;
+    }
+
+    if (
+      !String(envelope.wrapped_master_key || "").trim() ||
+      !String(envelope.wrapping_salt || "").trim()
+    ) {
+      return null;
+    }
+
+    return {
+      wrapped_master_key: String(envelope.wrapped_master_key),
+      wrapping_salt: String(envelope.wrapping_salt),
+      encryption_algorithm: normalizeEncryptionAlgorithm(
+        envelope.encryption_algorithm,
+      ),
+    };
+  }
+
+  function persistEnvelopeFromEntries(entries) {
+    if (!currentUser || !currentUser.username || !Array.isArray(entries)) {
+      return;
+    }
+
+    for (var i = 0; i < entries.length; i++) {
+      var entry = entries[i] || {};
+      if (
+        String(entry.wrapped_master_key || "").trim() &&
+        String(entry.salt || "").trim()
+      ) {
+        saveMasterKeyEnvelope(currentUser.username, {
+          wrapped_master_key: entry.wrapped_master_key,
+          wrapping_salt: entry.salt,
+          encryption_algorithm: entry.encryption_algorithm,
+        });
+        return;
+      }
+    }
   }
 
   function updateSettingsAvailability() {
@@ -1563,6 +1728,11 @@ function initApp(invoke) {
     settingsControls.autoLockMinutes.value = String(
       appSettings.autoLockMinutes,
     );
+    if (settingsControls.clipboardTimeout) {
+      settingsControls.clipboardTimeout.value = String(
+        appSettings.clipboardTimeoutSeconds,
+      );
+    }
     settingsControls.confirmDelete.checked = !!appSettings.confirmDelete;
     settingsControls.blockContextMenu.checked = !!appSettings.blockContextMenu;
     if (settingsControls.language) {
@@ -1594,7 +1764,6 @@ function initApp(invoke) {
     clearAutoLockTimer();
     setAuthenticated(false);
     setCurrentUser(null);
-    cachedSeedPhrase = "";
 
     try {
       await invoke("logout");
@@ -1635,7 +1804,6 @@ function initApp(invoke) {
   function setAuthenticated(value) {
     authenticated = !!value;
     if (!authenticated) {
-      cachedSeedPhrase = "";
       clearAutoLockTimer();
       adminStats = null;
       updateSettingsAvailability();
@@ -1876,6 +2044,7 @@ function initApp(invoke) {
     var list = document.getElementById("pw-list");
     try {
       var entries = await invoke("get_passwords");
+      persistEnvelopeFromEntries(entries);
       list.innerHTML = "";
       if (!entries || entries.length === 0) {
         list.innerHTML =
@@ -1928,23 +2097,6 @@ function initApp(invoke) {
 
     card.addEventListener("click", async function (e) {
       if (e.target.closest(".card-del")) return;
-
-      if (cachedSeedPhrase) {
-        try {
-          await invoke("copy_password", {
-            entryId: entry.id,
-            seedPhrase: cachedSeedPhrase,
-          });
-          notify(t("notify.passwordCopied"));
-          return;
-        } catch (err) {
-          if (await handleAuthFailure(err)) {
-            return;
-          }
-          cachedSeedPhrase = "";
-          notify(localizeMessage(err, "error.invalidSeed"), "err");
-        }
-      }
 
       currentId = entry.id;
       showModal("seed");
@@ -2067,6 +2219,19 @@ function initApp(invoke) {
     );
   });
 
+  if (settingsControls.clipboardTimeout) {
+    settingsControls.clipboardTimeout.addEventListener("change", function () {
+      var seconds = Number(settingsControls.clipboardTimeout.value);
+      if (isNaN(seconds) || seconds < 5) {
+        seconds = DEFAULT_SETTINGS.clipboardTimeoutSeconds;
+      }
+      appSettings.clipboardTimeoutSeconds = seconds;
+      saveSettings();
+      renderSettings();
+      notify(getClipboardTimeoutChangedMessage());
+    });
+  }
+
   settingsControls.confirmDelete.addEventListener("change", function () {
     appSettings.confirmDelete = settingsControls.confirmDelete.checked;
     saveSettings();
@@ -2149,7 +2314,6 @@ function initApp(invoke) {
         applySessionPreferences(profile);
         setCurrentUser(profile);
         setAuthenticated(true);
-        cachedSeedPhrase = "";
         await syncScreenshotGuardOnStart();
         await syncStartupOnStart();
         notify(t("notify.welcome"));
@@ -2160,6 +2324,8 @@ function initApp(invoke) {
         notify(localizeMessage(err, "error.login"), "err");
       }
 
+      p = "";
+      document.getElementById("login-pass").value = "";
       setLoad("login-btn", false);
     });
 
@@ -2212,11 +2378,16 @@ function initApp(invoke) {
       setLoad("reg-btn", true);
 
       try {
+        var preparedEnvelope = await invoke("prepare_local_master_key_envelope", {
+          seedPhrase: s,
+          encryptionAlgorithm: appSettings.encryptionAlgorithm,
+        });
         var msg = await invoke("register", {
           username: u,
           password: p,
           seedPhrase: s,
         });
+        saveMasterKeyEnvelope(u, preparedEnvelope);
         notify(localizeMessage(msg, "notify.accountCreated"));
         document.getElementById("register-form").reset();
         document.getElementById("str-bar").className = "str-fill";
@@ -2225,6 +2396,12 @@ function initApp(invoke) {
         notify(localizeMessage(err, "error.register"), "err");
       }
 
+      p = "";
+      p2 = "";
+      s = "";
+      document.getElementById("reg-pass").value = "";
+      document.getElementById("reg-pass2").value = "";
+      document.getElementById("reg-seed").value = "";
       setLoad("reg-btn", false);
     });
 
@@ -2320,12 +2497,30 @@ function initApp(invoke) {
       setLoad("save-btn", true);
 
       try {
-        await invoke("add_password", {
+        var localEnvelope =
+          currentUser && currentUser.username
+            ? getStoredMasterKeyEnvelope(currentUser.username)
+            : null;
+        var savedEntry = await invoke("add_password", {
           title: title,
           password: p,
           seedPhrase: s,
           encryptionAlgorithm: appSettings.encryptionAlgorithm,
+          localWrappedMasterKey: localEnvelope
+            ? localEnvelope.wrapped_master_key
+            : null,
+          localWrappingSalt: localEnvelope ? localEnvelope.wrapping_salt : null,
+          localWrappingAlgorithm: localEnvelope
+            ? localEnvelope.encryption_algorithm
+            : null,
         });
+        if (currentUser && currentUser.username) {
+          saveMasterKeyEnvelope(currentUser.username, {
+            wrapped_master_key: savedEntry.wrapped_master_key,
+            wrapping_salt: savedEntry.salt,
+            encryption_algorithm: savedEntry.encryption_algorithm,
+          });
+        }
         notify(t("notify.passwordSaved"));
         document.getElementById("add-form").reset();
         showPage("dashboard");
@@ -2336,6 +2531,10 @@ function initApp(invoke) {
         }
       }
 
+      p = "";
+      s = "";
+      document.getElementById("add-pass").value = "";
+      document.getElementById("add-seed").value = "";
       setLoad("save-btn", false);
     });
 
@@ -2363,10 +2562,13 @@ function initApp(invoke) {
       setLoad("modal-yes", true);
 
       try {
-        await invoke("copy_password", { entryId: currentId, seedPhrase: seed });
-        cachedSeedPhrase = seed;
+        await invoke("copy_password", {
+          entryId: currentId,
+          seedPhrase: seed,
+          clipboardTimeoutSeconds: appSettings.clipboardTimeoutSeconds,
+        });
         hideModal("seed");
-        notify(t("notify.passwordCopied"));
+        notify(getPasswordCopiedMessage());
         currentId = null;
       } catch (err) {
         if (await handleAuthFailure(err)) {
@@ -2377,6 +2579,8 @@ function initApp(invoke) {
         notify(localizeMessage(err, "error.invalidSeed"), "err");
       }
 
+      seed = "";
+      document.getElementById("modal-seed").value = "";
       setLoad("modal-yes", false);
     });
 

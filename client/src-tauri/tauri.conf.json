@@ -25,7 +25,7 @@
     "bundle": {
       "active": true,
       "identifier": "com.secureguard.app",
-      "publisher": "Aesterial",
+      "publisher": "Aesterial ",
       "icon": ["icons/icon.ico"],
       "targets": ["nsis"]
     },

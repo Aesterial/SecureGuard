@@ -26,8 +26,11 @@ message ListResponse {
 message CreateRequest {
   string service_url = 1;
   string login = 2;
-  string pass = 3;
-  string salt = 4;
+  string ciphertext = 3;
+  int32 version = 4;
+  string nonce = 5;
+  bytes aad = 6;
+  string metadata = 7;
 };
 
 message PassDataResponse {

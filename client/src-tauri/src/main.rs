@@ -10,32 +10,19 @@ mod screenshot_guard;
 
 use api::{AdminStats, ApiClient, AuthProfile, PasswordEntry};
 use crypto::{
-    decrypt_password, default_encryption_algorithm, encrypt_password, resolve_encryption_algorithm,
+    decrypt_password, decrypt_password_with_master_key, default_encryption_algorithm,
+    encrypt_password_with_master_key, generate_master_key, prepare_master_key_envelope,
+    resolve_encryption_algorithm, unwrap_master_key, wrap_master_key, MasterKeyEnvelope,
 };
-#[cfg(target_os = "windows")]
-use std::ffi::OsStr;
-#[cfg(target_os = "windows")]
-use std::os::windows::ffi::OsStrExt;
-#[cfg(target_os = "windows")]
-use std::ptr;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex as StdMutex;
 use tauri::{ClipboardManager, Manager, State};
 use tokio::sync::Mutex;
 #[cfg(target_os = "windows")]
-use winapi::um::securitybaseapi::{AllocateAndInitializeSid, CheckTokenMembership, FreeSid};
-#[cfg(target_os = "windows")]
-use winapi::um::shellapi::ShellExecuteW;
-#[cfg(target_os = "windows")]
-use winapi::um::winnt::{
-    DOMAIN_ALIAS_RID_ADMINS, PSID, SECURITY_BUILTIN_DOMAIN_RID, SID_IDENTIFIER_AUTHORITY,
-};
-#[cfg(target_os = "windows")]
-use winapi::um::winuser::SW_SHOWNORMAL;
-#[cfg(target_os = "windows")]
 use winreg::enums::HKEY_CURRENT_USER;
 #[cfg(target_os = "windows")]
 use winreg::RegKey;
+use zeroize::{Zeroize, Zeroizing};
 
 struct AppState {
     authenticated: AtomicBool,
@@ -47,6 +34,9 @@ struct AppState {
 const STARTUP_RUN_KEY_PATH: &str = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
 #[cfg(target_os = "windows")]
 const STARTUP_VALUE_NAME: &str = "SecureGuard";
+const DEFAULT_CLIPBOARD_TIMEOUT_SECS: u64 = 30;
+const MIN_CLIPBOARD_TIMEOUT_SECS: u64 = 5;
+const MAX_CLIPBOARD_TIMEOUT_SECS: u64 = 300;
 
 fn is_not_authenticated_error(message: &str) -> bool {
     let normalized = message.to_ascii_lowercase();
@@ -61,12 +51,19 @@ fn clear_auth_state(state: &State<'_, AppState>, api: &mut ApiClient) {
     }
 }
 
+fn sanitize_clipboard_timeout_seconds(value: Option<u64>) -> u64 {
+    value
+        .unwrap_or(DEFAULT_CLIPBOARD_TIMEOUT_SECS)
+        .clamp(MIN_CLIPBOARD_TIMEOUT_SECS, MAX_CLIPBOARD_TIMEOUT_SECS)
+}
+
 #[tauri::command]
 async fn login(
     state: State<'_, AppState>,
     username: String,
     password: String,
 ) -> Result<AuthProfile, String> {
+    let password = Zeroizing::new(password);
     let username = username.trim();
     if username.is_empty() || password.trim().is_empty() {
         return Err("Введите логин и пароль".into());
@@ -74,7 +71,7 @@ async fn login(
 
     {
         let mut api = state.api.lock().await;
-        let profile = api.authorize(username, &password).await?;
+        let profile = api.authorize(username, password.as_str()).await?;
         if let Ok(mut current_user) = state.current_user.lock() {
             *current_user = Some(profile.clone());
         }
@@ -90,6 +87,8 @@ async fn register(
     password: String,
     seed_phrase: String,
 ) -> Result<String, String> {
+    let password = Zeroizing::new(password);
+    let seed_phrase = Zeroizing::new(seed_phrase);
     let username = username.trim();
     let seed_phrase = seed_phrase.trim();
 
@@ -105,7 +104,8 @@ async fn register(
 
     {
         let mut api = state.api.lock().await;
-        api.register(username, &password, seed_phrase).await?;
+        api.register(username, password.as_str(), seed_phrase)
+            .await?;
         api.clear_session();
     }
 
@@ -115,6 +115,22 @@ async fn register(
 
     state.authenticated.store(false, Ordering::SeqCst);
     Ok("Аккаунт создан! Войдите.".into())
+}
+
+#[tauri::command]
+async fn prepare_local_master_key_envelope(
+    seed_phrase: String,
+    encryption_algorithm: String,
+) -> Result<MasterKeyEnvelope, String> {
+    let seed_phrase = Zeroizing::new(seed_phrase);
+    let seed_phrase = seed_phrase.trim();
+    if seed_phrase.is_empty() {
+        return Err("Р’РІРµРґРёС‚Рµ СЃРёРґ-С„СЂР°Р·Сѓ".into());
+    }
+
+    let selected_algorithm = resolve_encryption_algorithm(&encryption_algorithm)
+        .ok_or("РќРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Р№ Р°Р»РіРѕСЂРёС‚Рј С€РёС„СЂРѕРІР°РЅРёСЏ")?;
+    prepare_master_key_envelope(seed_phrase, selected_algorithm)
 }
 
 #[tauri::command]
@@ -251,6 +267,9 @@ async fn add_password(
     password: String,
     seed_phrase: String,
     encryption_algorithm: String,
+    local_wrapped_master_key: Option<String>,
+    local_wrapping_salt: Option<String>,
+    local_wrapping_algorithm: Option<String>,
 ) -> Result<PasswordEntry, String> {
     if !state.authenticated.load(Ordering::SeqCst) {
         return Err("Не авторизован".into());
@@ -258,24 +277,89 @@ async fn add_password(
     if title.trim().is_empty() {
         return Err("Введите название".into());
     }
+    let password = Zeroizing::new(password);
     if password.trim().is_empty() {
         return Err("Введите пароль".into());
     }
+    let seed_phrase = Zeroizing::new(seed_phrase);
     let seed_phrase = seed_phrase.trim();
     if seed_phrase.is_empty() {
         return Err("Введите сид-фразу".into());
     }
 
-    let algorithm = resolve_encryption_algorithm(&encryption_algorithm)
+    let selected_algorithm = resolve_encryption_algorithm(&encryption_algorithm)
         .ok_or("Неподдерживаемый алгоритм шифрования")?;
-    let (encrypted, salt) = encrypt_password(&password, seed_phrase, algorithm)?;
+    let existing_entries = {
+        let mut api = state.api.lock().await;
+        match api.list_passwords().await {
+            Ok(entries) => entries,
+            Err(err) => {
+                if is_not_authenticated_error(&err) {
+                    clear_auth_state(&state, &mut api);
+                }
+                return Err(err);
+            }
+        }
+    };
+
+    let envelope_from_entries = existing_entries.iter().find_map(|entry| {
+        if entry.wrapped_master_key.trim().is_empty() || entry.salt.trim().is_empty() {
+            return None;
+        }
+
+        Some(MasterKeyEnvelope {
+            wrapped_master_key: entry.wrapped_master_key.clone(),
+            wrapping_salt: entry.salt.clone(),
+            encryption_algorithm: if entry.encryption_algorithm.trim().is_empty() {
+                default_encryption_algorithm().to_string()
+            } else {
+                entry.encryption_algorithm.clone()
+            },
+        })
+    });
+
+    let envelope_from_local = match (local_wrapped_master_key, local_wrapping_salt) {
+        (Some(wrapped_master_key), Some(wrapping_salt))
+            if !wrapped_master_key.trim().is_empty() && !wrapping_salt.trim().is_empty() =>
+        {
+            Some(MasterKeyEnvelope {
+                wrapped_master_key,
+                wrapping_salt,
+                encryption_algorithm: local_wrapping_algorithm
+                    .and_then(|value| {
+                        resolve_encryption_algorithm(&value).map(|item| item.to_string())
+                    })
+                    .unwrap_or_else(|| selected_algorithm.to_string()),
+            })
+        }
+        _ => None,
+    };
+
+    let mut master_key = if let Some(envelope) = envelope_from_entries
+        .as_ref()
+        .or(envelope_from_local.as_ref())
+    {
+        unwrap_master_key(
+            &envelope.wrapped_master_key,
+            &envelope.wrapping_salt,
+            seed_phrase,
+            &envelope.encryption_algorithm,
+        )?
+    } else {
+        generate_master_key()
+    };
+
+    let encrypted_password = encrypt_password_with_master_key(password.as_str(), &master_key)?;
+    let entry_envelope = wrap_master_key(&master_key, seed_phrase, selected_algorithm)?;
+    master_key.zeroize();
 
     let entry = PasswordEntry {
         id: uuid::Uuid::new_v4().to_string(),
         title: title.trim().to_string(),
-        encrypted_password: encrypted,
-        salt,
-        encryption_algorithm: algorithm.to_string(),
+        encrypted_password,
+        salt: entry_envelope.wrapping_salt,
+        wrapped_master_key: entry_envelope.wrapped_master_key,
+        encryption_algorithm: entry_envelope.encryption_algorithm,
         created_at: chrono_now(),
     };
 
@@ -297,6 +381,7 @@ async fn copy_password(
     state: State<'_, AppState>,
     entry_id: String,
     seed_phrase: String,
+    clipboard_timeout_seconds: Option<u64>,
 ) -> Result<String, String> {
     if !state.authenticated.load(Ordering::SeqCst) {
         return Err("Не авторизован".into());
@@ -319,6 +404,7 @@ async fn copy_password(
             .ok_or("Запись не найдена")?
     };
 
+    let seed_phrase = Zeroizing::new(seed_phrase);
     let seed_phrase = seed_phrase.trim();
     if seed_phrase.is_empty() {
         return Err("Введите сид-фразу".into());
@@ -331,21 +417,37 @@ async fn copy_password(
             .ok_or("Неподдерживаемый алгоритм шифрования записи")?
     };
 
-    let decrypted = decrypt_password(
-        &entry.encrypted_password,
-        &entry.salt,
-        seed_phrase,
-        algorithm,
-    )?;
+    let decrypted = if !entry.wrapped_master_key.trim().is_empty() {
+        let mut master_key = unwrap_master_key(
+            &entry.wrapped_master_key,
+            &entry.salt,
+            seed_phrase,
+            algorithm,
+        )?;
+        let decrypted = Zeroizing::new(decrypt_password_with_master_key(
+            &entry.encrypted_password,
+            &master_key,
+        )?);
+        master_key.zeroize();
+        decrypted
+    } else {
+        Zeroizing::new(decrypt_password(
+            &entry.encrypted_password,
+            &entry.salt,
+            seed_phrase,
+            algorithm,
+        )?)
+    };
 
     app_handle
         .clipboard_manager()
-        .write_text(&decrypted)
+        .write_text(decrypted.as_str())
         .map_err(|e| format!("Буфер обмена: {}", e))?;
 
     let handle = app_handle.clone();
+    let clipboard_timeout_seconds = sanitize_clipboard_timeout_seconds(clipboard_timeout_seconds);
     tokio::spawn(async move {
-        tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(clipboard_timeout_seconds)).await;
         let _ = handle.clipboard_manager().write_text("");
     });
 
@@ -467,145 +569,6 @@ fn set_windows_startup_enabled(_enabled: bool) -> Result<bool, String> {
     Err("Автозапуск поддерживается только на Windows".into())
 }
 
-#[cfg(target_os = "windows")]
-fn ensure_elevated_or_relaunch() {
-    if is_running_as_admin() {
-        return;
-    }
-
-    let exe = match std::env::current_exe() {
-        Ok(path) => path,
-        Err(err) => {
-            eprintln!("SecureGuard UAC: current_exe failed: {}", err);
-            std::process::exit(1);
-        }
-    };
-
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    let params = quote_windows_args(&args);
-
-    let verb = to_wide("runas");
-    let file = to_wide_os(exe.as_os_str());
-    let params_wide = to_wide(&params);
-
-    let result = unsafe {
-        ShellExecuteW(
-            ptr::null_mut(),
-            verb.as_ptr(),
-            file.as_ptr(),
-            if params.is_empty() {
-                ptr::null()
-            } else {
-                params_wide.as_ptr()
-            },
-            ptr::null(),
-            SW_SHOWNORMAL,
-        ) as isize
-    };
-
-    if result <= 32 {
-        eprintln!(
-            "SecureGuard UAC: elevation failed (ShellExecuteW={})",
-            result
-        );
-        std::process::exit(1);
-    }
-
-    std::process::exit(0);
-}
-
-#[cfg(target_os = "windows")]
-fn is_running_as_admin() -> bool {
-    unsafe {
-        let mut admin_group: PSID = ptr::null_mut();
-        let nt_authority = SID_IDENTIFIER_AUTHORITY {
-            Value: [0, 0, 0, 0, 0, 5],
-        };
-
-        let sid_ok = AllocateAndInitializeSid(
-            &nt_authority as *const _ as *mut _,
-            2,
-            SECURITY_BUILTIN_DOMAIN_RID,
-            DOMAIN_ALIAS_RID_ADMINS,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            &mut admin_group,
-        );
-
-        if sid_ok == 0 || admin_group.is_null() {
-            return false;
-        }
-
-        let mut is_member = 0;
-        let token_ok = CheckTokenMembership(ptr::null_mut(), admin_group, &mut is_member);
-        FreeSid(admin_group);
-
-        token_ok != 0 && is_member != 0
-    }
-}
-
-#[cfg(target_os = "windows")]
-fn quote_windows_args(args: &[String]) -> String {
-    args.iter()
-        .map(|arg| quote_windows_arg(arg))
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-#[cfg(target_os = "windows")]
-fn quote_windows_arg(value: &str) -> String {
-    if value.is_empty() {
-        return "\"\"".to_string();
-    }
-
-    if !value
-        .chars()
-        .any(|ch| ch.is_whitespace() || ch == '"' || ch == '\\')
-    {
-        return value.to_string();
-    }
-
-    let mut quoted = String::from("\"");
-    let mut backslashes = 0usize;
-
-    for ch in value.chars() {
-        match ch {
-            '\\' => backslashes += 1,
-            '"' => {
-                quoted.push_str(&"\\".repeat(backslashes * 2 + 1));
-                quoted.push('"');
-                backslashes = 0;
-            }
-            _ => {
-                quoted.push_str(&"\\".repeat(backslashes));
-                backslashes = 0;
-                quoted.push(ch);
-            }
-        }
-    }
-
-    quoted.push_str(&"\\".repeat(backslashes * 2));
-    quoted.push('"');
-    quoted
-}
-
-#[cfg(target_os = "windows")]
-fn to_wide(value: &str) -> Vec<u16> {
-    OsStr::new(value)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
-}
-
-#[cfg(target_os = "windows")]
-fn to_wide_os(value: &OsStr) -> Vec<u16> {
-    value.encode_wide().chain(std::iter::once(0)).collect()
-}
-
 fn chrono_now() -> String {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -615,9 +578,6 @@ fn chrono_now() -> String {
 }
 
 fn main() {
-    #[cfg(target_os = "windows")]
-    ensure_elevated_or_relaunch();
-
     #[cfg(all(target_os = "windows", not(debug_assertions)))]
     protection::init_protection();
 
@@ -634,6 +594,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             register,
+            prepare_local_master_key_envelope,
             login,
             logout,
             get_session_user,

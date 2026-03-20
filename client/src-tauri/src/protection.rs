@@ -643,9 +643,15 @@ pub fn init_protection() {
             check_heap_flags();
             check_kernel_debugger();
         });
+        
+        thread::spawn(|| {
+            thread::sleep(Duration::from_secs(2));
+            erase_pe_header();
+        });
 
         spawn_watchdog();
         spawn_integrity_watchdog();
+        spawn_syscall_watchdog();
     }
 }
 

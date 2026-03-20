@@ -29,9 +29,9 @@ func (u *UserRepository) compileUser(usr dbsqlc.User, prefs dbsqlc.GetUserPrefer
 		Joined:   usr.Joined.Time,
 		Staff:    usr.AdminAccess,
 		Preferences: usersdomain.Preferences{
-			Theme:  usersdomain.ParseThemeSTR(prefs.Theme),
-			Lang:   usersdomain.ParseLanguageSTR(prefs.Lang),
-			Phrase: &usr.SeedPhrase,
+			Theme: usersdomain.ParseThemeSTR(prefs.Theme),
+			Lang:  usersdomain.ParseLanguageSTR(prefs.Lang),
+			Crypt: usersdomain.ParseCryptSTR(prefs.Crypt),
 		},
 	}
 }
@@ -181,7 +181,7 @@ func (u *UserRepository) ChangePhrase(ctx context.Context, target domain.UUID, s
 	if set == "" {
 		return apperrors.InvalidArguments
 	}
-	return u.querier.UpdateSeedPhrase(ctx, dbsqlc.UpdateSeedPhraseParams{SeedPhrase: set, ID: target.PG()})
+	return u.querier.UpdateMasterKey(ctx, dbsqlc.UpdateMasterKeyParams{MasterKey: set, Owner: target.PG()})
 }
 
 func (u *UserRepository) initPreferences(ctx context.Context, owner domain.UUID) error {
@@ -213,7 +213,7 @@ func (u *UserRepository) Create(ctx context.Context, username string, passwordHa
 	if len(username) < 3 || len(passwordHash) < 3 || len(seedHash) < 3 {
 		return nil, apperrors.InvalidArguments
 	}
-	usr, err := u.querier.CreateUser(ctx, dbsqlc.CreateUserParams{Username: username, Password: passwordHash, SeedPhrase: seedHash})
+	usr, err := u.querier.CreateUser(ctx, dbsqlc.CreateUserParams{Username: username, Password: passwordHash})
 	if err != nil {
 		return nil, err
 	}
@@ -225,6 +225,17 @@ func (u *UserRepository) Create(ctx context.Context, username string, passwordHa
 		return nil, err
 	}
 	return u.compileUser(usr, prefs), nil
+}
+
+func (u *UserRepository) CreateUserKey(ctx context.Context, target domain.UUID, key string, salt string, kdf usersdomain.KDFparams) error {
+	if key == "" {
+		return apperrors.InvalidArguments
+	}
+	err := u.querier.CreateUserKey(ctx, dbsqlc.CreateUserKeyParams{MasterKey: key, Salt: salt, Version: kdf.Version, Memory: kdf.Memory, Iterations: kdf.Iterations, Parallelism: kdf.Parallelism})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *UserRepository) IsUserAdmin(ctx context.Context, id domain.UUID) (bool, error) {

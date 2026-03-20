@@ -32,9 +32,15 @@ pub struct CreateRequest {
     #[prost(string, tag = "2")]
     pub login: ::prost::alloc::string::String,
     #[prost(string, tag = "3")]
-    pub pass: ::prost::alloc::string::String,
-    #[prost(string, tag = "4")]
-    pub salt: ::prost::alloc::string::String,
+    pub ciphertext: ::prost::alloc::string::String,
+    #[prost(int32, tag = "4")]
+    pub version: i32,
+    #[prost(string, tag = "5")]
+    pub nonce: ::prost::alloc::string::String,
+    #[prost(bytes = "vec", tag = "6")]
+    pub aad: ::prost::alloc::vec::Vec<u8>,
+    #[prost(string, tag = "7")]
+    pub metadata: ::prost::alloc::string::String,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct PassDataResponse {

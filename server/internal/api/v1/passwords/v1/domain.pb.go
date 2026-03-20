@@ -198,8 +198,11 @@ type CreateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ServiceUrl    string                 `protobuf:"bytes,1,opt,name=service_url,json=serviceUrl,proto3" json:"service_url,omitempty"`
 	Login         string                 `protobuf:"bytes,2,opt,name=login,proto3" json:"login,omitempty"`
-	Pass          string                 `protobuf:"bytes,3,opt,name=pass,proto3" json:"pass,omitempty"`
-	Salt          string                 `protobuf:"bytes,4,opt,name=salt,proto3" json:"salt,omitempty"`
+	Ciphertext    string                 `protobuf:"bytes,3,opt,name=ciphertext,proto3" json:"ciphertext,omitempty"`
+	Version       int32                  `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
+	Nonce         string                 `protobuf:"bytes,5,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Aad           []byte                 `protobuf:"bytes,6,opt,name=aad,proto3" json:"aad,omitempty"`
+	Metadata      string                 `protobuf:"bytes,7,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -248,16 +251,37 @@ func (x *CreateRequest) GetLogin() string {
 	return ""
 }
 
-func (x *CreateRequest) GetPass() string {
+func (x *CreateRequest) GetCiphertext() string {
 	if x != nil {
-		return x.Pass
+		return x.Ciphertext
 	}
 	return ""
 }
 
-func (x *CreateRequest) GetSalt() string {
+func (x *CreateRequest) GetVersion() int32 {
 	if x != nil {
-		return x.Salt
+		return x.Version
+	}
+	return 0
+}
+
+func (x *CreateRequest) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
+func (x *CreateRequest) GetAad() []byte {
+	if x != nil {
+		return x.Aad
+	}
+	return nil
+}
+
+func (x *CreateRequest) GetMetadata() string {
+	if x != nil {
+		return x.Metadata
 	}
 	return ""
 }
@@ -442,13 +466,18 @@ const file_xyz_secureguard_v1_passwords_v1_domain_proto_rawDesc = "" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"c\n" +
 	"\fListResponse\x12=\n" +
 	"\x04list\x18\x01 \x03(\v2).xyz.secureguard.v1.passwords.v1.PasswordR\x04list\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x05R\x05count\"n\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"\xc4\x01\n" +
 	"\rCreateRequest\x12\x1f\n" +
 	"\vservice_url\x18\x01 \x01(\tR\n" +
 	"serviceUrl\x12\x14\n" +
-	"\x05login\x18\x02 \x01(\tR\x05login\x12\x12\n" +
-	"\x04pass\x18\x03 \x01(\tR\x04pass\x12\x12\n" +
-	"\x04salt\x18\x04 \x01(\tR\x04salt\"}\n" +
+	"\x05login\x18\x02 \x01(\tR\x05login\x12\x1e\n" +
+	"\n" +
+	"ciphertext\x18\x03 \x01(\tR\n" +
+	"ciphertext\x12\x18\n" +
+	"\aversion\x18\x04 \x01(\x05R\aversion\x12\x14\n" +
+	"\x05nonce\x18\x05 \x01(\tR\x05nonce\x12\x10\n" +
+	"\x03aad\x18\x06 \x01(\fR\x03aad\x12\x1a\n" +
+	"\bmetadata\x18\a \x01(\tR\bmetadata\"}\n" +
 	"\x10PassDataResponse\x12=\n" +
 	"\x04info\x18\x01 \x01(\v2).xyz.secureguard.v1.passwords.v1.PasswordR\x04info\x12*\n" +
 	"\x02at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x02at\"\xb0\x01\n" +

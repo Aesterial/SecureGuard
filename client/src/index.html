@@ -225,10 +225,11 @@
                                                 class="info-tip"
                                                 id="reg-seed-info-tip"
                                                 role="tooltip"
-                                                >Сид-фраза - это секретная фраза
-                                                для шифрования паролей. Если ее
-                                                потерять, восстановить данные
-                                                нельзя.</span
+                                                >Сид-фраза используется только
+                                                локально для шифрования и
+                                                расшифровки паролей. Сервер не
+                                                хранит и не возвращает ее в
+                                                исходном виде.</span
                                             >
                                         </span>
                                     </label>
@@ -236,7 +237,7 @@
                                         <input
                                             type="password"
                                             id="reg-seed"
-                                            placeholder="Секретная фраза (мин. 3 слова)"
+                                            placeholder="Секретная фраза (мин. 1 слово)"
                                         />
                                         <button
                                             type="button"
@@ -262,8 +263,8 @@
                                         </button>
                                     </div>
                                     <span class="warn" id="reg-seed-warn"
-                                        >⚠ Запишите фразу! Восстановить
-                                        невозможно.</span
+                                        >⚠ Запишите фразу и храните локально.
+                                        Без нее расшифровка невозможна.</span
                                     >
                                 </div>
                                 <button
@@ -513,8 +514,8 @@
                                         Алгоритм шифрования
                                     </h3>
                                     <p id="setting-encryption-desc">
-                                        Выберите, как шифровать пароли через
-                                        сид-фразу.
+                                        Выберите, как шифровать пароли вашей
+                                        локальной сид-фразой.
                                     </p>
                                 </div>
                                 <select
@@ -618,6 +619,26 @@
                                     <option value="3">3 минуты</option>
                                     <option value="5">5 минут</option>
                                     <option value="10">10 минут</option>
+                                </select>
+                            </div>
+                            <div class="settings-item settings-item-inline">
+                                <div class="settings-copy">
+                                    <h3 id="setting-clipboard-timeout-title">
+                                        Таймаут буфера обмена
+                                    </h3>
+                                    <p id="setting-clipboard-timeout-desc">
+                                        Через сколько секунд очищать буфер
+                                        обмена после копирования пароля.
+                                    </p>
+                                </div>
+                                <select
+                                    id="setting-clipboard-timeout"
+                                    class="select"
+                                >
+                                    <option value="15">15 с</option>
+                                    <option value="30">30 с</option>
+                                    <option value="60">60 с</option>
+                                    <option value="120">120 с</option>
                                 </select>
                             </div>
                             <div class="settings-item">
@@ -803,7 +824,7 @@
                 <div class="modal-bg"></div>
                 <div class="modal-box">
                     <h2>Введите сид-фразу</h2>
-                    <p>Для расшифровки и копирования пароля</p>
+                    <p>Для локальной расшифровки и копирования пароля</p>
                     <div class="field">
                         <div class="pass-wrap">
                             <input

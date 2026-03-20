@@ -62,6 +62,7 @@ pub struct PasswordEntry {
     pub title: String,
     pub encrypted_password: String,
     pub salt: String,
+    pub wrapped_master_key: String,
     pub encryption_algorithm: String,
     pub created_at: String,
 }
@@ -110,6 +111,8 @@ struct PasswordPayload {
     encrypted_password: String,
     #[serde(default)]
     salt: String,
+    #[serde(default)]
+    wrapped_master_key: String,
     #[serde(default)]
     encryption_algorithm: String,
     #[serde(default)]
@@ -298,6 +301,7 @@ impl ApiClient {
                     title: decoded.title,
                     encrypted_password: decoded.encrypted_password,
                     salt: decoded.salt,
+                    wrapped_master_key: decoded.wrapped_master_key,
                     encryption_algorithm: normalize_encryption(&decoded.encryption_algorithm),
                     created_at: decoded.created_at,
                 });
@@ -370,6 +374,7 @@ impl ApiClient {
             title: entry.title.clone(),
             encrypted_password: entry.encrypted_password.clone(),
             salt: entry.salt.clone(),
+            wrapped_master_key: entry.wrapped_master_key.clone(),
             encryption_algorithm: normalize_encryption(&entry.encryption_algorithm),
             created_at: entry.created_at.clone(),
         };
@@ -397,6 +402,7 @@ impl ApiClient {
             title: decoded.title,
             encrypted_password: decoded.encrypted_password,
             salt: decoded.salt,
+            wrapped_master_key: decoded.wrapped_master_key,
             encryption_algorithm: normalize_encryption(&decoded.encryption_algorithm),
             created_at: decoded.created_at,
         })
@@ -500,7 +506,10 @@ fn decode_password_entry(
     fallback_created_at: String,
 ) -> PasswordPayload {
     if let Ok(mut payload) = serde_json::from_str::<PasswordPayload>(&item.pass) {
-        if !payload.encrypted_password.trim().is_empty() || !payload.salt.trim().is_empty() {
+        if !payload.encrypted_password.trim().is_empty()
+            || !payload.salt.trim().is_empty()
+            || !payload.wrapped_master_key.trim().is_empty()
+        {
             fill_payload_defaults(item, &mut payload, fallback_created_at);
             return payload;
         }
@@ -511,6 +520,7 @@ fn decode_password_entry(
         title: String::new(),
         encrypted_password: item.pass.clone(),
         salt: String::new(),
+        wrapped_master_key: String::new(),
         encryption_algorithm: DEFAULT_ENCRYPTION_ALGORITHM.to_string(),
         created_at: fallback_created_at,
     };
@@ -524,6 +534,9 @@ fn decode_password_entry(
         }
         if !metadata.salt.trim().is_empty() {
             payload.salt = metadata.salt;
+        }
+        if !metadata.wrapped_master_key.trim().is_empty() {
+            payload.wrapped_master_key = metadata.wrapped_master_key;
         }
         if !metadata.encryption_algorithm.trim().is_empty() {
             payload.encryption_algorithm = metadata.encryption_algorithm;

@@ -107,6 +107,10 @@ func ensure() {
 			Topic:    parseType("KAFKA_TOPIC", "secureguard.logs"),
 			ClientID: parseType("KAFKA_CLIENT_ID", "sg"),
 		},
+		Crypt: cfgdomain.Crypt{
+			Pepper:        envValue("SERVER_PEPPER"),
+			SessionLength: parseType("SESSION_LENGTH", 32),
+		},
 		Debug: parseType("DEBUG_MODE", false),
 	}
 	env.MarkLoaded()

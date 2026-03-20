@@ -259,3 +259,10 @@ func (usrs Users) Protobuf() []*userpb.UserPublic {
 	}
 	return out
 }
+
+type KDFparams struct {
+	Version     int32
+	Memory      int64
+	Iterations  int32
+	Parallelism int32
+}

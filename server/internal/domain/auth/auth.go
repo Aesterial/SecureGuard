@@ -4,6 +4,6 @@ import "github.com/aesterial/secureguard/internal/domain"
 
 type Meta struct {
 	UserID    *domain.UUID
-	SessionID *domain.UUID
+	SessionID *string
 	Hash      string
 }

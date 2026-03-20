@@ -82,7 +82,8 @@ func randInt(n int) int {
 
 type RegisterRequire struct {
 	Require
-	Phrase string
+	MasterKey string
+	Salt string
 }
 
 type AuthorizeRequire struct {
@@ -90,5 +91,5 @@ type AuthorizeRequire struct {
 }
 
 func (r RegisterRequire) IsValid() bool {
-	return r.Username != "" && r.Password != "" && r.Phrase != ""
+	return r.Username != "" && r.Password != "" && r.MasterKey != "" && r.Salt != ""
 }

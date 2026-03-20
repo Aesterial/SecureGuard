@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	github.com/aesterial/secureguard/internal v0.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.3
 )
 
 require (

@@ -16,13 +16,16 @@ type Activity struct {
 }
 
 type Password struct {
-	ID        pgtype.UUID        `json:"id"`
-	Owner     pgtype.UUID        `json:"owner"`
-	Service   string             `json:"service"`
-	Login     string             `json:"login"`
-	Pass      string             `json:"pass"`
-	Salt      string             `json:"salt"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	ID         pgtype.UUID        `json:"id"`
+	Owner      pgtype.UUID        `json:"owner"`
+	Service    string             `json:"service"`
+	Login      string             `json:"login"`
+	Ciphertext string             `json:"ciphertext"`
+	Version    int32              `json:"version"`
+	Nonce      string             `json:"nonce"`
+	Aad        []byte             `json:"aad"`
+	Metadata   []byte             `json:"metadata"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
 type Preference struct {
@@ -33,12 +36,14 @@ type Preference struct {
 }
 
 type Session struct {
-	ID         pgtype.UUID        `json:"id"`
+	ID         string             `json:"id"`
 	Owner      pgtype.UUID        `json:"owner"`
 	ClientHash string             `json:"client_hash"`
 	Revoked    bool               `json:"revoked"`
+	RevokedAt  pgtype.Timestamptz `json:"revoked_at"`
 	Created    pgtype.Timestamptz `json:"created"`
 	Expires    pgtype.Timestamptz `json:"expires"`
+	LastSeen   pgtype.Timestamptz `json:"last_seen"`
 }
 
 type Statistic struct {
@@ -54,7 +59,16 @@ type User struct {
 	ID          pgtype.UUID        `json:"id"`
 	Username    string             `json:"username"`
 	Password    string             `json:"password"`
-	SeedPhrase  string             `json:"seed_phrase"`
 	AdminAccess bool               `json:"admin_access"`
 	Joined      pgtype.Timestamptz `json:"joined"`
+}
+
+type UsersKey struct {
+	Owner       pgtype.UUID `json:"owner"`
+	MasterKey   string      `json:"master_key"`
+	Salt        string      `json:"salt"`
+	Version     int32       `json:"version"`
+	Memory      int64       `json:"memory"`
+	Iterations  int32       `json:"iterations"`
+	Parallelism int32       `json:"parallelism"`
 }
