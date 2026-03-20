@@ -40,6 +40,7 @@ type serverUsersRepoMock struct {
 	changeThemeFn      func(context.Context, domain.UUID, usersdomain.Theme) error
 	changeLanguageFn   func(context.Context, domain.UUID, usersdomain.Language) error
 	createFn           func(context.Context, string, string, string) (*usersdomain.User, error)
+	createUserKeyFn    func(context.Context, domain.UUID, string, string, usersdomain.KDFparams) error
 }
 
 func (m *serverUsersRepoMock) GetByID(ctx context.Context, target domain.UUID) (*usersdomain.User, error) {
@@ -117,54 +118,69 @@ func (m *serverUsersRepoMock) Create(ctx context.Context, username string, passw
 	}
 	return nil, nil
 }
-
-type serverSessionsRepoMock struct {
-	getOwnerFn func(context.Context, domain.UUID) (*domain.UUID, error)
-	getInfoFn  func(context.Context, domain.UUID) (*sessionsdomain.Session, error)
-	isExistsFn func(context.Context, domain.UUID) (bool, error)
-	createFn   func(context.Context, domain.UUID, string) (*domain.UUID, error)
-	revokeFn   func(context.Context, domain.UUID) error
+func (m *serverUsersRepoMock) CreateUserKey(ctx context.Context, target domain.UUID, key string, salt string, kdf usersdomain.KDFparams) error {
+	if m.createUserKeyFn != nil {
+		return m.createUserKeyFn(ctx, target, key, salt, kdf)
+	}
+	return nil
 }
 
-func (m *serverSessionsRepoMock) GetOwner(ctx context.Context, id domain.UUID) (*domain.UUID, error) {
+type serverSessionsRepoMock struct {
+	getOwnerFn    func(context.Context, string) (*domain.UUID, error)
+	getInfoFn     func(context.Context, string) (*sessionsdomain.Session, error)
+	isExistsFn    func(context.Context, string) (bool, error)
+	createFn      func(context.Context, string, domain.UUID, string) (*string, error)
+	revokeFn      func(context.Context, string) error
+	setLastSeenFn func(context.Context, string, time.Time) error
+}
+
+func (m *serverSessionsRepoMock) GetOwner(ctx context.Context, id string) (*domain.UUID, error) {
 	if m.getOwnerFn != nil {
 		return m.getOwnerFn(ctx, id)
 	}
 	return nil, nil
 }
-func (m *serverSessionsRepoMock) GetInfo(ctx context.Context, id domain.UUID) (*sessionsdomain.Session, error) {
+func (m *serverSessionsRepoMock) GetInfo(ctx context.Context, id string) (*sessionsdomain.Session, error) {
 	if m.getInfoFn != nil {
 		return m.getInfoFn(ctx, id)
 	}
 	return nil, nil
 }
-func (m *serverSessionsRepoMock) IsExists(ctx context.Context, id domain.UUID) (bool, error) {
+func (m *serverSessionsRepoMock) IsExists(ctx context.Context, id string) (bool, error) {
 	if m.isExistsFn != nil {
 		return m.isExistsFn(ctx, id)
 	}
 	return false, nil
 }
-func (m *serverSessionsRepoMock) Create(ctx context.Context, owner domain.UUID, hash string) (*domain.UUID, error) {
+func (m *serverSessionsRepoMock) Create(ctx context.Context, id string, owner domain.UUID, hash string) (*string, error) {
 	if m.createFn != nil {
-		return m.createFn(ctx, owner, hash)
+		return m.createFn(ctx, id, owner, hash)
 	}
 	return nil, nil
 }
-func (m *serverSessionsRepoMock) Revoke(ctx context.Context, id domain.UUID) error {
+func (m *serverSessionsRepoMock) Revoke(ctx context.Context, id string) error {
 	if m.revokeFn != nil {
 		return m.revokeFn(ctx, id)
 	}
 	return nil
 }
-
-func (m *serverSessionsRepoMock) GetExpired(context.Context) ([]*domain.UUID, error) {
+func (m *serverSessionsRepoMock) GetExpired(context.Context) ([]string, error) {
+	return nil, nil
+}
+func (m *serverSessionsRepoMock) SetLastSeen(ctx context.Context, id string, at time.Time) error {
+	if m.setLastSeenFn != nil {
+		return m.setLastSeenFn(ctx, id, at)
+	}
+	return nil
+}
+func (m *serverSessionsRepoMock) GetListByOwner(context.Context, domain.UUID, int32, int32) (sessionsdomain.Sessions, error) {
 	return nil, nil
 }
 
 type serverPassRepoMock struct {
 	getListFn  func(context.Context, domain.UUID, int32, int32) (passdomain.Passwords, error)
 	getOwnerFn func(context.Context, domain.UUID) (*domain.UUID, error)
-	createFn   func(context.Context, domain.UUID, string, string, string, string) (*passdomain.Password, error)
+	createFn   func(context.Context, domain.UUID, string, string, string, int32, []byte, string, []byte) (*passdomain.Password, error)
 	updateFn   func(context.Context, domain.UUID, passdomain.Target, string, string) (*passdomain.Password, error)
 	deleteFn   func(context.Context, domain.UUID) error
 }
@@ -181,9 +197,9 @@ func (m *serverPassRepoMock) GetOwner(ctx context.Context, id domain.UUID) (*dom
 	}
 	return nil, nil
 }
-func (m *serverPassRepoMock) Create(ctx context.Context, target domain.UUID, service string, login string, pass string, salt string) (*passdomain.Password, error) {
+func (m *serverPassRepoMock) Create(ctx context.Context, target domain.UUID, service string, login string, pass string, version int32, aad []byte, nonce string, metadata []byte) (*passdomain.Password, error) {
 	if m.createFn != nil {
-		return m.createFn(ctx, target, service, login, pass, salt)
+		return m.createFn(ctx, target, service, login, pass, version, aad, nonce, metadata)
 	}
 	return nil, nil
 }
@@ -246,21 +262,18 @@ func newServerUser(id domain.UUID, username string) *usersdomain.User {
 	}
 }
 
-func newAuthContext(hash string, sessionID domain.UUID) context.Context {
+func newAuthContext(hash string, sessionID string) context.Context {
 	return metadata.NewIncomingContext(
 		context.Background(),
-		metadata.Pairs("client", hash, "session", "SG-"+sessionID.String()),
+		metadata.Pairs("client", hash, "session", "SG-"+sessionID),
 	)
 }
 
 func TestLoginServiceRegisterSuccess(t *testing.T) {
 	userID := newServerUUID()
-	sessionID := newServerUUID()
+	createUserKeyCalled := false
 
 	userRepo := &serverUsersRepoMock{
-		isExistsFn: func(context.Context, domain.UUID) (bool, error) {
-			return true, nil
-		},
 		isUsernameExistsFn: func(context.Context, string) (bool, error) {
 			return false, nil
 		},
@@ -270,19 +283,35 @@ func TestLoginServiceRegisterSuccess(t *testing.T) {
 			}
 			return &usersdomain.User{ID: userID}, nil
 		},
+		createUserKeyFn: func(_ context.Context, target domain.UUID, key string, salt string, kdf usersdomain.KDFparams) error {
+			createUserKeyCalled = true
+			if target != userID || key != "master-key" || salt != "salt-value" {
+				t.Fatalf("unexpected user key args")
+			}
+			if kdf.Version != 1 || kdf.Memory != 64 || kdf.Iterations != 3 || kdf.Parallelism != 2 {
+				t.Fatalf("unexpected kdf params: %#v", kdf)
+			}
+			return nil
+		},
+		isExistsFn: func(context.Context, domain.UUID) (bool, error) {
+			return true, nil
+		},
 		getByIDFn: func(context.Context, domain.UUID) (*usersdomain.User, error) {
 			return newServerUser(userID, "abc123"), nil
 		},
 	}
 	sessionsRepo := &serverSessionsRepoMock{
-		createFn: func(_ context.Context, owner domain.UUID, hash string) (*domain.UUID, error) {
+		createFn: func(_ context.Context, id string, owner domain.UUID, hash string) (*string, error) {
 			if owner != userID {
 				t.Fatalf("unexpected session owner")
+			}
+			if id == "" {
+				t.Fatalf("expected encoded session id")
 			}
 			if hash != "device-hash" {
 				t.Fatalf("unexpected hash: %s", hash)
 			}
-			return &sessionID, nil
+			return &id, nil
 		},
 	}
 
@@ -293,15 +322,25 @@ func TestLoginServiceRegisterSuccess(t *testing.T) {
 
 	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs("client", "device-hash"))
 	resp, err := server.Register(ctx, &loginpb.RegisterRequest{
-		Username: "abcDEF123",
-		Password: "password-123",
-		Phraze:   "seed-phrase",
+		Username:  "abcDEF123",
+		Password:  "password-123",
+		MasterKey: "master-key",
+		Salt:      "salt-value",
+		KdfParams: &loginpb.RegisterRequestKdf{
+			Version:     1,
+			Memory:      64,
+			Iterations:  3,
+			Parallelism: 2,
+		},
 	})
 	if err != nil {
 		t.Fatalf("Register returned error: %v", err)
 	}
-	if resp == nil || resp.GetSession() != sessionID.String() {
+	if resp == nil || resp.GetSession() == "" {
 		t.Fatalf("unexpected register response: %#v", resp)
+	}
+	if !createUserKeyCalled {
+		t.Fatalf("expected CreateUserKey call")
 	}
 }
 
@@ -326,23 +365,22 @@ func TestLoginServiceAuthorizeNotFoundWhenUserMissing(t *testing.T) {
 
 func TestLoginServiceLogoutSuccess(t *testing.T) {
 	userID := newServerUUID()
-	sessionID := newServerUUID()
+	sessionID := uuid.NewString()
 	revoked := false
 
 	userRepo := &serverUsersRepoMock{
 		isUserAdminFn: func(context.Context, domain.UUID) (bool, error) { return false, nil },
 	}
 	sessionsRepo := &serverSessionsRepoMock{
-		isExistsFn: func(context.Context, domain.UUID) (bool, error) {
-			return true, nil
-		},
-		getInfoFn: func(context.Context, domain.UUID) (*sessionsdomain.Session, error) {
+		isExistsFn: func(context.Context, string) (bool, error) { return true, nil },
+		getInfoFn: func(context.Context, string) (*sessionsdomain.Session, error) {
 			return &sessionsdomain.Session{ID: sessionID, Hash: "device-hash", Expires: time.Now().Add(time.Hour)}, nil
 		},
-		getOwnerFn: func(context.Context, domain.UUID) (*domain.UUID, error) {
-			return &userID, nil
-		},
-		revokeFn: func(context.Context, domain.UUID) error {
+		getOwnerFn: func(context.Context, string) (*domain.UUID, error) { return &userID, nil },
+		revokeFn: func(_ context.Context, id string) error {
+			if id != sessionID {
+				t.Fatalf("unexpected raw session token")
+			}
 			revoked = true
 			return nil
 		},
@@ -363,7 +401,7 @@ func TestLoginServiceLogoutSuccess(t *testing.T) {
 
 func TestUserServiceInfoAndChangeTheme(t *testing.T) {
 	userID := newServerUUID()
-	sessionID := newServerUUID()
+	sessionID := uuid.NewString()
 
 	userRepo := &serverUsersRepoMock{
 		isExistsFn: func(context.Context, domain.UUID) (bool, error) { return true, nil },
@@ -375,11 +413,11 @@ func TestUserServiceInfoAndChangeTheme(t *testing.T) {
 		},
 	}
 	sessionsRepo := &serverSessionsRepoMock{
-		isExistsFn: func(context.Context, domain.UUID) (bool, error) { return true, nil },
-		getInfoFn: func(context.Context, domain.UUID) (*sessionsdomain.Session, error) {
+		isExistsFn: func(context.Context, string) (bool, error) { return true, nil },
+		getInfoFn: func(context.Context, string) (*sessionsdomain.Session, error) {
 			return &sessionsdomain.Session{ID: sessionID, Hash: "device-hash", Expires: time.Now().Add(time.Hour)}, nil
 		},
-		getOwnerFn: func(context.Context, domain.UUID) (*domain.UUID, error) { return &userID, nil },
+		getOwnerFn: func(context.Context, string) (*domain.UUID, error) { return &userID, nil },
 	}
 
 	usrService := usersapp.NewUserService(userRepo)
@@ -406,18 +444,18 @@ func TestUserServiceInfoAndChangeTheme(t *testing.T) {
 
 func TestPasswordsServiceUpdateUsesFirstProvidedField(t *testing.T) {
 	userID := newServerUUID()
-	sessionID := newServerUUID()
+	sessionID := uuid.NewString()
 	targetID := newServerUUID()
 	capturedTarget := passdomain.Target(-1)
 	capturedValue := ""
 
 	userRepo := &serverUsersRepoMock{}
 	sessionsRepo := &serverSessionsRepoMock{
-		isExistsFn: func(context.Context, domain.UUID) (bool, error) { return true, nil },
-		getInfoFn: func(context.Context, domain.UUID) (*sessionsdomain.Session, error) {
+		isExistsFn: func(context.Context, string) (bool, error) { return true, nil },
+		getInfoFn: func(context.Context, string) (*sessionsdomain.Session, error) {
 			return &sessionsdomain.Session{ID: sessionID, Hash: "device-hash", Expires: time.Now().Add(time.Hour)}, nil
 		},
-		getOwnerFn: func(context.Context, domain.UUID) (*domain.UUID, error) { return &userID, nil },
+		getOwnerFn: func(context.Context, string) (*domain.UUID, error) { return &userID, nil },
 	}
 	passRepo := &serverPassRepoMock{
 		getOwnerFn: func(context.Context, domain.UUID) (*domain.UUID, error) { return &userID, nil },
@@ -455,8 +493,23 @@ func TestPasswordsServiceUpdateUsesFirstProvidedField(t *testing.T) {
 }
 
 func TestPasswordsServiceDeleteRejectsInvalidID(t *testing.T) {
-	server := NewPasswordsService(passapp.NewPassService(&serverPassRepoMock{}), NewAuthentificator(sessionsapp.NewSessionService(&serverSessionsRepoMock{}), usersapp.NewUserService(&serverUsersRepoMock{})))
-	_, err := server.Delete(context.Background(), &typespb.RequestWithID{Id: "not-a-uuid"})
+	userID := newServerUUID()
+	sessionID := uuid.NewString()
+	server := NewPasswordsService(
+		passapp.NewPassService(&serverPassRepoMock{}),
+		NewAuthentificator(
+			sessionsapp.NewSessionService(&serverSessionsRepoMock{
+				isExistsFn: func(context.Context, string) (bool, error) { return true, nil },
+				getInfoFn: func(context.Context, string) (*sessionsdomain.Session, error) {
+					return &sessionsdomain.Session{ID: sessionID, Hash: "device-hash", Expires: time.Now().Add(time.Hour)}, nil
+				},
+				getOwnerFn: func(context.Context, string) (*domain.UUID, error) { return &userID, nil },
+			}),
+			usersapp.NewUserService(&serverUsersRepoMock{}),
+		),
+	)
+
+	_, err := server.Delete(newAuthContext("device-hash", sessionID), &typespb.RequestWithID{Id: "not-a-uuid"})
 	if !errors.Is(err, apperrors.InvalidArguments) {
 		t.Fatalf("expected invalid arguments, got %v", err)
 	}
@@ -464,17 +517,17 @@ func TestPasswordsServiceDeleteRejectsInvalidID(t *testing.T) {
 
 func TestStatsServiceByDateAndToday(t *testing.T) {
 	userID := newServerUUID()
-	sessionID := newServerUUID()
+	sessionID := uuid.NewString()
 
 	userRepo := &serverUsersRepoMock{
 		isUserAdminFn: func(context.Context, domain.UUID) (bool, error) { return true, nil },
 	}
 	sessionsRepo := &serverSessionsRepoMock{
-		isExistsFn: func(context.Context, domain.UUID) (bool, error) { return true, nil },
-		getInfoFn: func(context.Context, domain.UUID) (*sessionsdomain.Session, error) {
+		isExistsFn: func(context.Context, string) (bool, error) { return true, nil },
+		getInfoFn: func(context.Context, string) (*sessionsdomain.Session, error) {
 			return &sessionsdomain.Session{ID: sessionID, Hash: "device-hash", Expires: time.Now().Add(time.Hour)}, nil
 		},
-		getOwnerFn: func(context.Context, domain.UUID) (*domain.UUID, error) { return &userID, nil },
+		getOwnerFn: func(context.Context, string) (*domain.UUID, error) { return &userID, nil },
 	}
 	statsRepo := &serverStatsRepoMock{
 		byDateFn: func(_ context.Context, _ statsdomain.TimeRange, viewSaved ...bool) (*statsdomain.Stats, error) {

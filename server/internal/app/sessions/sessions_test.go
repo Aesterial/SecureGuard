@@ -14,59 +14,65 @@ import (
 )
 
 type sessionsRepoMock struct {
-	isExistsFn func(context.Context, domain.UUID) (bool, error)
-	getInfoFn  func(context.Context, domain.UUID) (*sessionsdomain.Session, error)
-	getOwnerFn func(context.Context, domain.UUID) (*domain.UUID, error)
-	createFn   func(context.Context, domain.UUID, string) (*domain.UUID, error)
-	revokeFn   func(context.Context, domain.UUID) error
+	isExistsFn    func(context.Context, string) (bool, error)
+	getInfoFn     func(context.Context, string) (*sessionsdomain.Session, error)
+	getOwnerFn    func(context.Context, string) (*domain.UUID, error)
+	createFn      func(context.Context, string, domain.UUID, string) (*string, error)
+	revokeFn      func(context.Context, string) error
+	setLastSeenFn func(context.Context, string, time.Time) error
 }
 
-func (m *sessionsRepoMock) GetOwner(ctx context.Context, id domain.UUID) (*domain.UUID, error) {
+func (m *sessionsRepoMock) GetOwner(ctx context.Context, id string) (*domain.UUID, error) {
 	if m.getOwnerFn != nil {
 		return m.getOwnerFn(ctx, id)
 	}
 	return nil, nil
 }
-func (m *sessionsRepoMock) GetInfo(ctx context.Context, id domain.UUID) (*sessionsdomain.Session, error) {
+func (m *sessionsRepoMock) GetInfo(ctx context.Context, id string) (*sessionsdomain.Session, error) {
 	if m.getInfoFn != nil {
 		return m.getInfoFn(ctx, id)
 	}
 	return nil, nil
 }
-func (m *sessionsRepoMock) IsExists(ctx context.Context, id domain.UUID) (bool, error) {
+func (m *sessionsRepoMock) IsExists(ctx context.Context, id string) (bool, error) {
 	if m.isExistsFn != nil {
 		return m.isExistsFn(ctx, id)
 	}
 	return false, nil
 }
-func (m *sessionsRepoMock) Create(ctx context.Context, owner domain.UUID, hash string) (*domain.UUID, error) {
+func (m *sessionsRepoMock) Create(ctx context.Context, id string, owner domain.UUID, hash string) (*string, error) {
 	if m.createFn != nil {
-		return m.createFn(ctx, owner, hash)
+		return m.createFn(ctx, id, owner, hash)
 	}
 	return nil, nil
 }
-func (m *sessionsRepoMock) Revoke(ctx context.Context, id domain.UUID) error {
+func (m *sessionsRepoMock) Revoke(ctx context.Context, id string) error {
 	if m.revokeFn != nil {
 		return m.revokeFn(ctx, id)
 	}
 	return nil
 }
-func (m *sessionsRepoMock) GetExpired(ctx context.Context) ([]*domain.UUID, error) {
+func (m *sessionsRepoMock) GetExpired(context.Context) ([]string, error) {
 	return nil, nil
 }
-
-func newSessionUUID() domain.UUID {
-	return domain.ParseUUID(uuid.New())
+func (m *sessionsRepoMock) SetLastSeen(ctx context.Context, id string, at time.Time) error {
+	if m.setLastSeenFn != nil {
+		return m.setLastSeenFn(ctx, id, at)
+	}
+	return nil
+}
+func (m *sessionsRepoMock) GetListByOwner(context.Context, domain.UUID, int32, int32) (sessionsdomain.Sessions, error) {
+	return nil, nil
 }
 
 func TestIsValidNotFoundWhenSessionDoesNotExist(t *testing.T) {
 	service := NewSessionService(&sessionsRepoMock{
-		isExistsFn: func(context.Context, domain.UUID) (bool, error) {
+		isExistsFn: func(context.Context, string) (bool, error) {
 			return false, nil
 		},
 	})
 
-	valid, err := service.IsValid(context.Background(), newSessionUUID(), "hash")
+	valid, err := service.IsValid(context.Background(), uuid.NewString(), "hash")
 	if valid {
 		t.Fatalf("expected invalid session")
 	}
@@ -76,7 +82,7 @@ func TestIsValidNotFoundWhenSessionDoesNotExist(t *testing.T) {
 }
 
 func TestIsValidHandlesRevokedExpiredAndHashMismatch(t *testing.T) {
-	sessionID := newSessionUUID()
+	sessionID := uuid.NewString()
 	tests := []struct {
 		name    string
 		session *sessionsdomain.Session
@@ -121,10 +127,10 @@ func TestIsValidHandlesRevokedExpiredAndHashMismatch(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			service := NewSessionService(&sessionsRepoMock{
-				isExistsFn: func(context.Context, domain.UUID) (bool, error) {
+				isExistsFn: func(context.Context, string) (bool, error) {
 					return true, nil
 				},
-				getInfoFn: func(context.Context, domain.UUID) (*sessionsdomain.Session, error) {
+				getInfoFn: func(context.Context, string) (*sessionsdomain.Session, error) {
 					return tc.session, nil
 				},
 			})
@@ -147,12 +153,12 @@ func TestIsValidHandlesRevokedExpiredAndHashMismatch(t *testing.T) {
 }
 
 func TestIsValidSuccess(t *testing.T) {
-	sessionID := newSessionUUID()
+	sessionID := uuid.NewString()
 	service := NewSessionService(&sessionsRepoMock{
-		isExistsFn: func(context.Context, domain.UUID) (bool, error) {
+		isExistsFn: func(context.Context, string) (bool, error) {
 			return true, nil
 		},
-		getInfoFn: func(context.Context, domain.UUID) (*sessionsdomain.Session, error) {
+		getInfoFn: func(context.Context, string) (*sessionsdomain.Session, error) {
 			return &sessionsdomain.Session{
 				ID:      sessionID,
 				Hash:    "device-hash",
@@ -173,12 +179,12 @@ func TestIsValidSuccess(t *testing.T) {
 
 func TestRevokeMapsNoRowsToNotFound(t *testing.T) {
 	service := NewSessionService(&sessionsRepoMock{
-		revokeFn: func(context.Context, domain.UUID) error {
+		revokeFn: func(context.Context, string) error {
 			return pgx.ErrNoRows
 		},
 	})
 
-	err := service.Revoke(context.Background(), newSessionUUID())
+	err := service.Revoke(context.Background(), uuid.NewString())
 	if !errors.Is(err, apperrors.NotFound) {
 		t.Fatalf("expected not found, got %v", err)
 	}

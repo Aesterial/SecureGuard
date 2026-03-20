@@ -19,7 +19,7 @@ type querierStub struct {
 	getUserPreferencesFn  func(context.Context, pgtype.UUID) (dbsqlc.GetUserPreferencesRow, error)
 	isPasswordExistsFn    func(context.Context, pgtype.UUID) (bool, error)
 	updatePasswordLoginFn func(context.Context, dbsqlc.UpdatePasswordLoginParams) error
-	getPasswordByIDFn     func(context.Context, pgtype.UUID) (dbsqlc.GetPasswordByIDRow, error)
+	getPasswordByIDFn     func(context.Context, pgtype.UUID) (dbsqlc.Password, error)
 }
 
 func (s *querierStub) GetListUsers(ctx context.Context, arg dbsqlc.GetListUsersParams) ([]dbsqlc.User, error) {
@@ -38,7 +38,7 @@ func (s *querierStub) UpdatePasswordLogin(ctx context.Context, arg dbsqlc.Update
 	return s.updatePasswordLoginFn(ctx, arg)
 }
 
-func (s *querierStub) GetPasswordByID(ctx context.Context, id pgtype.UUID) (dbsqlc.GetPasswordByIDRow, error) {
+func (s *querierStub) GetPasswordByID(ctx context.Context, id pgtype.UUID) (dbsqlc.Password, error) {
 	return s.getPasswordByIDFn(ctx, id)
 }
 
@@ -87,18 +87,18 @@ func TestPasswordsRepositoryUpdateReturnsFreshEntity(t *testing.T) {
 		},
 		updatePasswordLoginFn: func(_ context.Context, arg dbsqlc.UpdatePasswordLoginParams) error {
 			called = true
-			if arg.Login != "new-login" || arg.Salt != "new-salt" || arg.ID != target.PG() {
+			if arg.Login != "new-login" || arg.ID != target.PG() {
 				t.Fatalf("unexpected update args: %#v", arg)
 			}
 			return nil
 		},
-		getPasswordByIDFn: func(context.Context, pgtype.UUID) (dbsqlc.GetPasswordByIDRow, error) {
-			return dbsqlc.GetPasswordByIDRow{
-				ID:        target.PG(),
-				Service:   "github.com",
-				Login:     "new-login",
-				Pass:      "encrypted",
-				CreatedAt: pgtype.Timestamptz{Time: now, Valid: true},
+		getPasswordByIDFn: func(context.Context, pgtype.UUID) (dbsqlc.Password, error) {
+			return dbsqlc.Password{
+				ID:         target.PG(),
+				Service:    "github.com",
+				Login:      "new-login",
+				Ciphertext: "encrypted",
+				CreatedAt:  pgtype.Timestamptz{Time: now, Valid: true},
 			}, nil
 		},
 	}

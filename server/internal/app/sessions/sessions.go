@@ -90,7 +90,7 @@ func (s *Service) GetOwner(ctx context.Context, id string) (*domain.UUID, error)
 func (s *Service) GetListByOwner(ctx context.Context, id domain.UUID, limit int32, offset int32) (sessionsdomain.Sessions, error) {
 	list, err := s.ses.GetListByOwner(ctx, id, limit, offset)
 	if err != nil {
-	  return nil, err
+		return nil, err
 	}
 	return list, nil
 }
@@ -106,7 +106,7 @@ func (s *Service) Create(ctx context.Context, owner domain.UUID, hash string) (*
 		return nil, err
 	}
 	if id == nil {
-	  return nil, apperrors.NotFound
+		return nil, apperrors.NotFound
 	}
 	if *id != encoded {
 		return nil, apperrors.ServerError.AddErrDetails("unexpected session id value")

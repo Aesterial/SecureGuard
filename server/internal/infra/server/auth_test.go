@@ -17,37 +17,46 @@ import (
 )
 
 type authSessionsRepoMock struct {
-	getOwnerFn func(context.Context, domain.UUID) (*domain.UUID, error)
-	getInfoFn  func(context.Context, domain.UUID) (*sessionsdomain.Session, error)
-	isExistsFn func(context.Context, domain.UUID) (bool, error)
+	getOwnerFn    func(context.Context, string) (*domain.UUID, error)
+	getInfoFn     func(context.Context, string) (*sessionsdomain.Session, error)
+	isExistsFn    func(context.Context, string) (bool, error)
+	setLastSeenFn func(context.Context, string, time.Time) error
 }
 
-func (m *authSessionsRepoMock) GetOwner(ctx context.Context, id domain.UUID) (*domain.UUID, error) {
+func (m *authSessionsRepoMock) GetOwner(ctx context.Context, id string) (*domain.UUID, error) {
 	if m.getOwnerFn != nil {
 		return m.getOwnerFn(ctx, id)
 	}
 	return nil, nil
 }
-func (m *authSessionsRepoMock) GetInfo(ctx context.Context, id domain.UUID) (*sessionsdomain.Session, error) {
+func (m *authSessionsRepoMock) GetInfo(ctx context.Context, id string) (*sessionsdomain.Session, error) {
 	if m.getInfoFn != nil {
 		return m.getInfoFn(ctx, id)
 	}
 	return nil, nil
 }
-func (m *authSessionsRepoMock) IsExists(ctx context.Context, id domain.UUID) (bool, error) {
+func (m *authSessionsRepoMock) IsExists(ctx context.Context, id string) (bool, error) {
 	if m.isExistsFn != nil {
 		return m.isExistsFn(ctx, id)
 	}
 	return false, nil
 }
-func (m *authSessionsRepoMock) Create(context.Context, domain.UUID, string) (*domain.UUID, error) {
+func (m *authSessionsRepoMock) Create(context.Context, string, domain.UUID, string) (*string, error) {
 	return nil, nil
 }
-func (m *authSessionsRepoMock) Revoke(context.Context, domain.UUID) error {
+func (m *authSessionsRepoMock) Revoke(context.Context, string) error {
 	return nil
 }
-
-func (m *authSessionsRepoMock) GetExpired(context.Context) ([]*domain.UUID, error) {
+func (m *authSessionsRepoMock) GetExpired(context.Context) ([]string, error) {
+	return nil, nil
+}
+func (m *authSessionsRepoMock) SetLastSeen(ctx context.Context, id string, at time.Time) error {
+	if m.setLastSeenFn != nil {
+		return m.setLastSeenFn(ctx, id, at)
+	}
+	return nil
+}
+func (m *authSessionsRepoMock) GetListByOwner(context.Context, domain.UUID, int32, int32) (sessionsdomain.Sessions, error) {
 	return nil, nil
 }
 
@@ -100,6 +109,9 @@ func (m *authUsersRepoMock) ChangePhrase(context.Context, domain.UUID, string) e
 func (m *authUsersRepoMock) Create(context.Context, string, string, string) (*usersdomain.User, error) {
 	return nil, nil
 }
+func (m *authUsersRepoMock) CreateUserKey(context.Context, domain.UUID, string, string, usersdomain.KDFparams) error {
+	return nil
+}
 
 func newAuthUUID() domain.UUID {
 	return domain.ParseUUID(uuid.New())
@@ -129,16 +141,20 @@ func TestAuthentificatorUserRejectsMissingClientHeader(t *testing.T) {
 }
 
 func TestAuthentificatorUserSuccess(t *testing.T) {
-	sessionID := newAuthUUID()
+	sessionID := uuid.NewString()
 	ownerID := newAuthUUID()
+	var encodedID string
+	var rawOwnerLookup string
+	var rawLastSeen string
 
 	auth := NewAuthentificator(
 		sessionsapp.NewSessionService(&authSessionsRepoMock{
-			isExistsFn: func(_ context.Context, id domain.UUID) (bool, error) {
-				return id == sessionID, nil
+			isExistsFn: func(_ context.Context, id string) (bool, error) {
+				encodedID = id
+				return id != "", nil
 			},
-			getInfoFn: func(_ context.Context, id domain.UUID) (*sessionsdomain.Session, error) {
-				if id != sessionID {
+			getInfoFn: func(_ context.Context, id string) (*sessionsdomain.Session, error) {
+				if id != encodedID {
 					t.Fatalf("unexpected session id")
 				}
 				return &sessionsdomain.Session{
@@ -148,7 +164,12 @@ func TestAuthentificatorUserSuccess(t *testing.T) {
 					Expires: time.Now().Add(time.Hour),
 				}, nil
 			},
-			getOwnerFn: func(_ context.Context, id domain.UUID) (*domain.UUID, error) {
+			setLastSeenFn: func(_ context.Context, id string, _ time.Time) error {
+				rawLastSeen = id
+				return nil
+			},
+			getOwnerFn: func(_ context.Context, id string) (*domain.UUID, error) {
+				rawOwnerLookup = id
 				if id != sessionID {
 					t.Fatalf("unexpected session id")
 				}
@@ -158,7 +179,7 @@ func TestAuthentificatorUserSuccess(t *testing.T) {
 		usersapp.NewUserService(&authUsersRepoMock{}),
 	)
 
-	meta, err := auth.User(authContext("device-hash", "SG-"+sessionID.String()))
+	meta, err := auth.User(authContext("device-hash", "SG-"+sessionID))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -171,19 +192,22 @@ func TestAuthentificatorUserSuccess(t *testing.T) {
 	if meta.Hash != "device-hash" {
 		t.Fatalf("unexpected hash in meta: %q", meta.Hash)
 	}
+	if rawOwnerLookup != sessionID || rawLastSeen != sessionID {
+		t.Fatalf("expected raw session token for owner/last_seen lookups")
+	}
 }
 
 func TestAuthentificatorUserStaffCheckDenied(t *testing.T) {
-	sessionID := newAuthUUID()
+	sessionID := uuid.NewString()
 	ownerID := newAuthUUID()
 
 	auth := NewAuthentificator(
 		sessionsapp.NewSessionService(&authSessionsRepoMock{
-			isExistsFn: func(context.Context, domain.UUID) (bool, error) { return true, nil },
-			getInfoFn: func(context.Context, domain.UUID) (*sessionsdomain.Session, error) {
+			isExistsFn: func(context.Context, string) (bool, error) { return true, nil },
+			getInfoFn: func(context.Context, string) (*sessionsdomain.Session, error) {
 				return &sessionsdomain.Session{ID: sessionID, Hash: "device-hash", Expires: time.Now().Add(time.Hour)}, nil
 			},
-			getOwnerFn: func(context.Context, domain.UUID) (*domain.UUID, error) { return &ownerID, nil },
+			getOwnerFn: func(context.Context, string) (*domain.UUID, error) { return &ownerID, nil },
 		}),
 		usersapp.NewUserService(&authUsersRepoMock{
 			isAdminFn: func(context.Context, domain.UUID) (bool, error) {
@@ -192,16 +216,16 @@ func TestAuthentificatorUserStaffCheckDenied(t *testing.T) {
 		}),
 	)
 
-	_, err := auth.User(authContext("device-hash", "SG-"+sessionID.String()), true)
+	_, err := auth.User(authContext("device-hash", "SG-"+sessionID), true)
 	if !errors.Is(err, apperrors.AccessDenied) {
 		t.Fatalf("expected access denied, got %v", err)
 	}
 }
 
 func TestIDFromContextSkipsValuesWithoutPrefix(t *testing.T) {
-	sessionID := newAuthUUID()
+	sessionID := uuid.NewString()
 	auth := NewAuthentificator(nil, nil)
-	ctx := authContext("device", "plain-value", "SG-"+sessionID.String())
+	ctx := authContext("device", "plain-value", "SG-"+sessionID)
 
 	got, err := auth.idFromContext(ctx)
 	if err != nil {

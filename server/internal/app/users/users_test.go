@@ -92,6 +92,9 @@ func (m *usersRepoMock) ChangePhrase(context.Context, domain.UUID, string) error
 func (m *usersRepoMock) Create(context.Context, string, string, string) (*usersdomain.User, error) {
 	return nil, nil
 }
+func (m *usersRepoMock) CreateUserKey(context.Context, domain.UUID, string, string, usersdomain.KDFparams) error {
+	return nil
+}
 
 func newUsersUUID() domain.UUID {
 	return domain.ParseUUID(uuid.New())

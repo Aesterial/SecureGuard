@@ -15,7 +15,7 @@ import (
 type passRepoMock struct {
 	getListFn  func(context.Context, domain.UUID, int32, int32) (passdomain.Passwords, error)
 	getOwnerFn func(context.Context, domain.UUID) (*domain.UUID, error)
-	createFn   func(context.Context, domain.UUID, string, string, string, string) (*passdomain.Password, error)
+	createFn   func(context.Context, domain.UUID, string, string, string, int32, []byte, string, []byte) (*passdomain.Password, error)
 	updateFn   func(context.Context, domain.UUID, passdomain.Target, string, string) (*passdomain.Password, error)
 	deleteFn   func(context.Context, domain.UUID) error
 }
@@ -34,9 +34,9 @@ func (m *passRepoMock) GetOwner(ctx context.Context, id domain.UUID) (*domain.UU
 	return nil, nil
 }
 
-func (m *passRepoMock) Create(ctx context.Context, target domain.UUID, service string, login string, pass string, salt string) (*passdomain.Password, error) {
+func (m *passRepoMock) Create(ctx context.Context, target domain.UUID, service string, login string, pass string, version int32, aad []byte, nonce string, metadata []byte) (*passdomain.Password, error) {
 	if m.createFn != nil {
-		return m.createFn(ctx, target, service, login, pass, salt)
+		return m.createFn(ctx, target, service, login, pass, version, aad, nonce, metadata)
 	}
 	return nil, nil
 }
@@ -61,7 +61,7 @@ func newPassUUID() domain.UUID {
 
 func TestCreateValidatesRequiredFields(t *testing.T) {
 	service := NewPassService(&passRepoMock{})
-	_, err := service.Create(context.Background(), newPassUUID(), "", "login", "pass", "salt")
+	_, err := service.Create(context.Background(), newPassUUID(), "", "login", "pass", 1, []byte("aad"), "nonce", "meta")
 	if !errors.Is(err, apperrors.InvalidArguments) {
 		t.Fatalf("expected invalid arguments, got %v", err)
 	}

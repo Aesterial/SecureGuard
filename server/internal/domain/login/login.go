@@ -83,7 +83,7 @@ func randInt(n int) int {
 type RegisterRequire struct {
 	Require
 	MasterKey string
-	Salt string
+	Salt      string
 }
 
 type AuthorizeRequire struct {
