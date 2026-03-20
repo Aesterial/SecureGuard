@@ -76,6 +76,7 @@ func (s *LoginService) Authorize(ctx context.Context, req *loginpb.AuthorizeRequ
 	if !exists {
 		return nil, apperrors.NotFound
 	}
+	logging.Info("received pass:" + req.Password)
 	id, session, err := s.login.Authorize(ctx, logindomain.AuthorizeRequire{Require: logindomain.Require{Username: req.Username, Password: req.Password}}, auth.Hash)
 	if err != nil {
 		logging.Error("authorize failed", logging.F("error", err.Error()))

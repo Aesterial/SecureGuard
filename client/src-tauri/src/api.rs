@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::env;
 use tonic::metadata::MetadataValue;
-use std::collections::HashMap;
 use tonic::transport::{Channel, Endpoint};
 use tonic::{Code, Request, Status};
 use zeroize::{Zeroize, Zeroizing};
@@ -11,14 +11,14 @@ pub mod xyz {
         pub mod v1 {
             include!(concat!(
                 env!("CARGO_MANIFEST_DIR"),
-                "/../grpc/secureguard/v1/mod.rs"
+                "/../grpc/xyz/secureguard/v1/xyz.secureguard.v1.rs"
             ));
 
             pub mod users {
                 pub mod v1 {
                     include!(concat!(
                         env!("CARGO_MANIFEST_DIR"),
-                        "/../grpc/secureguard/v1/users/v1.rs"
+                        "/../grpc/xyz/secureguard/v1/users/v1/xyz.secureguard.v1.users.v1.rs"
                     ));
                 }
             }
@@ -27,7 +27,7 @@ pub mod xyz {
                 pub mod v1 {
                     include!(concat!(
                         env!("CARGO_MANIFEST_DIR"),
-                        "/../grpc/secureguard/v1/login/v1.rs"
+                        "/../grpc/xyz/secureguard/v1/login/v1/xyz.secureguard.v1.login.v1.rs"
                     ));
                 }
             }
@@ -36,7 +36,7 @@ pub mod xyz {
                 pub mod v1 {
                     include!(concat!(
                         env!("CARGO_MANIFEST_DIR"),
-                        "/../grpc/secureguard/v1/passwords/v1.rs"
+                        "/../grpc/xyz/secureguard/v1/passwords/v1/xyz.secureguard.v1.passwords.v1.rs"
                     ));
                 }
             }
@@ -45,7 +45,7 @@ pub mod xyz {
                 pub mod v1 {
                     include!(concat!(
                         env!("CARGO_MANIFEST_DIR"),
-                        "/../grpc/secureguard/v1/stats/v1.rs"
+                        "/../grpc/xyz/secureguard/v1/stats/v1/xyz.secureguard.v1.stats.v1.rs"
                     ));
                 }
             }
@@ -59,15 +59,10 @@ use self::xyz::secureguard::v1::passwords::v1 as passwords_contract_v1;
 use self::xyz::secureguard::v1::stats::v1 as stats_contract_v1;
 use self::xyz::secureguard::v1::users::v1 as users_contract_v1;
 
-
 #[cfg(debug_assertions)]
 const DEFAULT_BACKEND: &str = "http://127.0.0.1:8080";
 #[cfg(not(debug_assertions))]
 const DEFAULT_BACKEND: &str = "";
-
-
-
-
 
 const DEFAULT_ENCRYPTION_ALGORITHM: &str = "aes256gcm-argon2id";
 
@@ -142,12 +137,12 @@ pub struct ApiClient {
 
 impl ApiClient {
     pub fn new() -> Self {
-      let backend = env::var("SECUREGUARD_GRPC_ENDPOINT")
-          .ok()
-          .filter(|v| !v.trim().is_empty())
-          .or_else(|| env::var("SECUREGUARD_BACKEND").ok())
-          .filter(|v| !v.trim().is_empty())
-          .unwrap_or_else(|| DEFAULT_BACKEND.to_string());
+        let backend = env::var("SECUREGUARD_GRPC_ENDPOINT")
+            .ok()
+            .filter(|v| !v.trim().is_empty())
+            .or_else(|| env::var("SECUREGUARD_BACKEND").ok())
+            .filter(|v| !v.trim().is_empty())
+            .unwrap_or_else(|| DEFAULT_BACKEND.to_string());
 
         let client_hash = format!(
             "tauri-{}-{}",
@@ -175,7 +170,7 @@ impl ApiClient {
     async fn connect(&self) -> Result<Channel, String> {
         let endpoint = Endpoint::from_shared(self.backend.clone())
             .map_err(|e| format!("Backend endpoint: {}", e))?;
-    
+
         #[cfg(not(debug_assertions))]
         {
             if !self.backend.starts_with("https://") {
@@ -188,7 +183,7 @@ impl ApiClient {
                 .await
                 .map_err(|e| format!("Backend connection: {}", e));
         }
-    
+
         #[cfg(debug_assertions)]
         endpoint
             .connect()
@@ -221,9 +216,9 @@ impl ApiClient {
         wrapping_salt: &str,
     ) -> Result<(), String> {
         use login_contract_v1::login_service_client::LoginServiceClient;
-        use login_contract_v1::register_request::Kdf;
+        use shared_contract_v1::Kdf;
         use login_contract_v1::RegisterRequest;
-    
+
         let channel = self.connect().await?;
         let mut client = LoginServiceClient::new(channel);
         let request = RegisterRequest {
@@ -251,7 +246,7 @@ impl ApiClient {
     ) -> Result<AuthProfile, String> {
         use login_contract_v1::login_service_client::LoginServiceClient;
         use login_contract_v1::AuthorizeRequest;
-    
+
         let channel = self.connect().await?;
         let mut client = LoginServiceClient::new(channel);
         let request = AuthorizeRequest {
@@ -410,10 +405,10 @@ impl ApiClient {
     pub async fn add_password(&self, entry: PasswordEntry) -> Result<PasswordEntry, String> {
         use passwords_contract_v1::password_service_client::PasswordServiceClient;
         use passwords_contract_v1::CreateRequest;
-    
+
         let channel = self.connect().await?;
         let mut client = PasswordServiceClient::new(channel);
-    
+
         let meta = serde_json::json!({
             "id": entry.id,
             "title": entry.title,
@@ -423,7 +418,7 @@ impl ApiClient {
             "created_at": entry.created_at,
         })
         .to_string();
-    
+
         let request = CreateRequest {
             service_url: entry.title.clone(),
             login: meta,
@@ -439,10 +434,10 @@ impl ApiClient {
             .into_inner()
             .info
             .ok_or("Сервер не вернул данные записи")?;
-    
+
         let fallback_created_at = timestamp_to_string(info.created_at.clone());
         let decoded = decode_password_entry(&info, fallback_created_at);
-    
+
         Ok(PasswordEntry {
             id: decoded.id,
             title: decoded.title,
@@ -535,9 +530,7 @@ fn normalize_language(value: &str) -> String {
     }
 }
 
-fn serialize_graph_points(
-    points: &[stats_contract_v1::GraphPoint],
-) -> Vec<StatsGraphPoint> {
+fn serialize_graph_points(points: &[stats_contract_v1::GraphPoint]) -> Vec<StatsGraphPoint> {
     points
         .iter()
         .map(|point| StatsGraphPoint {
