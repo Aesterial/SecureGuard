@@ -38,38 +38,45 @@ func (s *Service) encodeToken(token string) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func (s *Service) IsValid(ctx context.Context, id string, hash string) (bool, *string, error) {
+func (s *Service) storedID(id string) string {
+	if _, err := hex.DecodeString(id); err == nil && len(id) == sha256.Size*2 {
+		return id
+	}
+	return s.encodeToken(id)
+}
+
+func (s *Service) IsValid(ctx context.Context, id string, hash string) (bool, error) {
 	token := s.encodeToken(id)
 	exists, err := s.ses.IsExists(ctx, token)
 	if err != nil {
 		logging.Error("session is not exists", logging.F("error", err.Error()))
-		return false, nil, err
+		return false, err
 	}
 	if !exists {
-		logging.Error("session is not exists (nf)", logging.F("error", err.Error()))
-		return false, nil, apperrors.NotFound
+		logging.Error("session is not exists (nf)")
+		return false, apperrors.NotFound
 	}
 	session, err := s.ses.GetInfo(ctx, token)
 	if err != nil {
-		return false, nil, err
+		return false, err
 	}
 	if session == nil {
-		return false, nil, apperrors.NotFound
+		return false, apperrors.NotFound
 	}
 	if session.Revoked {
-		return false, nil, nil
+		return false, nil
 	}
 	if time.Now().After(session.Expires) {
-		return false, nil, nil
+		return false, nil
 	}
 	if session.Hash != hash {
-		return false, nil, apperrors.Unauthenticated
+		return false, apperrors.Unauthenticated
 	}
-	return true, &token, nil
+	return true, nil
 }
 
 func (s *Service) Info(ctx context.Context, id string) (*sessionsdomain.Session, error) {
-	session, err := s.ses.GetInfo(ctx, id)
+	session, err := s.ses.GetInfo(ctx, s.storedID(id))
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +87,7 @@ func (s *Service) Info(ctx context.Context, id string) (*sessionsdomain.Session,
 }
 
 func (s *Service) GetOwner(ctx context.Context, id string) (*domain.UUID, error) {
-	owner, err := s.ses.GetOwner(ctx, id)
+	owner, err := s.ses.GetOwner(ctx, s.storedID(id))
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +124,19 @@ func (s *Service) Create(ctx context.Context, owner domain.UUID, hash string) (*
 	return &token, nil
 }
 
-func (s *Service) Revoke(ctx context.Context, id string) error {
-	err := s.ses.Revoke(ctx, id)
+func (s *Service) Revoke(ctx context.Context, by domain.UUID, id string) error {
+	token := s.storedID(id)
+	owner, err := s.ses.GetOwner(ctx, token)
+	if err != nil {
+		return err
+	}
+	if owner == nil {
+		return apperrors.NotFound
+	}
+	if *owner != by {
+		return apperrors.AccessDenied
+	}
+	err = s.ses.Revoke(ctx, token)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return apperrors.NotFound
@@ -129,7 +147,7 @@ func (s *Service) Revoke(ctx context.Context, id string) error {
 }
 
 func (s *Service) SetLastSeen(ctx context.Context, id string, at time.Time) error {
-	err := s.ses.SetLastSeen(ctx, id, at)
+	err := s.ses.SetLastSeen(ctx, s.storedID(id), at)
 	if err != nil {
 		return err
 	}

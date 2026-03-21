@@ -25,7 +25,6 @@ func NewUserService(usr *userapp.Service, a *Authentificator) *UserService {
 func (u *UserService) Info(ctx context.Context, _ *emptypb.Empty) (*userpb.UserResponse, error) {
 	auth, err := u.auth.User(ctx)
 	if err != nil {
-		logging.Error("error on authorizing: " + err.Error())
 		return nil, apperrors.Wrap(err)
 	}
 	usr, err := u.usr.GetByID(ctx, *auth.UserID)

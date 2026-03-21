@@ -33,11 +33,11 @@ func (s *SessionsService) GetList(ctx context.Context, req *typespb.RequestWithB
 }
 
 func (s *SessionsService) Revoke(ctx context.Context, req *typespb.RequestWithID) (*emptypb.Empty, error) {
-	_, err := s.auth.User(ctx)
+	auth, err := s.auth.User(ctx)
 	if err != nil {
 		return nil, err
 	}
-	err = s.ses.Revoke(ctx, req.GetId())
+	err = s.ses.Revoke(ctx, *auth.UserID, req.GetId())
 	if err != nil {
 		return nil, apperrors.Wrap(err)
 	}

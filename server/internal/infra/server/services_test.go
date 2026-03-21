@@ -370,19 +370,23 @@ func TestLoginServiceLogoutSuccess(t *testing.T) {
 	userID := newServerUUID()
 	sessionID := uuid.NewString()
 	revoked := false
+	var encodedID string
 
 	userRepo := &serverUsersRepoMock{
 		isUserAdminFn: func(context.Context, domain.UUID) (bool, error) { return false, nil },
 	}
 	sessionsRepo := &serverSessionsRepoMock{
-		isExistsFn: func(context.Context, string) (bool, error) { return true, nil },
+		isExistsFn: func(_ context.Context, id string) (bool, error) {
+			encodedID = id
+			return true, nil
+		},
 		getInfoFn: func(context.Context, string) (*sessionsdomain.Session, error) {
 			return &sessionsdomain.Session{ID: sessionID, Hash: "device-hash", Expires: time.Now().Add(time.Hour)}, nil
 		},
 		getOwnerFn: func(context.Context, string) (*domain.UUID, error) { return &userID, nil },
 		revokeFn: func(_ context.Context, id string) error {
-			if id != sessionID {
-				t.Fatalf("unexpected raw session token")
+			if id != encodedID {
+				t.Fatalf("unexpected encoded session id")
 			}
 			revoked = true
 			return nil

@@ -72,7 +72,7 @@ func TestIsValidNotFoundWhenSessionDoesNotExist(t *testing.T) {
 		},
 	})
 
-	valid, _, err := service.IsValid(context.Background(), uuid.NewString(), "hash")
+	valid, err := service.IsValid(context.Background(), uuid.NewString(), "hash")
 	if valid {
 		t.Fatalf("expected invalid session")
 	}
@@ -135,7 +135,7 @@ func TestIsValidHandlesRevokedExpiredAndHashMismatch(t *testing.T) {
 				},
 			})
 
-			valid, _, err := service.IsValid(context.Background(), sessionID, tc.hash)
+			valid, err := service.IsValid(context.Background(), sessionID, tc.hash)
 			if tc.wantErr == nil {
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
@@ -168,7 +168,7 @@ func TestIsValidSuccess(t *testing.T) {
 		},
 	})
 
-	valid, _, err := service.IsValid(context.Background(), sessionID, "device-hash")
+	valid, err := service.IsValid(context.Background(), sessionID, "device-hash")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -184,7 +184,7 @@ func TestRevokeMapsNoRowsToNotFound(t *testing.T) {
 		},
 	})
 
-	err := service.Revoke(context.Background(), uuid.NewString())
+	err := service.Revoke(context.Background(), domain.ParseUUID(uuid.New()), uuid.NewString())
 	if !errors.Is(err, apperrors.NotFound) {
 		t.Fatalf("expected not found, got %v", err)
 	}

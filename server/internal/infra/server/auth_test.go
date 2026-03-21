@@ -147,8 +147,8 @@ func TestAuthentificatorUserSuccess(t *testing.T) {
 	sessionID := uuid.NewString()
 	ownerID := newAuthUUID()
 	var encodedID string
-	var rawOwnerLookup string
-	var rawLastSeen string
+	var ownerLookup string
+	var lastSeenID string
 
 	auth := NewAuthentificator(
 		sessionsapp.NewSessionService(&authSessionsRepoMock{
@@ -168,12 +168,12 @@ func TestAuthentificatorUserSuccess(t *testing.T) {
 				}, nil
 			},
 			setLastSeenFn: func(_ context.Context, id string, _ time.Time) error {
-				rawLastSeen = id
+				lastSeenID = id
 				return nil
 			},
 			getOwnerFn: func(_ context.Context, id string) (*domain.UUID, error) {
-				rawOwnerLookup = id
-				if id != sessionID {
+				ownerLookup = id
+				if id != encodedID {
 					t.Fatalf("unexpected session id")
 				}
 				return &ownerID, nil
@@ -195,8 +195,8 @@ func TestAuthentificatorUserSuccess(t *testing.T) {
 	if meta.Hash != "device-hash" {
 		t.Fatalf("unexpected hash in meta: %q", meta.Hash)
 	}
-	if rawOwnerLookup != sessionID || rawLastSeen != sessionID {
-		t.Fatalf("expected raw session token for owner/last_seen lookups")
+	if ownerLookup != encodedID || lastSeenID != encodedID {
+		t.Fatalf("expected encoded session id for owner/last_seen lookups")
 	}
 }
 

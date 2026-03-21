@@ -168,7 +168,7 @@ where not exists (
 select COUNT(*) from users limit 1;
 
 -- name: GetTotalPasswords :one
-select COUNT(*) from users limit 1;
+select COUNT(*) from passwords limit 1;
 
 -- name: GetTotalAdmins :one
 select COUNT(*) from users where admin_access = true limit 1;

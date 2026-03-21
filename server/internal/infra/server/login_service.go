@@ -76,7 +76,6 @@ func (s *LoginService) Authorize(ctx context.Context, req *loginpb.AuthorizeRequ
 	if !exists {
 		return nil, apperrors.NotFound
 	}
-	logging.Info("received pass:" + req.Password)
 	id, session, err := s.login.Authorize(ctx, logindomain.AuthorizeRequire{Require: logindomain.Require{Username: req.Username, Password: req.Password}}, auth.Hash)
 	if err != nil {
 		logging.Error("authorize failed", logging.F("error", err.Error()))
@@ -95,7 +94,7 @@ func (s *LoginService) Logout(ctx context.Context, _ *emptypb.Empty) (*emptypb.E
 	if err != nil {
 		return nil, err
 	}
-	err = s.auth.ses.Revoke(ctx, *auth.SessionID)
+	err = s.auth.ses.Revoke(ctx, *auth.UserID, *auth.SessionID)
 	if err != nil {
 		logging.Error("failed to revoke session", logging.Field{Key: "err", Value: err.Error()})
 		return nil, apperrors.Wrap(err)

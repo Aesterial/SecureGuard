@@ -28,6 +28,7 @@ import (
 
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
 	passpb "github.com/aesterial/secureguard/internal/api/v1/passwords/v1"
+	sessionspb "github.com/aesterial/secureguard/internal/api/v1/sessions/v1"
 	statspb "github.com/aesterial/secureguard/internal/api/v1/stats/v1"
 	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
 )
@@ -81,6 +82,7 @@ func main() {
 	loginServer := server.NewLoginService(usrService, loginService, authentificator)
 	passServer := server.NewPasswordsService(passService, authentificator)
 	statsServer := server.NewStatsService(statsService, authentificator)
+	sessionsServer := server.NewSessionsService(sesService, authentificator)
 
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -97,6 +99,7 @@ func main() {
 	userpb.RegisterUserServiceServer(server, usrServer)
 	passpb.RegisterPasswordServiceServer(server, passServer)
 	statspb.RegisterStatsServiceServer(server, statsServer)
+	sessionspb.RegisterSessionsServiceServer(server, sessionsServer)
 	statsWorker.Start(ctx)
 	sesWorker.Start(ctx)
 	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", cfg.Boot.Port))
