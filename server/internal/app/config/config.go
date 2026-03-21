@@ -107,6 +107,19 @@ func ensure() {
 			Topic:    parseType("KAFKA_TOPIC", "secureguard.logs"),
 			ClientID: parseType("KAFKA_CLIENT_ID", "sg"),
 		},
+		Redis: cfgdomain.Redis{
+			Addr:     envValue("REDIS_ADDR"),
+			Password: envValue("REDIS_PASSWORD"),
+			DB:       parseType("REDIS_DB", 0),
+		},
+		RateLimit: cfgdomain.RateLimit{
+			Enabled:                parseType("RATE_LIMIT_ENABLED", false),
+			Prefix:                 parseType("RATE_LIMIT_PREFIX", "secureguard:ratelimit"),
+			AuthorizeLimit:         parseType("RATE_LIMIT_AUTHORIZE_LIMIT", 20),
+			AuthorizeWindowSeconds: parseType("RATE_LIMIT_AUTHORIZE_WINDOW_SEC", 900),
+			RegisterLimit:          parseType("RATE_LIMIT_REGISTER_LIMIT", 5),
+			RegisterWindowSeconds:  parseType("RATE_LIMIT_REGISTER_WINDOW_SEC", 3600),
+		},
 		Crypt: cfgdomain.Crypt{
 			Pepper:        envValue("SERVER_PEPPER"),
 			SessionLength: parseType("SESSION_LENGTH", 32),

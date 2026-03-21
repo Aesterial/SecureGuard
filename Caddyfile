@@ -9,7 +9,10 @@ example.com, www.example.com {
 		}
 	}
 
-	encode gzip
-
-	reverse_proxy h2c://backend:{$BOOT_PORT:50051}
+	reverse_proxy h2c://backend:{$BOOT_PORT:50051} {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-Host {host}
+	}
 }

@@ -22,8 +22,11 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	logging "github.com/aesterial/secureguard/internal/app/logging"
+	ratelimitapp "github.com/aesterial/secureguard/internal/app/ratelimit"
+	ratelimitdomain "github.com/aesterial/secureguard/internal/domain/ratelimit"
 	dbclient "github.com/aesterial/secureguard/internal/infra/db"
 	"github.com/aesterial/secureguard/internal/infra/db/repos"
+	"github.com/aesterial/secureguard/internal/infra/ratelimit"
 	"github.com/aesterial/secureguard/internal/infra/server"
 
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
@@ -69,6 +72,19 @@ func main() {
 	passRepo := repos.NewPasswordsRepository(conn.Querier())
 	statsRepo := repos.NewStatsRepository(conn.Querier())
 
+	limiterBackend, err := ratelimit.New(ctx, ratelimit.Config{
+		Enabled:  cfg.RateLimit.Enabled,
+		Addr:     cfg.Redis.Addr,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+		Prefix:   cfg.RateLimit.Prefix,
+	})
+	if err != nil {
+		logging.Critical("failed to initialize redis rate limiter", logging.F("error", err.Error()))
+		return
+	}
+	defer limiterBackend.Close()
+
 	usrService := usersapp.NewUserService(usrRepo)
 	sesService := sessionsapp.NewSessionService(sesRepo)
 	sesWorker := sessionsapp.NewWorker(sesRepo)
@@ -76,10 +92,23 @@ func main() {
 	statsService := statsapp.NewStatsService(statsRepo)
 	statsWorker := statsapp.NewPersistenceWorker(statsRepo)
 	loginService := loginapp.NewLoginService(usrRepo, sesService)
+	loginLimiter := ratelimitapp.NewService(
+		limiterBackend,
+		ratelimitdomain.Rules{
+			Authorize: ratelimitdomain.Rule{
+				Limit:  cfg.RateLimit.AuthorizeLimit,
+				Window: time.Duration(cfg.RateLimit.AuthorizeWindowSeconds) * time.Second,
+			},
+			Register: ratelimitdomain.Rule{
+				Limit:  cfg.RateLimit.RegisterLimit,
+				Window: time.Duration(cfg.RateLimit.RegisterWindowSeconds) * time.Second,
+			},
+		},
+	)
 
 	authentificator := server.NewAuthentificator(sesService, usrService)
 	usrServer := server.NewUserService(usrService, authentificator)
-	loginServer := server.NewLoginService(usrService, loginService, authentificator)
+	loginServer := server.NewLoginService(usrService, loginService, authentificator, loginLimiter)
 	passServer := server.NewPasswordsService(passService, authentificator)
 	statsServer := server.NewStatsService(statsService, authentificator)
 	sessionsServer := server.NewSessionsService(sesService, authentificator)

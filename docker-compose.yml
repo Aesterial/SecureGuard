@@ -14,6 +14,44 @@ services:
       timeout: 5s
       retries: 20
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000"]
+    volumes:
+      - secureguard-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  kafka:
+    image: bitnami/kafka:3.9
+    restart: unless-stopped
+    environment:
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_KRAFT_CLUSTER_ID: MDEyMzQ1Njc4OWFiY2RlZg
+    volumes:
+      - secureguard-kafka-data:/bitnami/kafka
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/bitnami/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+
   backend:
     image: aesterial/secureguard:1.0
     build:
@@ -22,6 +60,10 @@ services:
     restart: unless-stopped
     depends_on:
       db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST:-db}
@@ -33,7 +75,19 @@ services:
       BOOT_PORT: ${BOOT_PORT:-50051}
       LOG_SERVICE: ${LOG_SERVICE:-secureguard}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      KAFKA_ENABLED: ${KAFKA_ENABLED:-false}
+      KAFKA_ENABLED: ${KAFKA_ENABLED:-true}
+      KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:9092}
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-secureguard.logs}
+      KAFKA_CLIENT_ID: ${KAFKA_CLIENT_ID:-secureguard-backend}
+      REDIS_ADDR: ${REDIS_ADDR:-redis:6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DB: ${REDIS_DB:-0}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_PREFIX: ${RATE_LIMIT_PREFIX:-secureguard:ratelimit}
+      RATE_LIMIT_AUTHORIZE_LIMIT: ${RATE_LIMIT_AUTHORIZE_LIMIT:-20}
+      RATE_LIMIT_AUTHORIZE_WINDOW_SEC: ${RATE_LIMIT_AUTHORIZE_WINDOW_SEC:-900}
+      RATE_LIMIT_REGISTER_LIMIT: ${RATE_LIMIT_REGISTER_LIMIT:-5}
+      RATE_LIMIT_REGISTER_WINDOW_SEC: ${RATE_LIMIT_REGISTER_WINDOW_SEC:-3600}
       DEBUG_MODE: ${DEBUG_MODE:-false}
     expose:
       - "${BOOT_PORT:-50051}"
@@ -55,5 +109,7 @@ services:
 
 volumes:
   secureguard-postgres-data:
+  secureguard-redis-data:
+  secureguard-kafka-data:
   caddy-data:
   caddy-config:

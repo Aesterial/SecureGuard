@@ -20,9 +20,9 @@ func Connect() (*pgxpool.Pool, error) {
 		}
 		return pgxpool.New(context.Background(), dsn)
 	}
-	var sslMode string = "disabled"
-	if cfg.Tls {
-		sslMode = "require"
+	var sslMode string = "require"
+	if !cfg.Tls {
+		sslMode = "disable"
 	}
 	return pgxpool.New(context.Background(), fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name, sslMode))
 }

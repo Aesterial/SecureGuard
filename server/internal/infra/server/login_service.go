@@ -7,6 +7,7 @@ import (
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
 	logging "github.com/aesterial/secureguard/internal/app/logging"
 	loginapp "github.com/aesterial/secureguard/internal/app/login"
+	ratelimitapp "github.com/aesterial/secureguard/internal/app/ratelimit"
 	userapp "github.com/aesterial/secureguard/internal/app/users"
 	logindomain "github.com/aesterial/secureguard/internal/domain/login"
 	usersdomain "github.com/aesterial/secureguard/internal/domain/users"
@@ -19,15 +20,23 @@ type LoginService struct {
 	usr   *userapp.Service
 	login *loginapp.Service
 	auth  *Authentificator
+	limit *ratelimitapp.Service
 }
 
-func NewLoginService(usr *userapp.Service, login *loginapp.Service, auth *Authentificator) *LoginService {
-	return &LoginService{usr: usr, login: login, auth: auth}
+func NewLoginService(usr *userapp.Service, login *loginapp.Service, auth *Authentificator, limits ...*ratelimitapp.Service) *LoginService {
+	var limiter *ratelimitapp.Service
+	if len(limits) > 0 {
+		limiter = limits[0]
+	}
+	return &LoginService{usr: usr, login: login, auth: auth, limit: limiter}
 }
 
 func (s *LoginService) Register(ctx context.Context, req *loginpb.RegisterRequest) (*loginpb.LoginResponse, error) {
 	if req == nil || len(req.Password) < 8 || len(req.Username) < 3 {
 		return nil, apperrors.InvalidArguments
+	}
+	if err := s.limit.AllowRegister(ctx, clientIPFromContext(ctx)); err != nil {
+		return nil, err
 	}
 	auth, err := s.auth.User(ctx)
 	if err != nil && errors.Is(err, apperrors.InvalidArguments) {
@@ -61,6 +70,9 @@ func (s *LoginService) Authorize(ctx context.Context, req *loginpb.AuthorizeRequ
 	if req == nil || len(req.Username) < 3 || len(req.Password) < 8 {
 		return nil, apperrors.InvalidArguments
 	}
+	if err := s.limit.AllowAuthorize(ctx, clientIPFromContext(ctx)); err != nil {
+		return nil, err
+	}
 	auth, err := s.auth.User(ctx)
 	if err != nil && errors.Is(err, apperrors.InvalidArguments) {
 		if auth == nil || auth.Hash == "" {
@@ -74,7 +86,7 @@ func (s *LoginService) Authorize(ctx context.Context, req *loginpb.AuthorizeRequ
 		return nil, apperrors.Wrap(err)
 	}
 	if !exists {
-		return nil, apperrors.NotFound
+		return nil, apperrors.AccessDenied
 	}
 	id, session, err := s.login.Authorize(ctx, logindomain.AuthorizeRequire{Require: logindomain.Require{Username: req.Username, Password: req.Password}}, auth.Hash)
 	if err != nil {

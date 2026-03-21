@@ -347,7 +347,7 @@ func TestLoginServiceRegisterSuccess(t *testing.T) {
 	}
 }
 
-func TestLoginServiceAuthorizeNotFoundWhenUserMissing(t *testing.T) {
+func TestLoginServiceAuthorizeDeniesWhenUserMissing(t *testing.T) {
 	userRepo := &serverUsersRepoMock{
 		isUsernameExistsFn: func(context.Context, string) (bool, error) {
 			return false, nil
@@ -361,8 +361,8 @@ func TestLoginServiceAuthorizeNotFoundWhenUserMissing(t *testing.T) {
 
 	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs("client", "device-hash"))
 	_, err := server.Authorize(ctx, &loginpb.AuthorizeRequest{Username: "tester", Password: "password-123"})
-	if !errors.Is(err, apperrors.NotFound) {
-		t.Fatalf("expected not found, got %v", err)
+	if !errors.Is(err, apperrors.AccessDenied) {
+		t.Fatalf("expected access denied, got %v", err)
 	}
 }
 

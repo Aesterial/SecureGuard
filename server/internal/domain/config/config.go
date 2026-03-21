@@ -22,6 +22,21 @@ type Kafka struct {
 	ClientID string
 }
 
+type Redis struct {
+	Addr     string
+	Password string
+	DB       int
+}
+
+type RateLimit struct {
+	Enabled                bool
+	Prefix                 string
+	AuthorizeLimit         int
+	AuthorizeWindowSeconds int
+	RegisterLimit          int
+	RegisterWindowSeconds  int
+}
+
 type Crypt struct {
 	Pepper        string
 	SessionLength int
@@ -32,11 +47,13 @@ type Boot struct {
 }
 
 type Config struct {
-	Database Database
-	Boot     Boot
-	Logging  Logging
-	Kafka    Kafka
-	Crypt    Crypt
+	Database  Database
+	Boot      Boot
+	Logging   Logging
+	Kafka     Kafka
+	Redis     Redis
+	RateLimit RateLimit
+	Crypt     Crypt
 
 	Debug  bool
 	Loaded bool

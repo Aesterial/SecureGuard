@@ -80,6 +80,7 @@ var (
 	NotConfigured       = ErrorST{st: status.New(codes.Internal, "server error while progress"), content: "service not configured"}
 	AccessDenied        = ErrorST{st: status.New(codes.PermissionDenied, "denied"), content: "permissions denied"}
 	Unauthenticated     = ErrorST{st: status.New(codes.Unauthenticated, "failed to authorize"), content: "user unauthenticated"}
+	ResourceExhausted   = ErrorST{st: status.New(codes.ResourceExhausted, "too many requests"), content: "rate limit exceeded"}
 	AlreadyUsed         = ErrorST{st: status.New(codes.AlreadyExists, "already used"), content: "data is already used"}
 	DataExpired         = ErrorST{st: status.New(codes.InvalidArgument, "passed data expired"), content: "accepted data expired"}
 	AlreadyExists       = ErrorST{st: status.New(codes.AlreadyExists, "data already exists"), content: "already exists"}
