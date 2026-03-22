@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="./client/src-tauri/icons/icon.png" width="96" alt="SecureGuard logo" />
+  <img src="./.github/assets/illustration.png" width="180" alt="SecureGuard logo" />
   <br />
   SecureGuard
 </h1>

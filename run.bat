@@ -115,6 +115,10 @@ set "REDIS_ADDR=127.0.0.1:6379"
 set "REDIS_PASSWORD="
 set "REDIS_DB=0"
 set "RATE_LIMIT_ENABLED=false"
+set "KAFKA_ENABLED=false"
+set "KAFKA_BROKERS=127.0.0.1:9092"
+set "KAFKA_TOPIC=secureguard.logs"
+set "KAFKA_CLIENT_ID=secureguard-backend"
 
 for /f "usebackq tokens=1,* delims==" %%A in ("%SERVER_ENV%") do (
     set "K=%%~A"
@@ -130,6 +134,10 @@ for /f "usebackq tokens=1,* delims==" %%A in ("%SERVER_ENV%") do (
     if /I "!K!"=="REDIS_PASSWORD" set "REDIS_PASSWORD=!V!"
     if /I "!K!"=="REDIS_DB" set "REDIS_DB=!V!"
     if /I "!K!"=="RATE_LIMIT_ENABLED" set "RATE_LIMIT_ENABLED=!V!"
+    if /I "!K!"=="KAFKA_ENABLED" set "KAFKA_ENABLED=!V!"
+    if /I "!K!"=="KAFKA_BROKERS" set "KAFKA_BROKERS=!V!"
+    if /I "!K!"=="KAFKA_TOPIC" set "KAFKA_TOPIC=!V!"
+    if /I "!K!"=="KAFKA_CLIENT_ID" set "KAFKA_CLIENT_ID=!V!"
 )
 
 if not defined BACKEND_PORT set "BACKEND_PORT=50051"
@@ -156,9 +164,73 @@ set "REDIS_LOCAL="
 if /I "!REDIS_HOST!"=="127.0.0.1" set "REDIS_LOCAL=1"
 if /I "!REDIS_HOST!"=="0.0.0.0" set "REDIS_LOCAL=1"
 
+if not defined KAFKA_BROKERS set "KAFKA_BROKERS=127.0.0.1:9092"
+set "KAFKA_EFFECTIVE_BROKERS=!KAFKA_BROKERS!"
+set "KAFKA_MULTI_BROKER="
+if not "!KAFKA_BROKERS:,=!"=="!KAFKA_BROKERS!" set "KAFKA_MULTI_BROKER=1"
+set "KAFKA_PRIMARY_BROKER="
+for /f "tokens=1 delims=," %%A in ("!KAFKA_EFFECTIVE_BROKERS!") do (
+    set "KAFKA_PRIMARY_BROKER=%%~A"
+)
+if not defined KAFKA_PRIMARY_BROKER set "KAFKA_PRIMARY_BROKER=127.0.0.1:9092"
+for /f "tokens=1,2 delims=:" %%A in ("!KAFKA_PRIMARY_BROKER!") do (
+    set "KAFKA_HOST=%%~A"
+    set "KAFKA_PORT=%%~B"
+)
+if not defined KAFKA_HOST set "KAFKA_HOST=127.0.0.1"
+if not defined KAFKA_PORT set "KAFKA_PORT=9092"
+if /I "!KAFKA_HOST!"=="localhost" set "KAFKA_HOST=127.0.0.1"
+if /I "!KAFKA_HOST!"=="kafka" (
+    set "KAFKA_HOST=127.0.0.1"
+    set "KAFKA_PRIMARY_BROKER=127.0.0.1:!KAFKA_PORT!"
+)
+if not defined KAFKA_MULTI_BROKER set "KAFKA_EFFECTIVE_BROKERS=!KAFKA_PRIMARY_BROKER!"
+set "KAFKA_LOCAL="
+if /I "!KAFKA_HOST!"=="127.0.0.1" set "KAFKA_LOCAL=1"
+if /I "!KAFKA_HOST!"=="0.0.0.0" set "KAFKA_LOCAL=1"
+
+set "REDIS_USE_DEFAULT=n"
+if /I "!RATE_LIMIT_ENABLED!"=="true" set "REDIS_USE_DEFAULT=y"
+if /I "!RATE_LIMIT_ENABLED!"=="1" set "REDIS_USE_DEFAULT=y"
+echo.
+set "USE_REDIS="
+set /p USE_REDIS="Use Redis for this run? (y/n) [!REDIS_USE_DEFAULT!]: "
+if not defined USE_REDIS set "USE_REDIS=!REDIS_USE_DEFAULT!"
+if /I "!USE_REDIS!"=="y" (
+    set "REDIS_REQUIRED=1"
+    set "RATE_LIMIT_EFFECTIVE=true"
+) else (
+    set "REDIS_REQUIRED="
+    set "RATE_LIMIT_EFFECTIVE=false"
+)
+
+set "KAFKA_USE_DEFAULT=n"
+if /I "!KAFKA_ENABLED!"=="true" set "KAFKA_USE_DEFAULT=y"
+if /I "!KAFKA_ENABLED!"=="1" set "KAFKA_USE_DEFAULT=y"
+set "KAFKA_EFFECTIVE_ENABLED=false"
+echo.
+set "USE_KAFKA="
+set /p USE_KAFKA="Use Kafka for this run? (y/n) [!KAFKA_USE_DEFAULT!]: "
+if not defined USE_KAFKA set "USE_KAFKA=!KAFKA_USE_DEFAULT!"
+if /I "!USE_KAFKA!"=="y" (
+    set "KAFKA_REQUIRED=1"
+    set "KAFKA_EFFECTIVE_ENABLED=true"
+    if defined KAFKA_MULTI_BROKER (
+        set "KAFKA_EFFECTIVE_BROKERS=!KAFKA_BROKERS!"
+    ) else (
+        set "KAFKA_EFFECTIVE_BROKERS=!KAFKA_PRIMARY_BROKER!"
+    )
+) else (
+    set "KAFKA_REQUIRED="
+    set "KAFKA_EFFECTIVE_ENABLED=false"
+)
+
 echo [*] Backend endpoint: %BACKEND_ENDPOINT%
 if defined REDIS_REQUIRED (
     echo [*] Redis endpoint: !REDIS_EFFECTIVE_ADDR!
+)
+if defined KAFKA_REQUIRED (
+    echo [*] Kafka brokers: !KAFKA_EFFECTIVE_BROKERS!
 )
 
 set "BACKEND_RUNNING="
@@ -220,12 +292,8 @@ if errorlevel 1 (
 
 echo [*] Starting PostgreSQL in Docker...
 set "PG_CONTAINER=secureguard-postgres"
-set "PG_EXISTS="
-for /f %%N in ('docker ps -a --format "{{.Names}}" ^| findstr /R /X /C:"!PG_CONTAINER!"') do (
-    set "PG_EXISTS=1"
-)
-
-if defined PG_EXISTS (
+docker container inspect "!PG_CONTAINER!" >nul 2>&1
+if not errorlevel 1 (
     docker start "!PG_CONTAINER!" >nul 2>&1
 ) else (
     docker run -d --name "!PG_CONTAINER!" -e POSTGRES_USER=!DB_USER! -e POSTGRES_PASSWORD=!DB_PASSWORD! -e POSTGRES_DB=!DB_NAME! -p !DB_PORT!:5432 postgres:16-alpine >nul
@@ -269,11 +337,21 @@ if defined REDIS_REQUIRED (
         exit /b 1
     )
 ) else (
-    echo [*] Redis rate limit is disabled in backend config.
+    echo [*] Redis is disabled for this run.
+)
+
+if defined KAFKA_REQUIRED (
+    call :ensure_kafka
+    if errorlevel 1 (
+        pause
+        exit /b 1
+    )
+) else (
+    echo [*] Kafka is disabled for this run.
 )
 
 echo [*] Starting backend in a separate window...
-start "SecureGuard Backend" cmd /k "set REDIS_ADDR=!REDIS_EFFECTIVE_ADDR! && cd /d ""%SERVER_DIR%"" && go run ."
+start "SecureGuard Backend" cmd /k "set REDIS_ADDR=!REDIS_EFFECTIVE_ADDR! && set RATE_LIMIT_ENABLED=!RATE_LIMIT_EFFECTIVE! && set KAFKA_ENABLED=!KAFKA_EFFECTIVE_ENABLED! && set KAFKA_BROKERS=!KAFKA_EFFECTIVE_BROKERS! && cd /d ""%SERVER_DIR%"" && go run ."
 set "BACKEND_RUNNING=1"
 timeout /t 2 /nobreak >nul
 
@@ -391,12 +469,8 @@ if errorlevel 1 (
 
 echo [*] Starting Redis in Docker...
 set "REDIS_CONTAINER=secureguard-redis"
-set "REDIS_EXISTS="
-for /f %%N in ('docker ps -a --format "{{.Names}}" ^| findstr /R /X /C:"!REDIS_CONTAINER!"') do (
-    set "REDIS_EXISTS=1"
-)
-
-if defined REDIS_EXISTS (
+docker container inspect "!REDIS_CONTAINER!" >nul 2>&1
+if not errorlevel 1 (
     docker start "!REDIS_CONTAINER!" >nul 2>&1
 ) else (
     docker run -d --name "!REDIS_CONTAINER!" -p !REDIS_PORT!:6379 redis:7-alpine redis-server --appendonly yes --save 60 1000 >nul
@@ -413,4 +487,60 @@ for /l %%I in (1,1,30) do (
 
 echo [X] Redis did not become ready on !REDIS_EFFECTIVE_ADDR!.
 echo [X] Redis is not ready. Backend start canceled.
+exit /b 1
+
+:ensure_kafka
+echo [*] Checking Kafka...
+
+if defined KAFKA_MULTI_BROKER (
+    echo [*] Using external Kafka brokers !KAFKA_EFFECTIVE_BROKERS!
+    echo [+] Kafka is ready.
+    exit /b 0
+)
+
+if not defined KAFKA_LOCAL (
+    echo [*] Using remote Kafka !KAFKA_EFFECTIVE_BROKERS!
+    echo [+] Kafka is ready.
+    exit /b 0
+)
+
+for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":!KAFKA_PORT! .*LISTENING"') do (
+    echo [+] Kafka is ready.
+    exit /b 0
+)
+
+where docker >nul 2>&1
+if errorlevel 1 (
+    echo [X] Kafka is not listening on !KAFKA_EFFECTIVE_BROKERS! and Docker is not installed.
+    echo [X] Start Kafka manually and rerun run.bat.
+    exit /b 1
+)
+
+docker info >nul 2>&1
+if errorlevel 1 (
+    echo [X] Docker is installed, but Docker Desktop/daemon is not running.
+    echo [X] Start Docker and rerun run.bat.
+    exit /b 1
+)
+
+echo [*] Starting Kafka in Docker...
+set "KAFKA_CONTAINER=secureguard-kafka"
+docker container inspect "!KAFKA_CONTAINER!" >nul 2>&1
+if not errorlevel 1 (
+    docker start "!KAFKA_CONTAINER!" >nul 2>&1
+) else (
+    docker run -d --name "!KAFKA_CONTAINER!" -p !KAFKA_PORT!:9092 -e KAFKA_NODE_ID=1 -e KAFKA_PROCESS_ROLES=broker,controller -e KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:!KAFKA_PORT! -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER -e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@127.0.0.1:9093 -e CLUSTER_ID=MDEyMzQ1Njc4OWFiY2RlZg -e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 -e KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1 -e KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1 -e KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0 -e KAFKA_AUTO_CREATE_TOPICS_ENABLE=true apache/kafka:3.9.1 >nul
+)
+
+for /l %%I in (1,1,45) do (
+    docker exec "!KAFKA_CONTAINER!" sh -lc "/opt/kafka/bin/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list >/dev/null 2>&1" >nul 2>&1
+    if not errorlevel 1 (
+        echo [+] Kafka is ready.
+        exit /b 0
+    )
+    timeout /t 1 /nobreak >nul
+)
+
+echo [X] Kafka did not become ready on !KAFKA_EFFECTIVE_BROKERS!.
+echo [X] Kafka is not ready. Backend start canceled.
 exit /b 1
