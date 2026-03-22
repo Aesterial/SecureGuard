@@ -7,7 +7,23 @@ set -eu
 : "${POSTGRES_PASSWORD:=postgres}"
 : "${POSTGRES_NAME:=secureguard}"
 : "${BOOT_PORT:=50051}"
-: "${POSTGRES_TLS_MODE:=require}"
+: "${POSTGRES_TLS:=false}"
+
+postgres_tls_mode() {
+  if [ -n "${POSTGRES_TLS_MODE:-}" ]; then
+    printf '%s' "${POSTGRES_TLS_MODE}"
+    return
+  fi
+
+  case "${POSTGRES_TLS}" in
+    1|true|TRUE|True|yes|YES|on|ON)
+      printf '%s' "require"
+      ;;
+    *)
+      printf '%s' "disable"
+      ;;
+  esac
+}
 
 wait_for_db() {
   if [ -n "${POSTGRES_URL:-}" ]; then
@@ -32,7 +48,7 @@ apply_schema() {
   fi
 
   export PGPASSWORD="${POSTGRES_PASSWORD}"
-  psql "host=${POSTGRES_HOST} port=${POSTGRES_PORT} user=${POSTGRES_USER} dbname=${POSTGRES_NAME} sslmode=${POSTGRES_TLS_MODE}" \
+  psql "host=${POSTGRES_HOST} port=${POSTGRES_PORT} user=${POSTGRES_USER} dbname=${POSTGRES_NAME} sslmode=$(postgres_tls_mode)" \
     -v ON_ERROR_STOP=1 \
     -f /app/migrations/sqlc.sql
 }

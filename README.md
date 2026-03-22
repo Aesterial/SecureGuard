@@ -27,7 +27,6 @@
 Russian project materials prepared for documentation and presentation:
 
 - [docs/PROJECT_DOCS.md](./docs/PROJECT_DOCS.md) — full project documentation
-- [docs/PRESENTATION.md](./docs/PRESENTATION.md) — presentation outline and sample speech text
 - [docs/USER_FAQ.md](./docs/USER_FAQ.md) — end-user FAQ
 
 The current codebase is an active MVP. The desktop app is already usable for the core vault flow, while the backend exposes a wider API surface than the UI currently consumes.
@@ -37,6 +36,7 @@ The current codebase is an active MVP. The desktop app is already usable for the
 ### Desktop client
 
 - Account registration and login through gRPC
+- Local vault-key envelope generation from a seed phrase before registration
 - Local password encryption before sending data to backend
 - Supported encryption modes:
   - `AES-256-GCM + Argon2id`
@@ -46,17 +46,20 @@ The current codebase is an active MVP. The desktop app is already usable for the
   - list entries
   - delete entries
   - decrypt-and-copy via seed phrase
-- Clipboard auto-clear after 30 seconds
+- Staff-only read-only admin statistics screen
+- Clipboard auto-clear with default `30s` timeout and UI-configurable presets
 - RU/EN interface
 - Local UI settings:
   - language
   - encryption algorithm
   - screenshot guard
+  - light theme
   - startup with Windows
-  - auto-lock
+  - auto-logout timer
+  - clipboard timeout
   - delete confirmation
   - context-menu blocking
-- Windows-specific protection hooks and elevated launch flow
+- Windows-specific screenshot protection, startup integration, and release-only protection hooks
 
 ### Backend and API
 
@@ -65,8 +68,10 @@ The current codebase is an active MVP. The desktop app is already usable for the
   - `UserService`
   - `PasswordService`
   - `StatsService`
+  - `SessionsService`
 - PostgreSQL persistence through `sqlc`
-- Session-based authentication with background cleanup worker
+- Session-based authentication with client metadata binding and a background cleanup worker
+- Optional Redis-backed rate limiting for register/login endpoints
 - Structured logging subsystem
 - Optional Kafka-backed log transport and log reader
 - Hourly and daily stats persistence workers
@@ -76,7 +81,10 @@ The current codebase is an active MVP. The desktop app is already usable for the
 ### Known boundaries
 
 - The desktop client currently focuses on login and password-vault flows.
-- `UserService` and `StatsService` are available on the backend, but are not fully surfaced in the desktop UI yet.
+- The desktop UI does not expose password updates, session management, user listing, or key rotation, even though backend/API pieces for some of these flows exist.
+- `UserService.List` is declared in protobuf, but the server currently falls back to the generated `Unimplemented` stub for that RPC.
+- The admin statistics screen depends on the Kafka log reader path. In the minimal local setup with `KAFKA_ENABLED=false`, staff analytics are not available.
+- The server does not receive the raw seed phrase during registration. It stores a wrapped master key plus salt/KDF params in `users_keys`, so the system is safer than the old design but still not a strict zero-knowledge vault.
 - The repository is Windows-first. The Tauri app contains Windows-only integrations for screenshot protection and startup management.
 - `setup.bat` is a legacy scaffold script and is not part of the current monorepo development flow.
 
@@ -156,6 +164,11 @@ DEBUG_MODE=false
 
 Why `8080`: the Tauri client defaults to `http://127.0.0.1:8080` in `client/src-tauri/src/api.rs`.
 
+Notes:
+
+- `server/starter/.env.example` is aimed at the full Docker stack and enables `Kafka`, `Redis`, and rate limiting by default.
+- The minimal desktop flow works with the lean config above; the staff analytics screen does not.
+
 5. Start everything with the helper script:
 
 ```bat
@@ -173,7 +186,7 @@ run.bat
 
 ## Docker Compose
 
-For backend-only local infrastructure with reverse proxying, use the root Docker stack:
+For the full backend stack with analytics and reverse proxying, use the root Docker stack:
 
 ```bash
 docker compose up --build
@@ -182,6 +195,8 @@ docker compose up --build
 This stack starts:
 
 - `db`: PostgreSQL 16
+- `redis`: rate-limit storage
+- `kafka`: log transport and analytics reader source
 - `backend`: Go gRPC service from `server/starter`
 - `caddy`: public reverse proxy with automatic TLS
 
@@ -189,7 +204,9 @@ Notes:
 
 - Caddy exposes ports `80/443` and proxies h2c traffic to the backend on port `50051`.
 - The backend container waits for PostgreSQL, applies `server/migrations/scheme/sqlc.sql`, and then starts the gRPC server.
+- In this stack, backend defaults enable `KAFKA_ENABLED=true` and `RATE_LIMIT_ENABLED=true`.
 - Database data is stored in the named volume `secureguard-postgres-data`.
+- Redis and Kafka data are also persisted in named Docker volumes.
 - Caddy stores ACME state in persistent Docker volumes.
 - The checked-in `Caddyfile` is a public deployment template and uses `example.com`, `www.example.com`, and `admin@example.com` placeholders. Replace them with your real domain and email before deployment.
 
@@ -200,6 +217,8 @@ Notes:
 ```bash
 docker run --name secureguard-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=secureguard -p 5432:5432 -d postgres:16-alpine
 ```
+
+This is enough for the core vault flow. If you want staff analytics or rate limiting locally, use the root `docker compose` stack instead so `Redis` and `Kafka` are available.
 
 ### 2. Apply schema
 
@@ -255,7 +274,7 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo build --all-targets --all-features --locked
 ```
 
-These commands match the direction of the current CI workflows in `.github/workflows`.
+These commands match the direction of the current CI workflows in `.github/workflows/go-link-static.yml` and `.github/workflows/rust-link-static.yml`.
 
 ## API and Code Generation
 
