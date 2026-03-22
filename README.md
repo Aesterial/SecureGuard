@@ -1,15 +1,15 @@
-<h1 align="center">
-  <img src="./.github/assets/illustration.png" width="180" alt="SecureGuard logo" />
-  <br />
-  SecureGuard
-</h1>
+<h1 align="center">SecureGuard</h1>
+
+<p align="center">
+  <img src="./.github/assets/illustration.svg" alt="SecureGuard logo" />
+</p>
 
 <p align="center">
   <i>Windows-first desktop password vault with local encryption, OS hardening, and a Go gRPC backend.</i>
 </p>
 
 <p align="center">
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="license" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPL-blue.svg?style=flat-square" alt="license" /></a>
   <img src="https://img.shields.io/badge/platform-Windows-0078D6?style=flat-square&logo=windows" alt="platform windows" />
   <img src="https://img.shields.io/badge/stack-Tauri%20%2B%20Rust%20%2B%20Go%20%2B%20PostgreSQL-222?style=flat-square" alt="tech stack" />
 </p>
