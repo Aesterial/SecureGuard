@@ -22,7 +22,6 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	UserService_Info_FullMethodName           = "/xyz.secureguard.v1.users.v1.UserService/Info"
-	UserService_List_FullMethodName           = "/xyz.secureguard.v1.users.v1.UserService/List"
 	UserService_ChangeTheme_FullMethodName    = "/xyz.secureguard.v1.users.v1.UserService/ChangeTheme"
 	UserService_ChangeLanguage_FullMethodName = "/xyz.secureguard.v1.users.v1.UserService/ChangeLanguage"
 	UserService_ChangeCrypt_FullMethodName    = "/xyz.secureguard.v1.users.v1.UserService/ChangeCrypt"
@@ -34,7 +33,6 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	Info(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserResponse, error)
-	List(ctx context.Context, in *v1.RequestWithLimitAndOffset, opts ...grpc.CallOption) (*ListResponse, error)
 	ChangeTheme(ctx context.Context, in *ChangeThemeRequest, opts ...grpc.CallOption) (*ChangeThemeResponse, error)
 	ChangeLanguage(ctx context.Context, in *ChangeLanguageRequest, opts ...grpc.CallOption) (*ChangeLanguageResponse, error)
 	ChangeCrypt(ctx context.Context, in *ChangeCryptRequest, opts ...grpc.CallOption) (*ChangeCryptResponse, error)
@@ -53,16 +51,6 @@ func (c *userServiceClient) Info(ctx context.Context, in *emptypb.Empty, opts ..
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UserResponse)
 	err := c.cc.Invoke(ctx, UserService_Info_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userServiceClient) List(ctx context.Context, in *v1.RequestWithLimitAndOffset, opts ...grpc.CallOption) (*ListResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListResponse)
-	err := c.cc.Invoke(ctx, UserService_List_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +102,6 @@ func (c *userServiceClient) ChangeKey(ctx context.Context, in *v1.RequestWithVal
 // for forward compatibility.
 type UserServiceServer interface {
 	Info(context.Context, *emptypb.Empty) (*UserResponse, error)
-	List(context.Context, *v1.RequestWithLimitAndOffset) (*ListResponse, error)
 	ChangeTheme(context.Context, *ChangeThemeRequest) (*ChangeThemeResponse, error)
 	ChangeLanguage(context.Context, *ChangeLanguageRequest) (*ChangeLanguageResponse, error)
 	ChangeCrypt(context.Context, *ChangeCryptRequest) (*ChangeCryptResponse, error)
@@ -130,9 +117,6 @@ type UnimplementedUserServiceServer struct{}
 
 func (UnimplementedUserServiceServer) Info(context.Context, *emptypb.Empty) (*UserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Info not implemented")
-}
-func (UnimplementedUserServiceServer) List(context.Context, *v1.RequestWithLimitAndOffset) (*ListResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedUserServiceServer) ChangeTheme(context.Context, *ChangeThemeRequest) (*ChangeThemeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ChangeTheme not implemented")
@@ -180,24 +164,6 @@ func _UserService_Info_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).Info(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.RequestWithLimitAndOffset)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).List(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: UserService_List_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).List(ctx, req.(*v1.RequestWithLimitAndOffset))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -284,10 +250,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Info",
 			Handler:    _UserService_Info_Handler,
-		},
-		{
-			MethodName: "List",
-			Handler:    _UserService_List_Handler,
 		},
 		{
 			MethodName: "ChangeTheme",

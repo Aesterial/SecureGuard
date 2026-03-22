@@ -52,10 +52,6 @@ message UserResponse {
   UserSelf info = 1;
 }
 
-message ListResponse {
-    repeated UserPublic list = 1;
-}
-
 message ChangeThemeRequest {
   Theme value = 1;
 }

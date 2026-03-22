@@ -42,11 +42,6 @@ pub struct UserResponse {
     #[prost(message, optional, tag = "1")]
     pub info: ::core::option::Option<UserSelf>,
 }
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct ListResponse {
-    #[prost(message, repeated, tag = "1")]
-    pub list: ::prost::alloc::vec::Vec<UserPublic>,
-}
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct ChangeThemeRequest {
     #[prost(enumeration = "Theme", tag = "1")]
