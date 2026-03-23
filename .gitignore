@@ -26,5 +26,3 @@ go.work.sum
 
 .idea/
 docs/*
-!docs/
-!docs/*.md

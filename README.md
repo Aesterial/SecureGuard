@@ -1,7 +1,12 @@
 <h1 align="center">SecureGuard</h1>
 
 <p align="center">
-  <img src="./.github/assets/illustration.svg" alt="SecureGuard logo" />
+  <a href="./README.md"><strong>English</strong></a> |
+  <a href="./README.ru.md">Русский</a>
+</p>
+
+<p align="center">
+  <img src="./.github/assets/illustration.svg" alt="SecureGuard illustration" />
 </p>
 
 <p align="center">
@@ -9,9 +14,17 @@
 </p>
 
 <p align="center">
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPL-blue.svg?style=flat-square" alt="license" /></a>
-  <img src="https://img.shields.io/badge/platform-Windows-0078D6?style=flat-square&logo=windows" alt="platform windows" />
-  <img src="https://img.shields.io/badge/stack-Tauri%20%2B%20Rust%20%2B%20Go%20%2B%20PostgreSQL-222?style=flat-square" alt="tech stack" />
+  <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/go-link-static.yml">
+    <img src="https://github.com/Aesterial/SecureGuard/actions/workflows/go-link-static.yml/badge.svg?branch=main" alt="Go CI status" />
+  </a>
+  <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/rust-link-static.yml">
+    <img src="https://github.com/Aesterial/SecureGuard/actions/workflows/rust-link-static.yml/badge.svg?branch=main" alt="Rust CI status" />
+  </a>
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/license-AGPL--3.0-3e4c75.svg?style=flat-square" alt="AGPL-3.0 license" />
+  </a>
+  <img src="https://img.shields.io/badge/platform-Windows-0078D6?style=flat-square&logo=windows" alt="Windows platform" />
+  <img src="https://img.shields.io/badge/stack-Tauri%20%2B%20Rust%20%2B%20Go%20%2B%20PostgreSQL-222?style=flat-square" alt="Tech stack" />
 </p>
 
 ## Overview
@@ -20,24 +33,25 @@
 
 - `client/`: Tauri desktop app (`Rust + HTML/CSS/JS`)
 - `server/`: Go gRPC backend with layered `domain/app/infra` structure
-- `api/`: protobuf contracts and generated code inputs
+- `api/`: protobuf contracts and generation inputs for Go and Rust clients
+
+The repository is currently an active MVP. The desktop app already covers the core vault flow, while the backend exposes a broader API surface for sessions, settings, metadata, and admin statistics.
 
 ## Documentation
 
-Russian project materials prepared for documentation and presentation:
+Project materials prepared for development and presentation:
 
-- [docs/PROJECT_DOCS.md](./docs/PROJECT_DOCS.md) — full project documentation
-- [docs/USER_FAQ.md](./docs/USER_FAQ.md) — end-user FAQ
-
-The current codebase is an active MVP. The desktop app is already usable for the core vault flow, while the backend exposes a wider API surface than the UI currently consumes.
+- [docs/PROJECT_DOCS.md](./docs/PROJECT_DOCS.md) - full project documentation
+- [docs/USER_FAQ.md](./docs/USER_FAQ.md) - end-user FAQ
+- [api/README.md](./api/README.md) - protobuf and generation notes
 
 ## Current State
 
 ### Desktop client
 
-- Account registration and login through gRPC
+- Account registration and login over gRPC
 - Local vault-key envelope generation from a seed phrase before registration
-- Local password encryption before sending data to backend
+- Local password encryption before data is sent to the backend
 - Supported encryption modes:
   - `AES-256-GCM + Argon2id`
   - `AES-256-GCM + SHA-256`
@@ -47,7 +61,7 @@ The current codebase is an active MVP. The desktop app is already usable for the
   - delete entries
   - decrypt-and-copy via seed phrase
 - Staff-only read-only admin statistics screen
-- Clipboard auto-clear with default `30s` timeout and UI-configurable presets
+- Clipboard auto-clear with default `30s` timeout and configurable presets
 - RU/EN interface
 - Local UI settings:
   - language
@@ -64,6 +78,7 @@ The current codebase is an active MVP. The desktop app is already usable for the
 ### Backend and API
 
 - gRPC services registered in `server/starter/start.go`:
+  - `MetaService`
   - `LoginService`
   - `UserService`
   - `PasswordService`
@@ -71,40 +86,39 @@ The current codebase is an active MVP. The desktop app is already usable for the
   - `SessionsService`
 - PostgreSQL persistence through `sqlc`
 - Session-based authentication with client metadata binding and a background cleanup worker
-- Optional Redis-backed rate limiting for register/login endpoints
+- Optional Redis-backed rate limiting for register/login/meta endpoints
 - Structured logging subsystem
 - Optional Kafka-backed log transport and log reader
 - Hourly and daily stats persistence workers
 - Buf-based protobuf generation for Go and Rust clients
-- CI workflows for Go and Rust static analysis
+- GitHub Actions workflows for Go and Rust link/static analysis
 
 ### Known boundaries
 
-- The desktop client currently focuses on login and password-vault flows.
-- The desktop UI does not expose password updates, session management, user listing, or key rotation, even though backend/API pieces for some of these flows exist.
-- `UserService.List` is declared in protobuf, but the server currently falls back to the generated `Unimplemented` stub for that RPC.
+- The desktop client currently focuses on authentication, vault management, settings, and staff stats.
+- The desktop UI does not expose password updates, session management, or key rotation, even though backend/API support exists for some of those flows.
 - The admin statistics screen depends on the Kafka log reader path. In the minimal local setup with `KAFKA_ENABLED=false`, staff analytics are not available.
 - The server does not receive the raw seed phrase during registration. It stores a wrapped master key plus salt/KDF params in `users_keys`, so the system is safer than the old design but still not a strict zero-knowledge vault.
 - The repository is Windows-first. The Tauri app contains Windows-only integrations for screenshot protection and startup management.
-- `setup.bat` is a legacy scaffold script and is not part of the current monorepo development flow.
 
 ## Repository Layout
 
 ```text
 SecureGuard/
-├── client/
-│   ├── src/                # Frontend HTML/CSS/JS
-│   ├── src-tauri/          # Tauri shell, crypto, OS integrations
-│   └── grpc/               # Generated Rust gRPC stubs
-├── server/
-│   ├── internal/           # Domain, app, infra, generated Go stubs
-│   ├── starter/            # gRPC server bootstrap entrypoint
-│   └── migrations/         # Schema and sqlc queries
-├── api/
-│   ├── xyz/secureguard/... # Protobuf contracts
-│   └── third_party/        # Proto dependencies
-├── run.bat                 # Main local run helper for Windows
-└── .github/                # CI and repository automation
+|-- client/
+|   |-- src/                # Frontend HTML/CSS/JS
+|   |-- src-tauri/          # Tauri shell, crypto, OS integrations
+|   `-- grpc/               # Generated Rust gRPC stubs
+|-- server/
+|   |-- internal/           # Domain, app, infra, generated Go stubs
+|   |-- starter/            # gRPC server bootstrap entrypoint
+|   `-- migrations/         # Schema and sqlc queries
+|-- api/
+|   |-- xyz/secureguard/... # Protobuf contracts
+|   `-- third_party/        # Proto dependencies
+|-- docs/                   # Project docs and FAQ
+|-- run.bat                 # Main local run helper for Windows
+`-- .github/                # CI workflows and repository assets
 ```
 
 ## Prerequisites
@@ -166,7 +180,8 @@ Why `8080`: the Tauri client defaults to `http://127.0.0.1:8080` in `client/src-
 
 Notes:
 
-- `server/starter/.env.example` is aimed at the full Docker stack and enables `Kafka`, `Redis`, and rate limiting by default.
+- `server/starter/.env.example` is tuned for the local desktop flow and keeps Kafka-backed analytics plus Redis rate limiting disabled by default.
+- The root `docker compose` stack still enables Kafka and rate limiting through its own container defaults, so you do not need to turn them on in the minimal local setup.
 - The minimal desktop flow works with the lean config above; the staff analytics screen does not.
 
 5. Start everything with the helper script:
@@ -240,7 +255,7 @@ cd client
 npm run dev
 ```
 
-If you want to keep backend on another port, export one of these variables before launching the client:
+If you want to keep the backend on another port, export one of these variables before launching the client:
 
 - `SECUREGUARD_GRPC_ENDPOINT`
 - `SECUREGUARD_BACKEND`
@@ -274,11 +289,11 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo build --all-targets --all-features --locked
 ```
 
-These commands match the direction of the current CI workflows in `.github/workflows/go-link-static.yml` and `.github/workflows/rust-link-static.yml`.
+These commands match the current CI workflows in `.github/workflows/go-link-static.yml` and `.github/workflows/rust-link-static.yml`.
 
 ## API and Code Generation
 
-See [api/README.md](./api/README.md) for generation details.
+See [api/README.md](./api/README.md) for full generation details.
 
 Short version:
 
@@ -318,4 +333,4 @@ Generated outputs:
 
 ## License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [GNU AGPL-3.0](./LICENSE).
