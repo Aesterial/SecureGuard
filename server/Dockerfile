@@ -1,5 +1,8 @@
 FROM golang:1.26-alpine AS build
 
+ARG COMMIT_HASH=dev
+ARG BUILD_TIME=1970-01-01T00:00:00Z
+
 WORKDIR /src
 
 COPY server/internal/go.mod server/internal/go.sum ./server/internal/
@@ -11,7 +14,9 @@ RUN cd /src/server/starter && go mod download
 COPY server/internal ./server/internal
 COPY server/starter ./server/starter
 
-RUN cd /src/server/starter && CGO_ENABLED=0 GOOS=linux go build -o /out/secureguard-server .
+RUN cd /src/server/starter && CGO_ENABLED=0 GOOS=linux go build \
+	-ldflags="-s -w -X github.com/aesterial/secureguard/internal/shared/metadata.CommitHash=${COMMIT_HASH} -X github.com/aesterial/secureguard/internal/shared/metadata.BuildTime=${BUILD_TIME}" \
+	-o /out/secureguard-server .
 
 FROM alpine:3.22
 

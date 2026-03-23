@@ -1,0 +1,39 @@
+syntax="proto3";
+
+package xyz.secureguard.api.v1.meta.v1;
+
+option go_package = "github.com/aesterial/secureguard/internal/api/v1/meta/v1;meta";
+
+import "google/protobuf/timestamp.proto";
+
+enum ClientType {
+  CLIENT_TYPE_SECUREGUARD_UNSPECIFIED = 0;
+  CLIENT_TYPE_SECUREGUARD_WINDOWS = 1;
+  CLIENT_TYPE_SECUREGUARD_MAC = 2;
+  CLIENT_TYPE_SECUREGUARD_ANDROID = 3;
+  CLIENT_TYPE_SECUREGUARD_IOS = 4;
+}
+
+message ServerInfo {
+  string name = 1;
+  string version = 2;
+  string runtime_version = 3;
+  repeated float supporing_ver = 4;
+  string commit_hash = 5;
+  string reporitory = 6;
+  google.protobuf.Timestamp build_time = 7;
+}
+
+message ServerInfoResponse {
+  ServerInfo info = 1;
+}
+
+message CompatibilityRequest {
+  float client_api_version = 1;
+  ClientType type = 2;
+}
+
+message CompatibilityResponse {
+  bool value = 1;
+  repeated string reasons = 2;
+}

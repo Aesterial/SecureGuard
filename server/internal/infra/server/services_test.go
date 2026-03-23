@@ -8,20 +8,25 @@ import (
 
 	typespb "github.com/aesterial/secureguard/internal/api/v1"
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
+	metapb "github.com/aesterial/secureguard/internal/api/v1/meta/v1"
 	passpb "github.com/aesterial/secureguard/internal/api/v1/passwords/v1"
 	statspb "github.com/aesterial/secureguard/internal/api/v1/stats/v1"
 	userpb "github.com/aesterial/secureguard/internal/api/v1/users/v1"
 	loginapp "github.com/aesterial/secureguard/internal/app/login"
+	metaapp "github.com/aesterial/secureguard/internal/app/meta"
 	passapp "github.com/aesterial/secureguard/internal/app/passwords"
+	ratelimitapp "github.com/aesterial/secureguard/internal/app/ratelimit"
 	sessionsapp "github.com/aesterial/secureguard/internal/app/sessions"
 	statsapp "github.com/aesterial/secureguard/internal/app/stats"
 	usersapp "github.com/aesterial/secureguard/internal/app/users"
 	"github.com/aesterial/secureguard/internal/domain"
 	passdomain "github.com/aesterial/secureguard/internal/domain/passwords"
+	ratelimitdomain "github.com/aesterial/secureguard/internal/domain/ratelimit"
 	sessionsdomain "github.com/aesterial/secureguard/internal/domain/sessions"
 	statsdomain "github.com/aesterial/secureguard/internal/domain/stats"
 	usersdomain "github.com/aesterial/secureguard/internal/domain/users"
 	apperrors "github.com/aesterial/secureguard/internal/shared/errors"
+	sharedmetadata "github.com/aesterial/secureguard/internal/shared/metadata"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -224,6 +229,10 @@ type serverStatsRepoMock struct {
 	totalFn  func(context.Context) (*statsdomain.Total, error)
 }
 
+type serverRateLimitRepoMock struct {
+	allowFn func(context.Context, ratelimitdomain.Bucket, string, ratelimitdomain.Rule) (bool, time.Duration, error)
+}
+
 func (m *serverStatsRepoMock) ByDate(ctx context.Context, r statsdomain.TimeRange, viewSaved ...bool) (*statsdomain.Stats, error) {
 	if m.byDateFn != nil {
 		return m.byDateFn(ctx, r, viewSaved...)
@@ -247,6 +256,13 @@ func (m *serverStatsRepoMock) GetUsersPreferences(context.Context) (*statsdomain
 }
 func (m *serverStatsRepoMock) GetTopServices(context.Context, statsdomain.TimeRange, ...bool) (map[string]int32, error) {
 	return nil, nil
+}
+
+func (m *serverRateLimitRepoMock) Allow(ctx context.Context, bucket ratelimitdomain.Bucket, key string, rule ratelimitdomain.Rule) (bool, time.Duration, error) {
+	if m.allowFn != nil {
+		return m.allowFn(ctx, bucket, key, rule)
+	}
+	return true, 0, nil
 }
 
 func newServerUUID() domain.UUID {
@@ -584,5 +600,68 @@ func TestStatsServiceByDateAndToday(t *testing.T) {
 	}
 	if total.GetUsers() != 1 {
 		t.Fatalf("unexpected total payload: %#v", total)
+	}
+}
+
+func TestMetaServiceServerInformationReturnsConfiguredMetadata(t *testing.T) {
+	oldServerName := sharedmetadata.ServerName
+	oldCommitHash := sharedmetadata.CommitHash
+	oldBuildTime := sharedmetadata.BuildTime
+	t.Cleanup(func() {
+		sharedmetadata.ServerName = oldServerName
+		sharedmetadata.CommitHash = oldCommitHash
+		sharedmetadata.BuildTime = oldBuildTime
+	})
+
+	sharedmetadata.ServerName = "QA Node"
+	sharedmetadata.CommitHash = "abc123"
+	sharedmetadata.BuildTime = "2026-03-23T12:34:56Z"
+
+	server := NewMetaService(metaapp.NewService())
+	resp, err := server.ServerInformation(context.Background(), &emptypb.Empty{})
+	if err != nil {
+		t.Fatalf("ServerInformation returned error: %v", err)
+	}
+	if resp.GetInfo().GetName() != "QA Node" {
+		t.Fatalf("unexpected server name: %#v", resp.GetInfo())
+	}
+	if resp.GetInfo().GetCommitHash() != "abc123" {
+		t.Fatalf("unexpected commit hash: %#v", resp.GetInfo())
+	}
+	if resp.GetInfo().GetBuildTime() == nil {
+		t.Fatalf("expected build time to be set")
+	}
+}
+
+func TestMetaServiceServerInformationRespectsRateLimit(t *testing.T) {
+	limiter := ratelimitapp.NewService(&serverRateLimitRepoMock{
+		allowFn: func(_ context.Context, bucket ratelimitdomain.Bucket, key string, rule ratelimitdomain.Rule) (bool, time.Duration, error) {
+			if bucket != ratelimitdomain.MetaBucket {
+				t.Fatalf("unexpected bucket: %v", bucket)
+			}
+			if key != "203.0.113.10" {
+				t.Fatalf("unexpected key: %q", key)
+			}
+			return false, time.Minute, nil
+		},
+	}, ratelimitdomain.Rules{
+		Meta: ratelimitdomain.Rule{Limit: 1, Window: time.Minute},
+	})
+
+	server := NewMetaService(metaapp.NewService(), limiter)
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs("x-real-ip", "203.0.113.10"))
+
+	_, err := server.ServerInformation(ctx, &emptypb.Empty{})
+	if !errors.Is(err, apperrors.ResourceExhausted) {
+		t.Fatalf("expected rate limit error, got %v", err)
+	}
+}
+
+func TestMetaServiceClientCompatibilityValidatesRequest(t *testing.T) {
+	server := NewMetaService(metaapp.NewService())
+
+	_, err := server.ClientCompatibility(context.Background(), &metapb.CompatibilityRequest{})
+	if !errors.Is(err, apperrors.InvalidArguments) {
+		t.Fatalf("expected invalid arguments, got %v", err)
 	}
 }

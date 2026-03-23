@@ -61,6 +61,9 @@ services:
     build:
       context: .
       dockerfile: server/Dockerfile
+      args:
+        COMMIT_HASH: ${COMMIT_HASH:-dev}
+        BUILD_TIME: ${BUILD_TIME:-1970-01-01T00:00:00Z}
     restart: unless-stopped
     depends_on:
       db:
@@ -80,6 +83,7 @@ services:
       BOOT_PORT: ${BOOT_PORT:-50051}
       LOG_SERVICE: ${LOG_SERVICE:-secureguard}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      SERVER_NAME: ${SERVER_NAME:-SecureGuard Server}
       KAFKA_ENABLED: ${KAFKA_ENABLED:-true}
       KAFKA_BROKERS: ${DOCKER_KAFKA_BROKERS:-kafka:9092}
       KAFKA_TOPIC: ${KAFKA_TOPIC:-secureguard.logs}
@@ -93,6 +97,8 @@ services:
       RATE_LIMIT_AUTHORIZE_WINDOW_SEC: ${RATE_LIMIT_AUTHORIZE_WINDOW_SEC:-900}
       RATE_LIMIT_REGISTER_LIMIT: ${RATE_LIMIT_REGISTER_LIMIT:-5}
       RATE_LIMIT_REGISTER_WINDOW_SEC: ${RATE_LIMIT_REGISTER_WINDOW_SEC:-3600}
+      RATE_LIMIT_META_LIMIT: ${RATE_LIMIT_META_LIMIT:-60}
+      RATE_LIMIT_META_WINDOW_SEC: ${RATE_LIMIT_META_WINDOW_SEC:-60}
       DEBUG_MODE: ${DEBUG_MODE:-false}
     expose:
       - "${BOOT_PORT:-50051}"

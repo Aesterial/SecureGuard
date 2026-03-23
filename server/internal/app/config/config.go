@@ -119,6 +119,11 @@ func ensure() {
 			AuthorizeWindowSeconds: parseType("RATE_LIMIT_AUTHORIZE_WINDOW_SEC", 900),
 			RegisterLimit:          parseType("RATE_LIMIT_REGISTER_LIMIT", 5),
 			RegisterWindowSeconds:  parseType("RATE_LIMIT_REGISTER_WINDOW_SEC", 3600),
+			MetaLimit:              parseType("RATE_LIMIT_META_LIMIT", 60),
+			MetaWindowSeconds:      parseType("RATE_LIMIT_META_WINDOW_SEC", 60),
+		},
+		Metadata: cfgdomain.Metadata{
+			ServerName: parseType("SERVER_NAME", "SecureGuard Server"),
 		},
 		Crypt: cfgdomain.Crypt{
 			Pepper:        envValue("SERVER_PEPPER"),

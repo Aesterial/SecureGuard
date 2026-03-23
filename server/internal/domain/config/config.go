@@ -35,6 +35,12 @@ type RateLimit struct {
 	AuthorizeWindowSeconds int
 	RegisterLimit          int
 	RegisterWindowSeconds  int
+	MetaLimit              int
+	MetaWindowSeconds      int
+}
+
+type Metadata struct {
+	ServerName string
 }
 
 type Crypt struct {
@@ -53,6 +59,7 @@ type Config struct {
 	Kafka     Kafka
 	Redis     Redis
 	RateLimit RateLimit
+	Metadata  Metadata
 	Crypt     Crypt
 
 	Debug  bool

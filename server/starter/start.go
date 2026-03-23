@@ -7,20 +7,24 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	configapp "github.com/aesterial/secureguard/internal/app/config"
 	loginapp "github.com/aesterial/secureguard/internal/app/login"
+	metaapp "github.com/aesterial/secureguard/internal/app/meta"
 	passapp "github.com/aesterial/secureguard/internal/app/passwords"
 	sessionsapp "github.com/aesterial/secureguard/internal/app/sessions"
 	statsapp "github.com/aesterial/secureguard/internal/app/stats"
 	usersapp "github.com/aesterial/secureguard/internal/app/users"
 	interceptors "github.com/aesterial/secureguard/internal/infra/server/interceptors"
+	sharedmetadata "github.com/aesterial/secureguard/internal/shared/metadata"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	metapb "github.com/aesterial/secureguard/internal/api/v1/meta/v1"
 	logging "github.com/aesterial/secureguard/internal/app/logging"
 	ratelimitapp "github.com/aesterial/secureguard/internal/app/ratelimit"
 	ratelimitdomain "github.com/aesterial/secureguard/internal/domain/ratelimit"
@@ -38,6 +42,9 @@ import (
 
 func main() {
 	cfg := configapp.Get()
+	sharedmetadata.ServerName = cfg.Metadata.ServerName
+	sharedmetadata.CommitHash = fillEmpty(sharedmetadata.CommitHash, strings.TrimSpace(os.Getenv("COMMIT_HASH")))
+	sharedmetadata.BuildTime = fillEmpty(sharedmetadata.BuildTime, strings.TrimSpace(os.Getenv("BUILD_TIME")))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -91,8 +98,9 @@ func main() {
 	passService := passapp.NewPassService(passRepo)
 	statsService := statsapp.NewStatsService(statsRepo)
 	statsWorker := statsapp.NewPersistenceWorker(statsRepo)
+	metaService := metaapp.NewService()
 	loginService := loginapp.NewLoginService(usrRepo, sesService)
-	loginLimiter := ratelimitapp.NewService(
+	rateLimiter := ratelimitapp.NewService(
 		limiterBackend,
 		ratelimitdomain.Rules{
 			Authorize: ratelimitdomain.Rule{
@@ -103,12 +111,17 @@ func main() {
 				Limit:  cfg.RateLimit.RegisterLimit,
 				Window: time.Duration(cfg.RateLimit.RegisterWindowSeconds) * time.Second,
 			},
+			Meta: ratelimitdomain.Rule{
+				Limit:  cfg.RateLimit.MetaLimit,
+				Window: time.Duration(cfg.RateLimit.MetaWindowSeconds) * time.Second,
+			},
 		},
 	)
 
 	authentificator := server.NewAuthentificator(sesService, usrService)
 	usrServer := server.NewUserService(usrService, authentificator)
-	loginServer := server.NewLoginService(usrService, loginService, authentificator, loginLimiter)
+	loginServer := server.NewLoginService(usrService, loginService, authentificator, rateLimiter)
+	metaServer := server.NewMetaService(metaService, rateLimiter)
 	passServer := server.NewPasswordsService(passService, authentificator)
 	statsServer := server.NewStatsService(statsService, authentificator)
 	sessionsServer := server.NewSessionsService(sesService, authentificator)
@@ -124,6 +137,7 @@ func main() {
 	if cfg.Debug {
 		reflection.Register(server)
 	}
+	metapb.RegisterMetaServiceServer(server, metaServer)
 	loginpb.RegisterLoginServiceServer(server, loginServer)
 	userpb.RegisterUserServiceServer(server, usrServer)
 	passpb.RegisterPasswordServiceServer(server, passServer)
@@ -162,4 +176,11 @@ func main() {
 			logging.Critical("grpc server crashed", logging.F("error", err.Error()))
 		}
 	}
+}
+
+func fillEmpty(current string, fallback string) string {
+	if strings.TrimSpace(current) != "" {
+		return current
+	}
+	return fallback
 }

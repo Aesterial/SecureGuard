@@ -32,6 +32,11 @@ if not exist "%SERVER_DIR%\go.mod" (
     exit /b 1
 )
 
+set "GIT_BRANCH="
+set "GIT_COMMIT=dev"
+set "BUILD_TIME=1970-01-01T00:00:00Z"
+set "GIT_CAN_UPDATE="
+
 echo [*] Stopping previous app instances...
 taskkill /F /IM SecureGuard.exe      >nul 2>&1
 taskkill /F /IM secureguard.exe      >nul 2>&1
@@ -44,22 +49,63 @@ echo  [BACKEND] backend only
 echo  [CLIENT]  client only
 echo.
 
-set "TARGET="
-set /p TARGET="Target (full/backend/client): "
-if not defined TARGET set "TARGET=full"
+set "RUN_TARGET="
+set /p RUN_TARGET="Target (full/backend/client): "
+if not defined RUN_TARGET set "RUN_TARGET=full"
 
 set "RUN_BACKEND=1"
 set "RUN_CLIENT=1"
 
-if /I "%TARGET%"=="backend" set "RUN_CLIENT="
-if /I "%TARGET%"=="client" set "RUN_BACKEND="
+if /I "%RUN_TARGET%"=="backend" set "RUN_CLIENT="
+if /I "%RUN_TARGET%"=="client" set "RUN_BACKEND="
 
-if /I not "%TARGET%"=="full" if /I not "%TARGET%"=="backend" if /I not "%TARGET%"=="client" (
-    echo [!] Unknown target '%TARGET%'. Using 'full'.
-    set "TARGET=full"
+if /I not "%RUN_TARGET%"=="full" if /I not "%RUN_TARGET%"=="backend" if /I not "%RUN_TARGET%"=="client" (
+    echo [!] Unknown target '%RUN_TARGET%'. Using 'full'.
+    set "RUN_TARGET=full"
     set "RUN_BACKEND=1"
     set "RUN_CLIENT=1"
 )
+
+if exist "%ROOT%\.git\" (
+    where git >nul 2>&1
+    if errorlevel 1 (
+        echo [!] Git is not installed. Skipping repository update.
+    ) else (
+        set "GIT_CAN_UPDATE=1"
+        for /f "delims=" %%A in ('git rev-parse --abbrev-ref HEAD 2^>nul') do set "GIT_BRANCH=%%A"
+        if defined GIT_BRANCH (
+            echo [*] Checking repository state...
+            set "GIT_DIRTY="
+            for /f "delims=" %%A in ('git status --porcelain --untracked-files=normal 2^>nul') do (
+                set "GIT_DIRTY=1"
+            )
+            if defined GIT_DIRTY (
+                echo [!] Repository has local changes. Skipping git pull.
+            ) else (
+                if /I "!GIT_BRANCH!"=="HEAD" (
+                    echo [!] Detached HEAD detected. Skipping git pull.
+                ) else (
+                    echo [*] Pulling latest commit for branch !GIT_BRANCH!...
+                    git fetch --prune >nul 2>&1
+                    if errorlevel 1 (
+                        echo [!] git fetch failed. Continuing with current checkout.
+                    ) else (
+                        git pull --ff-only origin "!GIT_BRANCH!"
+                        if errorlevel 1 (
+                            echo [!] git pull failed. Continuing with current checkout.
+                        )
+                    )
+                )
+            )
+        )
+    )
+)
+
+if defined GIT_CAN_UPDATE (
+    for /f "delims=" %%A in ('git rev-parse HEAD 2^>nul') do set "GIT_COMMIT=%%A"
+)
+for /f "delims=" %%A in ('powershell -NoProfile -Command "(Get-Date).ToUniversalTime().ToString(\"yyyy-MM-ddTHH:mm:ssZ\")"') do set "BUILD_TIME=%%A"
+echo [*] Build metadata: commit !GIT_COMMIT!, build time !BUILD_TIME!
 
 if not exist "%SERVER_ENV%" (
     echo [*] Creating backend .env with local defaults...
@@ -75,6 +121,7 @@ if not exist "%SERVER_ENV%" (
             echo POSTGRES_NAME=secureguard
             echo POSTGRES_TLS=false
             echo BOOT_PORT=8080
+            echo SERVER_NAME=SecureGuard Server
             echo REDIS_ADDR=127.0.0.1:6379
             echo REDIS_PASSWORD=
             echo REDIS_DB=0
@@ -93,6 +140,7 @@ if not exist "%SERVER_ENV%" (
             echo BOOT_PORT=8080
             echo LOG_SERVICE=secureguard
             echo LOG_LEVEL=info
+            echo SERVER_NAME=SecureGuard Server
             echo REDIS_ADDR=127.0.0.1:6379
             echo REDIS_PASSWORD=
             echo REDIS_DB=0
@@ -119,6 +167,7 @@ set "KAFKA_ENABLED=false"
 set "KAFKA_BROKERS=127.0.0.1:9092"
 set "KAFKA_TOPIC=secureguard.logs"
 set "KAFKA_CLIENT_ID=secureguard-backend"
+set "SERVER_NAME_EFFECTIVE=SecureGuard Server"
 
 for /f "usebackq tokens=1,* delims==" %%A in ("%SERVER_ENV%") do (
     set "K=%%~A"
@@ -138,6 +187,7 @@ for /f "usebackq tokens=1,* delims==" %%A in ("%SERVER_ENV%") do (
     if /I "!K!"=="KAFKA_BROKERS" set "KAFKA_BROKERS=!V!"
     if /I "!K!"=="KAFKA_TOPIC" set "KAFKA_TOPIC=!V!"
     if /I "!K!"=="KAFKA_CLIENT_ID" set "KAFKA_CLIENT_ID=!V!"
+    if /I "!K!"=="SERVER_NAME" set "SERVER_NAME_EFFECTIVE=!V!"
 )
 
 if not defined BACKEND_PORT set "BACKEND_PORT=50051"
@@ -351,7 +401,22 @@ if defined KAFKA_REQUIRED (
 )
 
 echo [*] Starting backend in a separate window...
-start "SecureGuard Backend" cmd /k "set REDIS_ADDR=!REDIS_EFFECTIVE_ADDR! && set RATE_LIMIT_ENABLED=!RATE_LIMIT_EFFECTIVE! && set KAFKA_ENABLED=!KAFKA_EFFECTIVE_ENABLED! && set KAFKA_BROKERS=!KAFKA_EFFECTIVE_BROKERS! && cd /d ""%SERVER_DIR%"" && go run ."
+set "GO_LDFLAGS=-X github.com/aesterial/secureguard/internal/shared/metadata.CommitHash=!GIT_COMMIT! -X github.com/aesterial/secureguard/internal/shared/metadata.BuildTime=!BUILD_TIME!"
+set "BACKEND_LAUNCHER=%TEMP%\secureguard-backend-run.cmd"
+(
+    echo @echo off
+    echo setlocal EnableExtensions
+    echo set "REDIS_ADDR=!REDIS_EFFECTIVE_ADDR!"
+    echo set "RATE_LIMIT_ENABLED=!RATE_LIMIT_EFFECTIVE!"
+    echo set "KAFKA_ENABLED=!KAFKA_EFFECTIVE_ENABLED!"
+    echo set "KAFKA_BROKERS=!KAFKA_EFFECTIVE_BROKERS!"
+    echo set "SERVER_NAME=!SERVER_NAME_EFFECTIVE!"
+    echo set "COMMIT_HASH=!GIT_COMMIT!"
+    echo set "BUILD_TIME=!BUILD_TIME!"
+    echo cd /d "%SERVER_DIR%"
+    echo go run -ldflags^="%GO_LDFLAGS%" .
+) > "!BACKEND_LAUNCHER!"
+start "SecureGuard Backend" cmd /k ""!BACKEND_LAUNCHER!""
 set "BACKEND_RUNNING=1"
 timeout /t 2 /nobreak >nul
 

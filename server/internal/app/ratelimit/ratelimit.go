@@ -30,6 +30,13 @@ func (s *Service) AllowRegister(ctx context.Context, ip string) error {
 	return s.allow(ctx, ratelimitdomain.RegisterBucket, ip, s.rules.Register)
 }
 
+func (s *Service) AllowMeta(ctx context.Context, ip string) error {
+	if s == nil {
+		return nil
+	}
+	return s.allow(ctx, ratelimitdomain.MetaBucket, ip, s.rules.Meta)
+}
+
 func (s *Service) allow(ctx context.Context, bucket ratelimitdomain.Bucket, ip string, rule ratelimitdomain.Rule) error {
 	if s == nil || s.repo == nil || rule.IsZero() {
 		return nil

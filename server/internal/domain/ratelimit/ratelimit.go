@@ -11,6 +11,7 @@ type Bucket string
 const (
 	AuthorizeBucket Bucket = "authorize"
 	RegisterBucket  Bucket = "register"
+	MetaBucket      Bucket = "meta"
 )
 
 type Rule struct {
@@ -25,6 +26,7 @@ func (r Rule) IsZero() bool {
 type Rules struct {
 	Authorize Rule
 	Register  Rule
+	Meta      Rule
 }
 
 func FirstForwardedIP(value string) string {
