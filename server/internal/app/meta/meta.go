@@ -30,7 +30,7 @@ func (s *Service) CheckCompability(clientVer float32, clientType metapb.ClientTy
 	default:
 		reasons = append(reasons, "unsupported client type")
 	}
-	return (correctVer == true) && (correctClient == true), reasons
+	return correctVer && correctClient, reasons
 }
 
 func (s *Service) ServerInformation() *metadomain.ServerInfo {

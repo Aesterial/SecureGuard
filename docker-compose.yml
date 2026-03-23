@@ -57,7 +57,7 @@ services:
       retries: 20
 
   backend:
-    image: aesterial/secureguard:1.1
+    image: aesterial/secureguard:1.1.1
     build:
       context: .
       dockerfile: server/Dockerfile
