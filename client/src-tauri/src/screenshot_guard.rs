@@ -5,16 +5,6 @@ use winapi::shared::windef::*;
 #[cfg(target_os = "windows")]
 use winapi::um::errhandlingapi::*;
 #[cfg(target_os = "windows")]
-use winapi::um::handleapi::*;
-#[cfg(target_os = "windows")]
-use winapi::um::libloaderapi::*;
-#[cfg(target_os = "windows")]
-use winapi::um::processthreadsapi::*;
-#[cfg(target_os = "windows")]
-use winapi::um::tlhelp32::*;
-#[cfg(target_os = "windows")]
-use winapi::um::winnt::PROCESS_TERMINATE;
-#[cfg(target_os = "windows")]
 use winapi::um::winuser::*;
 
 use once_cell::sync::OnceCell;
@@ -159,173 +149,12 @@ unsafe fn window_affinity_matches(hwnd: HWND, expected: DWORD) -> bool {
 }
 
 #[cfg(target_os = "windows")]
-unsafe fn terminate_process(pid: u32) {
-    if pid == 0 {
-        return;
-    }
-
-    let handle = OpenProcess(PROCESS_TERMINATE, 0, pid);
-    if handle.is_null() {
-        return;
-    }
-
-    let _ = TerminateProcess(handle, 1);
-    CloseHandle(handle);
-}
-
-#[cfg(target_os = "windows")]
-fn install_keyboard_hook() {
-    unsafe {
-        let hook = SetWindowsHookExW(
-            WH_KEYBOARD_LL,
-            Some(keyboard_proc),
-            GetModuleHandleW(ptr::null()),
-            0,
-        );
-
-        if hook.is_null() {
-            return;
-        }
-        let mut msg: MSG = std::mem::zeroed();
-        while GetMessageW(&mut msg, ptr::null_mut(), 0, 0) > 0 {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-
-        UnhookWindowsHookEx(hook);
-    }
-}
-#[cfg(target_os = "windows")]
-unsafe extern "system" fn keyboard_proc(code: i32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
-    if code == HC_ACTION as i32 {
-        let kb = *(l_param as *const KBDLLHOOKSTRUCT);
-
-        if !PROTECTION_ON.load(Ordering::SeqCst) {
-            return CallNextHookEx(ptr::null_mut(), code, w_param, l_param);
-        }
-
-        if kb.vkCode == 0x2C {
-            clear_clipboard();
-            return 1;
-        }
-        if kb.vkCode == 0x53 {
-            let win = GetAsyncKeyState(VK_LWIN) as u16 & 0x8000 != 0
-                || GetAsyncKeyState(VK_RWIN) as u16 & 0x8000 != 0;
-            let shift = GetAsyncKeyState(VK_SHIFT) as u16 & 0x8000 != 0;
-
-            if win && shift {
-                clear_clipboard();
-                return 1;
-            }
-        }
-        if kb.vkCode == 0x2C {
-            let alt = GetAsyncKeyState(VK_MENU) as u16 & 0x8000 != 0;
-            if alt {
-                clear_clipboard();
-                return 1;
-            }
-        }
-    }
-
-    CallNextHookEx(ptr::null_mut(), code, w_param, l_param)
-}
-#[cfg(target_os = "windows")]
 unsafe fn clear_clipboard() {
     if OpenClipboard(ptr::null_mut()) != 0 {
         EmptyClipboard();
         CloseClipboard();
     }
 }
-#[cfg(target_os = "windows")]
-fn monitor_capture_tools() {
-    let tools = [
-        "sharex.exe",
-        "lightshot.exe",
-        "greenshot.exe",
-        "snippingtool.exe",
-        "screenclippinghost.exe",
-        "screensketch.exe",
-        "snagit.exe",
-        "snagit32.exe",
-        "picpick.exe",
-        "gyazo.exe",
-        "gyazowin.exe",
-        "flameshot.exe",
-        "screenpresso.exe",
-        "monosnap.exe",
-        "nimbus screenshot.exe",
-        "joxi.exe",
-        "clip2net.exe",
-        "obs64.exe",
-        "obs32.exe",
-        "obs.exe",
-        "streamlabs obs.exe",
-        "bandicam.exe",
-        "bdcam.exe",
-        "camtasia.exe",
-        "camrecorder.exe",
-        "fraps.exe",
-        "action.exe",
-        "xsplit.exe",
-        "gamebar.exe",
-        "gamebarpresencewriter.exe",
-        "clipboardfusion.exe",
-        "ditto.exe",
-        "peek.exe",
-    ];
-
-    loop {
-        if !PROTECTION_ON.load(Ordering::SeqCst) {
-            thread::sleep(Duration::from_secs(5));
-            continue;
-        }
-
-        unsafe {
-            let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-            if snapshot == INVALID_HANDLE_VALUE {
-                thread::sleep(Duration::from_secs(3));
-                continue;
-            }
-
-            let mut entry: PROCESSENTRY32 = std::mem::zeroed();
-            entry.dwSize = std::mem::size_of::<PROCESSENTRY32>() as u32;
-
-            if Process32First(snapshot, &mut entry) != 0 {
-                loop {
-                    let name_bytes: Vec<u8> = entry
-                        .szExeFile
-                        .iter()
-                        .take_while(|&&c| c != 0)
-                        .map(|&c| c as u8)
-                        .collect();
-
-                    if let Ok(name) = String::from_utf8(name_bytes) {
-                        let lower = name.to_lowercase();
-                        for tool in &tools {
-                            if lower.contains(tool) {
-                                if let Some(&hwnd) = WINDOW_HWND.get() {
-                                    apply_display_affinity(hwnd as HWND);
-                                }
-                                terminate_process(entry.th32ProcessID);
-                                clear_clipboard();
-                                break;
-                            }
-                        }
-                    }
-
-                    if Process32Next(snapshot, &mut entry) == 0 {
-                        break;
-                    }
-                }
-            }
-
-            CloseHandle(snapshot);
-        }
-
-        thread::sleep(Duration::from_secs(3));
-    }
-}
-
 #[cfg(target_os = "windows")]
 fn monitor_clipboard(_hwnd: HWND) {
     loop {

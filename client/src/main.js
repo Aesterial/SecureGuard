@@ -68,6 +68,9 @@ var I18N = {
     "settings.language.desc": "Выберите язык интерфейса приложения.",
     "settings.language.ru": "Русский",
     "settings.language.en": "English",
+    "settings.dpi.title": "Масштаб интерфейса",
+    "settings.dpi.desc":
+      "Меняет DPI/масштаб самой приложухи без изменения системного масштаба.",
     "settings.encryption.title": "Алгоритм шифрования",
     "settings.encryption.desc":
       "Выберите способ шифрования паролей сид-фразой.",
@@ -145,6 +148,7 @@ var I18N = {
     "notify.copied": "Скопировано",
     "notify.screenshotsBlocked": "Скриншоты заблокированы",
     "notify.languageChanged": "Язык интерфейса изменён",
+    "notify.dpiChanged": "Масштаб интерфейса: {value}",
     "notify.encryptionChanged": "Алгоритм шифрования обновлён",
 
     "error.fillAllFields": "Заполните все поля",
@@ -171,6 +175,61 @@ var I18N = {
     "error.notAuthenticated": "Вы не авторизованы",
     "error.entryNotFound": "Запись не найдена",
     "error.commandUnavailable": "Команда недоступна: {command}",
+    "error.backendTransport":
+      "Не удалось подключиться к серверу. Проверьте endpoint, TLS и доступность gRPC.",
+    "settings.backend.title": "Backend",
+    "settings.backend.desc":
+      "Выберите production endpoint или укажите свой HTTP/HTTPS-адрес без path и query.",
+    "settings.backend.production": "Production",
+    "settings.backend.custom": "Custom URL",
+    "settings.backend.customPlaceholder": "http://127.0.0.1:8080",
+    "settings.backend.effective": "Effective endpoint",
+    "settings.backend.statusTitle": "Статус сервера",
+    "settings.backend.statusIdle":
+      "Укажите endpoint и нажмите «Применить», чтобы проверить сервер.",
+    "settings.backend.statusChecking": "Проверка сервера...",
+    "settings.backend.statusHealthy": "Сервер доступен и отвечает.",
+    "settings.backend.statusUnreachable":
+      "Не удалось подключиться к серверу.",
+    "settings.backend.compatible": "Совместим",
+    "settings.backend.incompatible": "Несовместим",
+    "settings.backend.unreachable": "Недоступен",
+    "settings.backend.checking": "Проверка",
+    "settings.backend.notChecked": "Не проверен",
+    "settings.backend.serverName": "Сервер",
+    "settings.backend.serverVersion": "Версия сборки",
+    "settings.backend.runtimeVersion": "Go runtime",
+    "settings.backend.buildTime": "Время сборки",
+    "settings.backend.commit": "Commit",
+    "settings.backend.repository": "Repository",
+    "settings.backend.clientApi": "API клиента",
+    "settings.backend.supportedApi": "Поддерживаемые API",
+    "settings.backend.reasons": "Причины несовместимости",
+    "settings.backend.unknown": "Нет данных",
+    "settings.backend.apply": "Применить",
+    "settings.sessions.title": "Активные сессии",
+    "settings.sessions.desc":
+      "Просмотр активных устройств и отключение других сессий пользователя.",
+    "settings.sessions.refresh": "Обновить",
+    "settings.sessions.loading": "Загрузка сессий...",
+    "settings.sessions.empty": "Других активных сессий пока нет.",
+    "settings.sessions.authRequired": "Войдите в аккаунт, чтобы управлять сессиями.",
+    "settings.sessions.current": "Текущее устройство",
+    "settings.sessions.other": "Устройство",
+    "settings.sessions.disconnect": "Отключить",
+    "settings.sessions.created": "Создана",
+    "settings.sessions.lastSeen": "Последняя активность",
+    "settings.sessions.expires": "Истекает",
+    "settings.sessions.id": "ID",
+    "settings.sessions.unknown": "Нет данных",
+    "notify.backendApplied": "Backend endpoint обновлён",
+    "notify.backendChangedReauth":
+      "Backend изменён. Войдите заново, чтобы продолжить.",
+    "notify.sessionRevoked": "Сессия отключена",
+    "error.backendEndpointInvalid": "Некорректный backend endpoint",
+    "error.backendApply": "Не удалось применить backend endpoint",
+    "error.sessionsLoad": "Не удалось загрузить список сессий",
+    "error.sessionRevoke": "Не удалось отключить сессию",
   },
   en: {
     "common.admin": "Admin panel",
@@ -232,6 +291,9 @@ var I18N = {
     "settings.language.desc": "Choose the application interface language.",
     "settings.language.ru": "Russian",
     "settings.language.en": "English",
+    "settings.dpi.title": "Interface scale",
+    "settings.dpi.desc":
+      "Adjusts the app DPI/scale without changing system display settings.",
     "settings.encryption.title": "Encryption algorithm",
     "settings.encryption.desc":
       "Choose how passwords are encrypted with your local seed phrase.",
@@ -296,6 +358,7 @@ var I18N = {
     "notify.copied": "Copied",
     "notify.screenshotsBlocked": "Screenshots are blocked",
     "notify.languageChanged": "Interface language changed",
+    "notify.dpiChanged": "Interface scale: {value}",
     "notify.encryptionChanged": "Encryption algorithm updated",
     "error.fillAllFields": "Fill in all fields",
     "error.loginMin": "Username: minimum 3 characters",
@@ -321,6 +384,61 @@ var I18N = {
     "error.notAuthenticated": "Not authenticated",
     "error.entryNotFound": "Entry not found",
     "error.commandUnavailable": "Command unavailable: {command}",
+    "error.backendTransport":
+      "Could not connect to the server. Check the endpoint, TLS, and gRPC availability.",
+    "settings.backend.title": "Backend",
+    "settings.backend.desc":
+      "Choose the production endpoint or provide a custom HTTP/HTTPS URL without path or query.",
+    "settings.backend.production": "Production",
+    "settings.backend.custom": "Custom URL",
+    "settings.backend.customPlaceholder": "http://127.0.0.1:8080",
+    "settings.backend.effective": "Effective endpoint",
+    "settings.backend.statusTitle": "Server status",
+    "settings.backend.statusIdle":
+      "Set an endpoint and click Apply to check the server.",
+    "settings.backend.statusChecking": "Checking server...",
+    "settings.backend.statusHealthy": "The server is reachable and responding.",
+    "settings.backend.statusUnreachable":
+      "The client could not connect to the server.",
+    "settings.backend.compatible": "Compatible",
+    "settings.backend.incompatible": "Incompatible",
+    "settings.backend.unreachable": "Unavailable",
+    "settings.backend.checking": "Checking",
+    "settings.backend.notChecked": "Not checked",
+    "settings.backend.serverName": "Server",
+    "settings.backend.serverVersion": "Build version",
+    "settings.backend.runtimeVersion": "Go runtime",
+    "settings.backend.buildTime": "Build time",
+    "settings.backend.commit": "Commit",
+    "settings.backend.repository": "Repository",
+    "settings.backend.clientApi": "Client API",
+    "settings.backend.supportedApi": "Supported API",
+    "settings.backend.reasons": "Compatibility details",
+    "settings.backend.unknown": "Unknown",
+    "settings.backend.apply": "Apply",
+    "settings.sessions.title": "Active sessions",
+    "settings.sessions.desc":
+      "View active devices and disconnect other user sessions.",
+    "settings.sessions.refresh": "Refresh",
+    "settings.sessions.loading": "Loading sessions...",
+    "settings.sessions.empty": "No other active sessions yet.",
+    "settings.sessions.authRequired": "Sign in to manage sessions.",
+    "settings.sessions.current": "Current device",
+    "settings.sessions.other": "Device",
+    "settings.sessions.disconnect": "Disconnect",
+    "settings.sessions.created": "Created",
+    "settings.sessions.lastSeen": "Last seen",
+    "settings.sessions.expires": "Expires",
+    "settings.sessions.id": "ID",
+    "settings.sessions.unknown": "No data",
+    "notify.backendApplied": "Backend endpoint updated",
+    "notify.backendChangedReauth":
+      "Backend changed. Sign in again to continue.",
+    "notify.sessionRevoked": "Session disconnected",
+    "error.backendEndpointInvalid": "Invalid backend endpoint",
+    "error.backendApply": "Failed to apply backend endpoint",
+    "error.sessionsLoad": "Failed to load sessions",
+    "error.sessionRevoke": "Failed to disconnect session",
   },
 };
 
@@ -340,12 +458,19 @@ var MESSAGE_KEY_BY_TEXT = {
   Copied: "notify.copied",
   "Аккаунт создан! Теперь войдите.": "notify.accountCreatedLogin",
   "Account created! Sign in.": "notify.accountCreatedLogin",
+  "Invalid backend endpoint": "error.backendEndpointInvalid",
 };
 
 var SETTINGS_KEY = "secureguard.settings.v1";
 var MASTER_KEY_ENVELOPES_KEY = "secureguard.master-keys.v1";
 var ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID = "aes256gcm-argon2id";
 var ENCRYPTION_ALGORITHM_AES256_GCM_SHA256 = "aes256gcm-sha256";
+var DEFAULT_BACKEND_ENDPOINT = "http://127.0.0.1:8080";
+var BACKEND_MODE_PRODUCTION = "production";
+var BACKEND_MODE_CUSTOM = "custom";
+var CLIENT_API_VERSION = 1.0;
+var DEFAULT_UI_SCALE = 1;
+var UI_SCALE_OPTIONS = [0.9, 1, 1.1, 1.25, 1.5];
 var DEFAULT_CLIPBOARD_TIMEOUT_SECONDS = 30;
 
 var DEFAULT_SETTINGS = {
@@ -358,7 +483,10 @@ var DEFAULT_SETTINGS = {
   confirmDelete: true,
   blockContextMenu: true,
   language: "ru",
+  uiScale: DEFAULT_UI_SCALE,
   encryptionAlgorithm: ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID,
+  backendMode: BACKEND_MODE_PRODUCTION,
+  backendCustomUrl: "",
 };
 
 function bootstrapApp(retriesLeft) {
@@ -392,8 +520,11 @@ function createFallbackInvoke() {
   var currentUser = null;
   var nextId = 1;
   var entries = [];
+  var backendEndpoint = DEFAULT_BACKEND_ENDPOINT;
   var screenshotGuardEnabled = true;
   var startupEnabled = false;
+  var currentSessionId = "";
+  var sessions = [];
   var users = {
     test: { password: "test", staff: true },
   };
@@ -429,8 +560,92 @@ function createFallbackInvoke() {
     },
   };
 
+  function resetFallbackAuth() {
+    authenticated = false;
+    currentUser = null;
+    currentSessionId = "";
+    entries = [];
+    sessions = [];
+  }
+
+  function buildFallbackSession(id, isCurrent, createdAt, expiresAt, lastSeenAt) {
+    return {
+      id: id,
+      is_current: !!isCurrent,
+      created_at_unix: createdAt,
+      expires_at_unix: expiresAt,
+      last_seen_unix: lastSeenAt,
+    };
+  }
+
+  function buildFallbackSessions() {
+    var now = Math.floor(Date.now() / 1000);
+    var current = buildFallbackSession(
+      currentSessionId,
+      true,
+      now - 900,
+      now + 86400,
+      now,
+    );
+    var otherA = buildFallbackSession(
+      "fallback-session-2",
+      false,
+      now - 7200,
+      now + 43200,
+      now - 1800,
+    );
+    var otherB = buildFallbackSession(
+      "fallback-session-3",
+      false,
+      now - 172800,
+      now + 21600,
+      now - 14400,
+    );
+    sessions = [current, otherA, otherB];
+  }
+
   return async function (command, args) {
     args = args || {};
+
+    if (command === "get_backend_endpoint") {
+      return backendEndpoint;
+    }
+
+    if (command === "set_backend_endpoint") {
+      var nextEndpoint = validateBackendEndpoint(args.endpoint);
+      var changed = nextEndpoint !== backendEndpoint;
+      var reauthRequired = changed && authenticated;
+      backendEndpoint = nextEndpoint;
+      if (changed) {
+        resetFallbackAuth();
+      }
+      return {
+        endpoint: backendEndpoint,
+        reauth_required: reauthRequired,
+      };
+    }
+
+    if (command === "probe_backend_server") {
+      return {
+        endpoint: backendEndpoint,
+        healthy: true,
+        health_error: "",
+        compatibility_checked: true,
+        compatible: true,
+        compatibility_error: "",
+        reasons: [],
+        client_api_version: CLIENT_API_VERSION,
+        info: {
+          name: "SecureGuard Server",
+          version: "1.1.1",
+          runtime_version: "go1.24.0",
+          supported_api_versions: [1.0],
+          commit_hash: "fallback-demo",
+          repository: "https://github.com/aesterial/secureguard",
+          build_time_unix: Math.floor(Date.now() / 1000) - 3600,
+        },
+      };
+    }
 
     if (command === "login") {
       var loginUser = (args.username || "").trim();
@@ -451,6 +666,8 @@ function createFallbackInvoke() {
         language: "ru",
         encryption_algorithm: ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID,
       };
+      currentSessionId = "fallback-session-1";
+      buildFallbackSessions();
       return currentUser;
     }
 
@@ -485,9 +702,7 @@ function createFallbackInvoke() {
     }
 
     if (command === "logout") {
-      authenticated = false;
-      currentUser = null;
-      entries = [];
+      resetFallbackAuth();
       return;
     }
 
@@ -497,6 +712,27 @@ function createFallbackInvoke() {
 
     if (command === "get_session_user") {
       return currentUser;
+    }
+
+    if (command === "list_sessions") {
+      if (!authenticated) {
+        throw "Р’С‹ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅС‹";
+      }
+      return sessions.slice();
+    }
+
+    if (command === "revoke_session") {
+      if (!authenticated) {
+        throw "Р’С‹ РЅРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅС‹";
+      }
+      var revokeId = String(args.sessionId || args.session_id || "").trim();
+      if (!revokeId) {
+        throw "Not found";
+      }
+      sessions = sessions.filter(function (item) {
+        return item.id !== revokeId;
+      });
+      return;
     }
 
     if (command === "get_screenshot_guard_status") {
@@ -635,6 +871,10 @@ function initApp(invoke) {
   var notifTimer = null;
   var autoLockTimer = null;
   var authenticated = false;
+  var currentBackendEndpoint = DEFAULT_BACKEND_ENDPOINT;
+  var backendDraftMode = BACKEND_MODE_PRODUCTION;
+  var backendDraftCustomUrl = "";
+  var backendSyncInProgress = false;
   var settingsSyncInProgress = false;
   var startupSyncInProgress = false;
   var preferenceSyncInProgress = {
@@ -648,10 +888,19 @@ function initApp(invoke) {
   var currentUser = null;
   var adminStats = null;
   var adminStatsLoading = false;
+  var sessionSummaries = [];
+  var sessionsLoading = false;
+  var sessionActionId = "";
+  var serverProbeInProgress = false;
+  var lastProbedBackendEndpoint = "";
+  var serverStatus = createEmptyServerStatus();
 
   var loaded = loadSettings();
   var appSettings = loaded.settings;
   var hasStoredSettings = loaded.hasStored;
+  currentBackendEndpoint = getSafeSettingsBackendEndpoint(appSettings);
+  backendDraftMode = appSettings.backendMode;
+  backendDraftCustomUrl = appSettings.backendCustomUrl;
 
   var pages = {
     login: document.getElementById("page-login"),
@@ -672,10 +921,25 @@ function initApp(invoke) {
     confirmDelete: document.getElementById("setting-confirm-delete"),
     blockContextMenu: document.getElementById("setting-block-context-menu"),
     language: document.getElementById("setting-language"),
+    uiScale: document.getElementById("setting-ui-scale"),
     encryptionAlgorithm: document.getElementById(
       "setting-encryption-algorithm",
     ),
+    backendModeProduction: document.getElementById("setting-backend-mode-production"),
+    backendModeCustom: document.getElementById("setting-backend-mode-custom"),
+    backendCustomUrl: document.getElementById("setting-backend-custom-url"),
+    backendApply: document.getElementById("setting-backend-apply-btn"),
+    backendEffective: document.getElementById("setting-backend-effective-endpoint"),
+    backendStatusCard: document.getElementById("setting-backend-status-card"),
+    backendStatusTitle: document.getElementById("setting-backend-status-title"),
+    backendStatusBadge: document.getElementById("setting-backend-status-badge"),
+    backendStatusSummary: document.getElementById("setting-backend-status-summary"),
+    backendStatusDetails: document.getElementById("setting-backend-status-details"),
+    sessionsRefresh: document.getElementById("setting-sessions-refresh-btn"),
+    sessionsList: document.getElementById("setting-sessions-list"),
   };
+
+  var settingsSections = buildSettingsSections();
 
   var adminControls = {
     button: document.getElementById("admin-btn"),
@@ -749,6 +1013,113 @@ function initApp(invoke) {
 
   function canViewAdmin() {
     return !!(authenticated && currentUser && currentUser.staff);
+  }
+
+  function createEmptyServerStatus() {
+    return {
+      endpoint: "",
+      healthy: false,
+      health_error: "",
+      compatibility_checked: false,
+      compatible: false,
+      compatibility_error: "",
+      reasons: [],
+      client_api_version: CLIENT_API_VERSION,
+      info: null,
+    };
+  }
+
+  function normalizeSupportedApiVersions(source) {
+    if (!Array.isArray(source)) {
+      return [];
+    }
+    return source
+      .map(function (value) {
+        var normalized = Number(value);
+        return isNaN(normalized) ? null : normalized;
+      })
+      .filter(function (value) {
+        return value !== null;
+      });
+  }
+
+  function normalizeServerStatus(source) {
+    var normalized = createEmptyServerStatus();
+    var info = source && source.info ? source.info : null;
+
+    normalized.endpoint = source && source.endpoint ? String(source.endpoint) : "";
+    normalized.healthy = !!(source && source.healthy);
+    normalized.health_error =
+      source && source.health_error ? String(source.health_error) : "";
+    normalized.compatibility_checked = !!(
+      source && source.compatibility_checked
+    );
+    normalized.compatible = !!(source && source.compatible);
+    normalized.compatibility_error =
+      source && source.compatibility_error
+        ? String(source.compatibility_error)
+        : "";
+    normalized.reasons = Array.isArray(source && source.reasons)
+      ? source.reasons.map(function (reason) {
+          return String(reason);
+        })
+      : [];
+    normalized.client_api_version =
+      Number(source && source.client_api_version) || CLIENT_API_VERSION;
+    normalized.info = info
+      ? {
+          name: info.name ? String(info.name) : "",
+          version: info.version ? String(info.version) : "",
+          runtime_version: info.runtime_version
+            ? String(info.runtime_version)
+            : "",
+          supported_api_versions: normalizeSupportedApiVersions(
+            info.supported_api_versions,
+          ),
+          commit_hash: info.commit_hash ? String(info.commit_hash) : "",
+          repository: info.repository ? String(info.repository) : "",
+          build_time_unix:
+            info.build_time_unix === null || info.build_time_unix === undefined
+              ? null
+              : Number(info.build_time_unix) || null,
+        }
+      : null;
+
+    return normalized;
+  }
+
+  function getSettingsSection(control) {
+    return control && typeof control.closest === "function"
+      ? control.closest(".settings-item")
+      : null;
+  }
+
+  function buildSettingsSections() {
+    return {
+      language: getSettingsSection(settingsControls.language),
+      encryption: getSettingsSection(settingsControls.encryptionAlgorithm),
+      backend: getSettingsSection(
+        settingsControls.backendApply || settingsControls.backendCustomUrl,
+      ),
+      screenshotGuard: getSettingsSection(settingsControls.screenshotGuard),
+      lightTheme: getSettingsSection(settingsControls.lightThemeEnabled),
+      startup: getSettingsSection(settingsControls.startupEnabled),
+      autoLock: getSettingsSection(settingsControls.autoLockEnabled),
+      autoLockMinutes: getSettingsSection(settingsControls.autoLockMinutes),
+      clipboardTimeout: getSettingsSection(settingsControls.clipboardTimeout),
+      confirmDelete: getSettingsSection(settingsControls.confirmDelete),
+      blockContextMenu: getSettingsSection(settingsControls.blockContextMenu),
+      sessions: getSettingsSection(
+        settingsControls.sessionsRefresh || settingsControls.sessionsList,
+      ),
+    };
+  }
+
+  function setElementVisible(node, visible) {
+    if (!node) {
+      return;
+    }
+    node.classList.toggle("hidden", !visible);
   }
 
   function t(key, params) {
@@ -844,6 +1215,20 @@ function initApp(invoke) {
       return t("error.commandUnavailable", {
         command: text.slice(unavailablePrefixEn.length),
       });
+    }
+
+    var normalizedText = text.trim().toLowerCase();
+    if (
+      normalizedText.indexOf("transport error") !== -1 ||
+      normalizedText.indexOf("backend connection:") !== -1 ||
+      normalizedText.indexOf("tls config:") !== -1 ||
+      normalizedText.indexOf("error trying to connect") !== -1 ||
+      normalizedText.indexOf("connection refused") !== -1 ||
+      normalizedText.indexOf("dns error") !== -1 ||
+      normalizedText.indexOf("invalid peer certificate") !== -1 ||
+      normalizedText.indexOf("certificate") !== -1
+    ) {
+      return t("error.backendTransport");
     }
 
     return text;
@@ -956,7 +1341,7 @@ function initApp(invoke) {
 
     authHandlingInProgress = true;
     try {
-      await performLogout(t("error.notAuthenticated"), "err");
+      finalizeLocalLogout(t("error.notAuthenticated"), "err");
     } finally {
       authHandlingInProgress = false;
     }
@@ -1003,6 +1388,27 @@ function initApp(invoke) {
       option.textContent = getMinuteLabel(minutes);
       settingsControls.autoLockMinutes.appendChild(option);
     }
+  }
+
+  function normalizeUiScale(value) {
+    var scale = Number(value);
+    if (!isFinite(scale)) {
+      return DEFAULT_UI_SCALE;
+    }
+
+    var nearest = UI_SCALE_OPTIONS[0];
+    var distance = Math.abs(scale - nearest);
+
+    for (var i = 1; i < UI_SCALE_OPTIONS.length; i += 1) {
+      var candidate = UI_SCALE_OPTIONS[i];
+      var candidateDistance = Math.abs(scale - candidate);
+      if (candidateDistance < distance) {
+        nearest = candidate;
+        distance = candidateDistance;
+      }
+    }
+
+    return nearest;
   }
 
   function applyTranslations() {
@@ -1055,6 +1461,8 @@ function initApp(invoke) {
     setText("#page-settings .dash-brand h1", "settings.title");
     setText("#setting-language-title", "settings.language.title");
     setText("#setting-language-desc", "settings.language.desc");
+    setText("#setting-ui-scale-title", "settings.dpi.title");
+    setText("#setting-ui-scale-desc", "settings.dpi.desc");
     setText("#setting-encryption-title", "settings.encryption.title");
     setText("#setting-encryption-desc", "settings.encryption.desc");
     setText("#setting-sg-title", "settings.screenshotGuard.title");
@@ -1085,6 +1493,19 @@ function initApp(invoke) {
     setText("#setting-confirm-delete-desc", "settings.confirmDelete.desc");
     setText("#setting-block-context-title", "settings.blockContext.title");
     setText("#setting-block-context-desc", "settings.blockContext.desc");
+    setText("#setting-backend-title", "settings.backend.title");
+    setText("#setting-backend-desc", "settings.backend.desc");
+    setText(
+      "#setting-backend-mode-production-label",
+      "settings.backend.production",
+    );
+    setText("#setting-backend-mode-custom-label", "settings.backend.custom");
+    setText("#setting-backend-effective-label", "settings.backend.effective");
+    setText("#setting-backend-apply-btn", "settings.backend.apply");
+    setText("#setting-backend-status-title", "settings.backend.statusTitle");
+    setText("#setting-sessions-title", "settings.sessions.title");
+    setText("#setting-sessions-desc", "settings.sessions.desc");
+    setText("#setting-sessions-refresh-btn", "settings.sessions.refresh");
     setText("#page-admin .dash-brand h1", "admin.title");
     setText("#admin-refresh-btn span", "admin.refresh");
     setTitle("#admin-refresh-btn", "admin.refresh");
@@ -1104,6 +1525,20 @@ function initApp(invoke) {
     ) {
       settingsControls.language.options[0].text = t("settings.language.ru");
       settingsControls.language.options[1].text = t("settings.language.en");
+    }
+
+    if (
+      settingsControls.uiScale &&
+      settingsControls.uiScale.options.length >= UI_SCALE_OPTIONS.length
+    ) {
+      for (
+        var scaleIndex = 0;
+        scaleIndex < UI_SCALE_OPTIONS.length;
+        scaleIndex += 1
+      ) {
+        settingsControls.uiScale.options[scaleIndex].text =
+          Math.round(UI_SCALE_OPTIONS[scaleIndex] * 100) + "%";
+      }
     }
 
     if (
@@ -1140,8 +1575,10 @@ function initApp(invoke) {
     setPlaceholder("add-pass", "add.passwordPlaceholder");
     setPlaceholder("add-seed", "add.seedPlaceholder");
     setPlaceholder("modal-seed", "seedModal.placeholder");
+    setPlaceholder("setting-backend-custom-url", "settings.backend.customPlaceholder");
 
     renderAutoLockMinuteOptions();
+    renderSessions();
     if (adminStats) {
       renderAdminStats(adminStats);
     }
@@ -1336,6 +1773,67 @@ function initApp(invoke) {
     return ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID;
   }
 
+  function normalizeBackendMode(value) {
+    return value === BACKEND_MODE_CUSTOM
+      ? BACKEND_MODE_CUSTOM
+      : BACKEND_MODE_PRODUCTION;
+  }
+
+  function validateBackendEndpoint(value) {
+    var raw = String(value || "").trim();
+    if (!raw) {
+      throw "Invalid backend endpoint";
+    }
+
+    var url;
+    try {
+      url = new URL(raw);
+    } catch (e) {
+      throw "Invalid backend endpoint";
+    }
+
+    var isHttp = url.protocol === "http:";
+    var isHttps = url.protocol === "https:";
+
+    if (
+      (!isHttp && !isHttps) ||
+      !url.hostname ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash ||
+      (url.pathname && url.pathname !== "/")
+    ) {
+      throw "Invalid backend endpoint";
+    }
+
+    return url.origin;
+  }
+
+  function resolveSettingsBackendEndpoint(settings) {
+    var mode = normalizeBackendMode(settings && settings.backendMode);
+    if (mode === BACKEND_MODE_CUSTOM) {
+      return validateBackendEndpoint(settings && settings.backendCustomUrl);
+    }
+    return DEFAULT_BACKEND_ENDPOINT;
+  }
+
+  function getSafeSettingsBackendEndpoint(settings) {
+    try {
+      return resolveSettingsBackendEndpoint(settings);
+    } catch (e) {
+      return DEFAULT_BACKEND_ENDPOINT;
+    }
+  }
+
+  function normalizeAppliedBackendEndpoint(value) {
+    try {
+      return validateBackendEndpoint(value);
+    } catch (e) {
+      return DEFAULT_BACKEND_ENDPOINT;
+    }
+  }
+
   function normalizeSettings(source) {
     var out = {
       screenshotGuardEnabled: DEFAULT_SETTINGS.screenshotGuardEnabled,
@@ -1347,7 +1845,10 @@ function initApp(invoke) {
       confirmDelete: DEFAULT_SETTINGS.confirmDelete,
       blockContextMenu: DEFAULT_SETTINGS.blockContextMenu,
       language: DEFAULT_SETTINGS.language,
+      uiScale: DEFAULT_SETTINGS.uiScale,
       encryptionAlgorithm: DEFAULT_SETTINGS.encryptionAlgorithm,
+      backendMode: DEFAULT_SETTINGS.backendMode,
+      backendCustomUrl: DEFAULT_SETTINGS.backendCustomUrl,
     };
 
     if (!source || typeof source !== "object") {
@@ -1363,9 +1864,15 @@ function initApp(invoke) {
     out.confirmDelete = source.confirmDelete !== false;
     out.blockContextMenu = source.blockContextMenu !== false;
     out.language = source.language === "en" ? "en" : "ru";
+    out.uiScale = normalizeUiScale(source.uiScale);
     out.encryptionAlgorithm = normalizeEncryptionAlgorithm(
       source.encryptionAlgorithm,
     );
+    out.backendMode = normalizeBackendMode(source.backendMode);
+    out.backendCustomUrl =
+      typeof source.backendCustomUrl === "string"
+        ? source.backendCustomUrl.trim()
+        : DEFAULT_SETTINGS.backendCustomUrl;
 
     var minutes = Number(source.autoLockMinutes);
     if (!isNaN(minutes) && minutes >= 1 && minutes <= 60) {
@@ -1422,10 +1929,9 @@ function initApp(invoke) {
     }
   }
 
-  function saveMasterKeyEnvelope(username, envelope) {
-    var normalizedUsername = String(username || "").trim();
-    if (!normalizedUsername || !envelope || typeof envelope !== "object") {
-      return;
+  function normalizeStoredEnvelope(envelope) {
+    if (!envelope || typeof envelope !== "object") {
+      return null;
     }
 
     var wrappedMasterKey = String(
@@ -1434,20 +1940,41 @@ function initApp(invoke) {
     var wrappingSalt = String(
       envelope.wrapping_salt || envelope.wrappingSalt || "",
     ).trim();
-    var encryptionAlgorithm = normalizeEncryptionAlgorithm(
-      envelope.encryption_algorithm || envelope.encryptionAlgorithm,
-    );
 
     if (!wrappedMasterKey || !wrappingSalt) {
+      return null;
+    }
+
+    return {
+      wrapped_master_key: wrappedMasterKey,
+      wrapping_salt: wrappingSalt,
+      encryption_algorithm: normalizeEncryptionAlgorithm(
+        envelope.encryption_algorithm || envelope.encryptionAlgorithm,
+      ),
+    };
+  }
+
+  function buildEnvelopeStorageKey(username, endpoint) {
+    var normalizedUsername = String(username || "").trim();
+    if (!normalizedUsername) {
+      return "";
+    }
+    return (
+      normalizeAppliedBackendEndpoint(endpoint || currentBackendEndpoint) +
+      "|" +
+      normalizedUsername
+    );
+  }
+
+  function saveMasterKeyEnvelope(username, envelope) {
+    var normalizedEnvelope = normalizeStoredEnvelope(envelope);
+    var storageKey = buildEnvelopeStorageKey(username, currentBackendEndpoint);
+    if (!storageKey || !normalizedEnvelope) {
       return;
     }
 
     var envelopes = loadMasterKeyEnvelopes();
-    envelopes[normalizedUsername] = {
-      wrapped_master_key: wrappedMasterKey,
-      wrapping_salt: wrappingSalt,
-      encryption_algorithm: encryptionAlgorithm,
-    };
+    envelopes[storageKey] = normalizedEnvelope;
 
     try {
       localStorage.setItem(MASTER_KEY_ENVELOPES_KEY, JSON.stringify(envelopes));
@@ -1461,25 +1988,22 @@ function initApp(invoke) {
     }
 
     var envelopes = loadMasterKeyEnvelopes();
-    var envelope = envelopes[normalizedUsername];
-    if (!envelope || typeof envelope !== "object") {
-      return null;
+    var storageKey = buildEnvelopeStorageKey(normalizedUsername, currentBackendEndpoint);
+    var envelope = normalizeStoredEnvelope(envelopes[storageKey]);
+    if (envelope) {
+      return envelope;
     }
 
-    if (
-      !String(envelope.wrapped_master_key || "").trim() ||
-      !String(envelope.wrapping_salt || "").trim()
-    ) {
-      return null;
+    var legacyEnvelope = normalizeStoredEnvelope(envelopes[normalizedUsername]);
+    if (legacyEnvelope) {
+      envelopes[storageKey] = legacyEnvelope;
+      try {
+        localStorage.setItem(MASTER_KEY_ENVELOPES_KEY, JSON.stringify(envelopes));
+      } catch (e) {}
+      return legacyEnvelope;
     }
 
-    return {
-      wrapped_master_key: String(envelope.wrapped_master_key),
-      wrapping_salt: String(envelope.wrapping_salt),
-      encryption_algorithm: normalizeEncryptionAlgorithm(
-        envelope.encryption_algorithm,
-      ),
-    };
+    return null;
   }
 
   function persistEnvelopeFromEntries(entries) {
@@ -1503,7 +2027,206 @@ function initApp(invoke) {
     }
   }
 
+  function shouldShowBackendSettings() {
+    return !authenticated;
+  }
+
+  function updateSettingsVisibility() {
+    setElementVisible(settingsSections.backend, shouldShowBackendSettings());
+    setElementVisible(settingsSections.screenshotGuard, authenticated);
+    setElementVisible(settingsSections.startup, authenticated);
+    setElementVisible(settingsSections.encryption, authenticated);
+    setElementVisible(settingsSections.sessions, authenticated);
+  }
+
+  function formatApiVersion(value) {
+    var version = Number(value);
+    if (isNaN(version)) {
+      return t("settings.backend.unknown");
+    }
+    if (Math.abs(version - Math.round(version)) < 0.001) {
+      return version.toFixed(1);
+    }
+    return version.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+  }
+
+  function formatSupportedApiVersions(values) {
+    if (!Array.isArray(values) || values.length === 0) {
+      return t("settings.backend.unknown");
+    }
+    return values
+      .map(function (value) {
+        return formatApiVersion(value);
+      })
+      .join(", ");
+  }
+
+  function formatBuildTime(value) {
+    if (value === null || value === undefined) {
+      return t("settings.backend.unknown");
+    }
+    var unix = Number(value);
+    if (!unix) {
+      return t("settings.backend.unknown");
+    }
+    var date = new Date(unix * 1000);
+    if (isNaN(date.getTime())) {
+      return t("settings.backend.unknown");
+    }
+    return date.toLocaleString(getLanguage() === "en" ? "en-US" : "ru-RU");
+  }
+
+  function localizeCompatibilityReason(reason) {
+    var text = String(reason || "");
+    var normalized = text.trim().toLowerCase();
+
+    if (normalized === "unsupported api version") {
+      return getLanguage() === "en"
+        ? "Unsupported client API version"
+        : "Неподдерживаемая версия API клиента";
+    }
+
+    if (normalized === "unsupported client type") {
+      return getLanguage() === "en"
+        ? "Unsupported client type"
+        : "Неподдерживаемый тип клиента";
+    }
+
+    return text;
+  }
+
+  function buildServerStatusMeta(label, value) {
+    return (
+      '<div class="backend-status-meta">' +
+      "<span>" +
+      esc(label) +
+      "</span>" +
+      "<b>" +
+      esc(value) +
+      "</b>" +
+      "</div>"
+    );
+  }
+
+  function renderServerStatus() {
+    if (
+      !settingsControls.backendStatusBadge ||
+      !settingsControls.backendStatusSummary ||
+      !settingsControls.backendStatusDetails
+    ) {
+      return;
+    }
+
+    var badgeClass = "is-idle";
+    var badgeText = t("settings.backend.notChecked");
+    var summaryText = t("settings.backend.statusIdle");
+    var details = "";
+    var hasStatus =
+      serverStatus.endpoint === currentBackendEndpoint &&
+      !!(
+        serverStatus.healthy ||
+        serverStatus.health_error ||
+        serverStatus.compatibility_checked ||
+        serverStatus.compatibility_error
+      );
+
+    if (serverProbeInProgress) {
+      badgeClass = "is-checking";
+      badgeText = t("settings.backend.checking");
+      summaryText = t("settings.backend.statusChecking");
+    } else if (hasStatus && !serverStatus.healthy) {
+      badgeClass = "is-error";
+      badgeText = t("settings.backend.unreachable");
+      summaryText = localizeMessage(
+        serverStatus.health_error,
+        "settings.backend.statusUnreachable",
+      );
+    } else if (hasStatus && serverStatus.healthy) {
+      if (serverStatus.compatibility_checked) {
+        badgeClass = serverStatus.compatible ? "is-ok" : "is-warn";
+        badgeText = t(
+          serverStatus.compatible
+            ? "settings.backend.compatible"
+            : "settings.backend.incompatible",
+        );
+      } else if (serverStatus.compatibility_error) {
+        badgeClass = "is-warn";
+        badgeText = t("settings.backend.checking");
+      } else {
+        badgeClass = "is-ok";
+        badgeText = t("settings.backend.compatible");
+      }
+
+      summaryText = serverStatus.compatibility_error
+        ? localizeMessage(serverStatus.compatibility_error)
+        : serverStatus.compatible ||
+            !serverStatus.compatibility_checked ||
+            serverStatus.reasons.length === 0
+          ? t("settings.backend.statusHealthy")
+          : localizeCompatibilityReason(serverStatus.reasons[0]);
+
+      if (serverStatus.info) {
+        details += buildServerStatusMeta(
+          t("settings.backend.serverName"),
+          serverStatus.info.name || t("settings.backend.unknown"),
+        );
+        details += buildServerStatusMeta(
+          t("settings.backend.serverVersion"),
+          serverStatus.info.version || t("settings.backend.unknown"),
+        );
+        details += buildServerStatusMeta(
+          t("settings.backend.runtimeVersion"),
+          serverStatus.info.runtime_version || t("settings.backend.unknown"),
+        );
+        details += buildServerStatusMeta(
+          t("settings.backend.buildTime"),
+          formatBuildTime(serverStatus.info.build_time_unix),
+        );
+        details += buildServerStatusMeta(
+          t("settings.backend.commit"),
+          serverStatus.info.commit_hash || t("settings.backend.unknown"),
+        );
+        details += buildServerStatusMeta(
+          t("settings.backend.repository"),
+          serverStatus.info.repository || t("settings.backend.unknown"),
+        );
+        details += buildServerStatusMeta(
+          t("settings.backend.clientApi"),
+          formatApiVersion(serverStatus.client_api_version),
+        );
+        details += buildServerStatusMeta(
+          t("settings.backend.supportedApi"),
+          formatSupportedApiVersions(serverStatus.info.supported_api_versions),
+        );
+      }
+
+      if (serverStatus.reasons.length > 0) {
+        details +=
+          '<div class="backend-status-reasons">' +
+          "<span>" +
+          esc(t("settings.backend.reasons")) +
+          "</span>" +
+          "<ul>" +
+          serverStatus.reasons
+            .map(function (reason) {
+              return "<li>" + esc(localizeCompatibilityReason(reason)) + "</li>";
+            })
+            .join("") +
+          "</ul>" +
+          "</div>";
+      }
+    }
+
+    settingsControls.backendStatusBadge.className =
+      "backend-status-badge " + badgeClass;
+    settingsControls.backendStatusBadge.textContent = badgeText;
+    settingsControls.backendStatusSummary.textContent = summaryText;
+    settingsControls.backendStatusDetails.innerHTML = details;
+    setElementVisible(settingsControls.backendStatusDetails, !!details);
+  }
+
   function updateSettingsAvailability() {
+    updateSettingsVisibility();
     if (settingsControls.screenshotGuard) {
       settingsControls.screenshotGuard.disabled =
         !authenticated || settingsSyncInProgress;
@@ -1521,6 +2244,221 @@ function initApp(invoke) {
     }
     if (settingsControls.lightThemeEnabled) {
       settingsControls.lightThemeEnabled.disabled = !!preferenceSyncInProgress.theme;
+    }
+    if (settingsControls.backendModeProduction) {
+      settingsControls.backendModeProduction.disabled =
+        backendSyncInProgress || serverProbeInProgress;
+    }
+    if (settingsControls.backendModeCustom) {
+      settingsControls.backendModeCustom.disabled =
+        backendSyncInProgress || serverProbeInProgress;
+    }
+    if (settingsControls.backendCustomUrl) {
+      settingsControls.backendCustomUrl.disabled =
+        backendSyncInProgress ||
+        serverProbeInProgress ||
+        backendDraftMode !== BACKEND_MODE_CUSTOM;
+    }
+    if (settingsControls.backendApply) {
+      settingsControls.backendApply.disabled =
+        backendSyncInProgress || serverProbeInProgress;
+    }
+    if (settingsControls.sessionsRefresh) {
+      settingsControls.sessionsRefresh.disabled =
+        !authenticated || sessionsLoading || backendSyncInProgress;
+    }
+  }
+
+  function normalizeSessionSummary(source) {
+    return {
+      id: source && source.id ? String(source.id) : "",
+      is_current: !!(source && (source.is_current || source.isCurrent)),
+      created_at_unix: Number(source && source.created_at_unix) || 0,
+      expires_at_unix: Number(source && source.expires_at_unix) || 0,
+      last_seen_unix:
+        source && source.last_seen_unix !== null && source.last_seen_unix !== undefined
+          ? Number(source.last_seen_unix) || 0
+          : null,
+    };
+  }
+
+  function formatSessionDateTime(unixSeconds) {
+    if (!unixSeconds) {
+      return t("settings.sessions.unknown");
+    }
+    return new Date(unixSeconds * 1000).toLocaleString(
+      getLanguage() === "en" ? "en-US" : "ru-RU",
+      {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    );
+  }
+
+  function truncateSessionId(value) {
+    var sessionId = String(value || "");
+    if (sessionId.length <= 20) {
+      return sessionId;
+    }
+    return sessionId.slice(0, 10) + "..." + sessionId.slice(-6);
+  }
+
+  function renderSessions() {
+    if (!settingsControls.sessionsList) {
+      return;
+    }
+
+    if (!authenticated) {
+      settingsControls.sessionsList.innerHTML =
+        '<div class="settings-empty">' +
+        esc(t("settings.sessions.authRequired")) +
+        "</div>";
+      return;
+    }
+
+    if (sessionsLoading) {
+      settingsControls.sessionsList.innerHTML =
+        '<div class="settings-empty">' +
+        esc(t("settings.sessions.loading")) +
+        "</div>";
+      return;
+    }
+
+    if (!sessionSummaries.length) {
+      settingsControls.sessionsList.innerHTML =
+        '<div class="settings-empty">' +
+        esc(t("settings.sessions.empty")) +
+        "</div>";
+      return;
+    }
+
+    settingsControls.sessionsList.innerHTML = sessionSummaries
+      .map(function (item) {
+        var sessionId = String(item.id || "");
+        var isCurrent = !!item.is_current;
+        var isBusy = sessionActionId === sessionId;
+        var lastSeenText =
+          item.last_seen_unix === null
+            ? t("settings.sessions.unknown")
+            : formatSessionDateTime(item.last_seen_unix);
+        return (
+          '<div class="session-row">' +
+          '<div class="session-main">' +
+          '<div class="session-top">' +
+          '<strong>' +
+          esc(isCurrent ? t("settings.sessions.current") : t("settings.sessions.other")) +
+          "</strong>" +
+          (isCurrent
+            ? '<span class="session-badge">' +
+              esc(t("settings.sessions.current")) +
+              "</span>"
+            : "") +
+          "</div>" +
+          '<div class="session-meta"><span>' +
+          esc(t("settings.sessions.id")) +
+          ": " +
+          esc(truncateSessionId(sessionId)) +
+          "</span></div>" +
+          '<div class="session-grid">' +
+          '<span><b>' +
+          esc(t("settings.sessions.created")) +
+          ":</b> " +
+          esc(formatSessionDateTime(item.created_at_unix)) +
+          "</span>" +
+          '<span><b>' +
+          esc(t("settings.sessions.lastSeen")) +
+          ":</b> " +
+          esc(lastSeenText) +
+          "</span>" +
+          '<span><b>' +
+          esc(t("settings.sessions.expires")) +
+          ":</b> " +
+          esc(formatSessionDateTime(item.expires_at_unix)) +
+          "</span>" +
+          "</div>" +
+          "</div>" +
+          '<button class="btn-exit session-action" data-session-id="' +
+          esc(sessionId) +
+          '"' +
+          (isCurrent || isBusy ? " disabled" : "") +
+          ">" +
+          esc(t("settings.sessions.disconnect")) +
+          "</button>" +
+          "</div>"
+        );
+      })
+      .join("");
+
+    settingsControls.sessionsList
+      .querySelectorAll("[data-session-id]")
+      .forEach(function (button) {
+        button.addEventListener("click", async function () {
+          var sessionId = button.getAttribute("data-session-id");
+          if (!sessionId || button.disabled) {
+            return;
+          }
+          await revokeSession(sessionId);
+        });
+      });
+  }
+
+  async function loadSessions() {
+    if (!authenticated) {
+      sessionSummaries = [];
+      sessionActionId = "";
+      renderSessions();
+      return;
+    }
+
+    if (sessionsLoading) {
+      return;
+    }
+
+    sessionsLoading = true;
+    renderSessions();
+    updateSettingsAvailability();
+
+    try {
+      var list = await invoke("list_sessions");
+      sessionSummaries = Array.isArray(list)
+        ? list.map(normalizeSessionSummary)
+        : [];
+    } catch (err) {
+      if (!(await handleAuthFailure(err))) {
+        notify(localizeMessage(err, "error.sessionsLoad"), "err");
+      }
+    } finally {
+      sessionsLoading = false;
+      sessionActionId = "";
+      renderSessions();
+      updateSettingsAvailability();
+    }
+  }
+
+  async function revokeSession(sessionId) {
+    if (!authenticated || !sessionId || sessionActionId) {
+      return;
+    }
+
+    sessionActionId = String(sessionId);
+    renderSessions();
+
+    try {
+      await invoke("revoke_session", { sessionId: sessionId });
+      notify(t("notify.sessionRevoked"));
+      await loadSessions();
+      if (canViewAdmin()) {
+        await loadAdminStats();
+      }
+    } catch (err) {
+      if (!(await handleAuthFailure(err))) {
+        notify(localizeMessage(err, "error.sessionRevoke"), "err");
+      }
+      sessionActionId = "";
+      renderSessions();
     }
   }
 
@@ -1726,11 +2664,30 @@ function initApp(invoke) {
     if (settingsControls.language) {
       settingsControls.language.value = getLanguage();
     }
+    if (settingsControls.uiScale) {
+      settingsControls.uiScale.value = String(normalizeUiScale(appSettings.uiScale));
+    }
     if (settingsControls.encryptionAlgorithm) {
       settingsControls.encryptionAlgorithm.value = normalizeEncryptionAlgorithm(
         appSettings.encryptionAlgorithm,
       );
     }
+    if (settingsControls.backendModeProduction) {
+      settingsControls.backendModeProduction.checked =
+        backendDraftMode !== BACKEND_MODE_CUSTOM;
+    }
+    if (settingsControls.backendModeCustom) {
+      settingsControls.backendModeCustom.checked =
+        backendDraftMode === BACKEND_MODE_CUSTOM;
+    }
+    if (settingsControls.backendCustomUrl) {
+      settingsControls.backendCustomUrl.value = backendDraftCustomUrl;
+    }
+    if (settingsControls.backendEffective) {
+      settingsControls.backendEffective.textContent = currentBackendEndpoint;
+    }
+    renderServerStatus();
+    renderSessions();
     updateSettingsAvailability();
   }
 
@@ -1741,6 +2698,12 @@ function initApp(invoke) {
     );
   }
 
+  function applyUiScale() {
+    var scale = normalizeUiScale(appSettings.uiScale);
+    appSettings.uiScale = scale;
+    document.documentElement.style.setProperty("--ui-scale", String(scale));
+  }
+
   function clearAutoLockTimer() {
     if (autoLockTimer) {
       clearTimeout(autoLockTimer);
@@ -1748,25 +2711,31 @@ function initApp(invoke) {
     }
   }
 
-  async function performLogout(message, type) {
+  function finalizeLocalLogout(message, type) {
     clearAutoLockTimer();
     setAuthenticated(false);
     setCurrentUser(null);
-
-    try {
-      await invoke("logout");
-    } catch (e) {}
-
     resolveWeakConfirmation(false);
     hideModal("seed");
     hideModal("del");
     currentId = null;
     deleteId = null;
+    var list = document.getElementById("pw-list");
+    if (list) {
+      list.innerHTML = "";
+    }
     showPage("login", { instant: true });
 
     if (message) {
       notify(message, type || "ok");
     }
+  }
+
+  async function performLogout(message, type) {
+    try {
+      await invoke("logout");
+    } catch (e) {}
+    finalizeLocalLogout(message, type);
   }
 
   function scheduleAutoLock() {
@@ -1794,11 +2763,16 @@ function initApp(invoke) {
     if (!authenticated) {
       clearAutoLockTimer();
       adminStats = null;
+      sessionsLoading = false;
+      sessionSummaries = [];
+      sessionActionId = "";
+      renderSessions();
       updateSettingsAvailability();
       updateAdminVisibility();
       return;
     }
 
+    renderSessions();
     updateSettingsAvailability();
     updateAdminVisibility();
     scheduleAutoLock();
@@ -1827,11 +2801,174 @@ function initApp(invoke) {
     }
   }
 
+  function hasCurrentServerProbe() {
+    return (
+      lastProbedBackendEndpoint === currentBackendEndpoint &&
+      serverStatus.endpoint === currentBackendEndpoint &&
+      !!(
+        serverStatus.healthy ||
+        serverStatus.health_error ||
+        serverStatus.compatibility_checked ||
+        serverStatus.compatibility_error
+      )
+    );
+  }
+
+  function resetServerProbe() {
+    serverStatus = createEmptyServerStatus();
+    serverStatus.endpoint = currentBackendEndpoint;
+    lastProbedBackendEndpoint = "";
+  }
+
+  async function probeBackendServer(force) {
+    if (!shouldShowBackendSettings()) {
+      return null;
+    }
+    if (serverProbeInProgress) {
+      return null;
+    }
+    if (!force && hasCurrentServerProbe()) {
+      return serverStatus;
+    }
+
+    serverProbeInProgress = true;
+    serverStatus = createEmptyServerStatus();
+    serverStatus.endpoint = currentBackendEndpoint;
+    renderSettings();
+    updateSettingsAvailability();
+
+    try {
+      serverStatus = normalizeServerStatus(await invoke("probe_backend_server"));
+      if (!serverStatus.endpoint) {
+        serverStatus.endpoint = currentBackendEndpoint;
+      }
+      lastProbedBackendEndpoint = currentBackendEndpoint;
+      return serverStatus;
+    } catch (err) {
+      serverStatus = createEmptyServerStatus();
+      serverStatus.endpoint = currentBackendEndpoint;
+      serverStatus.health_error = localizeMessage(
+        err,
+        "settings.backend.statusUnreachable",
+      );
+      lastProbedBackendEndpoint = currentBackendEndpoint;
+      return serverStatus;
+    } finally {
+      serverProbeInProgress = false;
+      renderSettings();
+      updateSettingsAvailability();
+    }
+  }
+
   function openSettingsPage(returnPage) {
     settingsReturnPage =
       returnPage || currentPage || (authenticated ? "dashboard" : "login");
     renderSettings();
     showPage("settings");
+    if (authenticated) {
+      loadSessions();
+    }
+  }
+
+  async function applyBackendSelection() {
+    if (backendSyncInProgress) {
+      return;
+    }
+
+    var requestedEndpoint;
+    try {
+      requestedEndpoint = resolveSettingsBackendEndpoint({
+        backendMode: backendDraftMode,
+        backendCustomUrl: backendDraftCustomUrl,
+      });
+    } catch (err) {
+      notify(localizeMessage(err, "error.backendEndpointInvalid"), "err");
+      renderSettings();
+      return;
+    }
+
+    backendSyncInProgress = true;
+    updateSettingsAvailability();
+
+    try {
+      var result = await invoke("set_backend_endpoint", {
+        endpoint: requestedEndpoint,
+      });
+      currentBackendEndpoint =
+        result && result.endpoint
+          ? String(result.endpoint)
+          : requestedEndpoint;
+      resetServerProbe();
+      appSettings.backendMode = backendDraftMode;
+      appSettings.backendCustomUrl =
+        backendDraftMode === BACKEND_MODE_CUSTOM
+          ? currentBackendEndpoint
+          : String(backendDraftCustomUrl || "").trim();
+      backendDraftCustomUrl = appSettings.backendCustomUrl;
+      saveSettings();
+      renderSettings();
+      if (result && result.reauth_required) {
+        finalizeLocalLogout(t("notify.backendChangedReauth"), "err");
+        return;
+      }
+      var probeResult = await probeBackendServer(true);
+      if (probeResult && !probeResult.healthy) {
+        notify(
+          probeResult.health_error || t("settings.backend.statusUnreachable"),
+          "err",
+        );
+        return;
+      }
+      notify(t("notify.backendApplied"));
+      if (authenticated && currentPage === "settings") {
+        await loadSessions();
+      }
+    } catch (err) {
+      notify(localizeMessage(err, "error.backendApply"), "err");
+    } finally {
+      backendSyncInProgress = false;
+      renderSettings();
+      updateSettingsAvailability();
+    }
+  }
+
+  async function syncBackendOnStart() {
+    var requestedEndpoint = getSafeSettingsBackendEndpoint(appSettings);
+
+    backendSyncInProgress = true;
+    updateSettingsAvailability();
+
+    try {
+      var result = await invoke("set_backend_endpoint", {
+        endpoint: requestedEndpoint,
+      });
+      currentBackendEndpoint =
+        result && result.endpoint
+          ? String(result.endpoint)
+          : requestedEndpoint;
+      resetServerProbe();
+      if (appSettings.backendMode === BACKEND_MODE_CUSTOM) {
+        appSettings.backendCustomUrl = currentBackendEndpoint;
+        backendDraftCustomUrl = currentBackendEndpoint;
+        saveSettings();
+      }
+    } catch (err) {
+      currentBackendEndpoint = DEFAULT_BACKEND_ENDPOINT;
+      resetServerProbe();
+      try {
+        var fallback = await invoke("set_backend_endpoint", {
+          endpoint: DEFAULT_BACKEND_ENDPOINT,
+        });
+        if (fallback && fallback.endpoint) {
+          currentBackendEndpoint = String(fallback.endpoint);
+          resetServerProbe();
+        }
+      } catch (ignored) {}
+    } finally {
+      backendSyncInProgress = false;
+      renderSettings();
+      updateSettingsAvailability();
+    }
   }
 
   function getSettingsReturnPage() {
@@ -2028,6 +3165,418 @@ function initApp(invoke) {
     }
   }
 
+  function buildServiceGlyphSvg(text, fontSize, weight) {
+    return (
+      '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      '<text x="12" y="15.2" text-anchor="middle" font-size="' +
+      (fontSize || 9) +
+      '" font-family="Arial, sans-serif" font-weight="' +
+      (weight || 700) +
+      '" fill="currentColor">' +
+      text +
+      "</text>" +
+      "</svg>"
+    );
+  }
+
+  var SERVICE_ICON_DEFINITIONS = [
+    {
+      aliases: ["gmail.com", "gmail", "google mail"],
+      accent: "#ea4335",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M4 6.5h16a1 1 0 0 1 1 1V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>' +
+        '<path d="M4 8l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="M4 17V9l8 5.8L20 9v8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["youtube.com", "youtu.be", "youtube"],
+      accent: "#ff0033",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M21 12c0 3.5-.3 4.6-.6 5.3a2.8 2.8 0 0 1-1.6 1.6c-.7.3-1.8.6-6.8.6s-6.1-.3-6.8-.6a2.8 2.8 0 0 1-1.6-1.6C3.3 16.6 3 15.5 3 12s.3-4.6.6-5.3a2.8 2.8 0 0 1 1.6-1.6c.7-.3 1.8-.6 6.8-.6s6.1.3 6.8.6a2.8 2.8 0 0 1 1.6 1.6c.3.7.6 1.8.6 5.3Z" fill="currentColor"/>' +
+        '<path d="M10 8.5 16 12l-6 3.5Z" fill="#0b0f14"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["telegram", "t.me"],
+      accent: "#229ed9",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M20.7 4.1 4.2 10.5c-1 .4-1 1 .1 1.4l4.2 1.3 1.7 5.1c.2.7.5.9 1 .9.4 0 .7-.2 1-.5l2.4-2.3 4.8 3.5c.9.5 1.5.2 1.7-.8l2.7-13.1c.3-1.3-.5-1.9-1.6-1.4Z" fill="currentColor"/>' +
+        '<path d="m9.2 13 8.4-5.2c.4-.3.8-.1.5.2L11.2 14l-.3 3-1.7-4Z" fill="#0b0f14"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["discord", "discordapp"],
+      accent: "#5865f2",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M7 7.6c1.5-.7 2.6-.9 3.4-1l.4.8c-1 .2-1.8.5-2.6.9.8-.4 1.8-.7 3.8-.7s3 .3 3.8.7c-.8-.4-1.6-.7-2.6-.9l.4-.8c.8.1 1.9.3 3.4 1 1.6 2.3 2.3 4.6 2.5 6.8-1.1 1.5-2.2 2.4-3.3 3l-.8-1.2c.5-.2 1-.5 1.5-.9-.9.7-2.5 1.4-5 1.4s-4.1-.7-5-1.4c.5.4 1 .7 1.5.9l-.8 1.2c-1.1-.6-2.2-1.5-3.3-3 .2-2.2.9-4.5 2.5-6.8Z" fill="currentColor"/>' +
+        '<circle cx="9.7" cy="12.5" r="1.2" fill="#0b0f14"/>' +
+        '<circle cx="14.3" cy="12.5" r="1.2" fill="#0b0f14"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["github.com", "github"],
+      accent: "#24292f",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M12 3C7 3 3 6.9 3 11.7c0 3.8 2.5 7 6 8.1.4.1.6-.2.6-.5v-1.7c-2.4.5-2.9-1-2.9-1-.4-1-.9-1.2-.9-1.2-.8-.5.1-.5.1-.5.9.1 1.3.9 1.3.9.8 1.3 2 1 2.5.7.1-.5.3-.9.6-1.1-1.9-.2-4-1-4-4.2 0-.9.3-1.7.9-2.3-.1-.2-.4-1.1.1-2.2 0 0 .7-.2 2.4.9.7-.2 1.5-.3 2.3-.3s1.6.1 2.3.3c1.6-1.1 2.4-.9 2.4-.9.5 1.1.2 2 .1 2.2.6.6.9 1.4.9 2.3 0 3.2-2 4-4 4.2.3.3.6.8.6 1.5v2.2c0 .3.2.6.6.5 3.5-1.1 6-4.3 6-8.1C21 6.9 17 3 12 3Z" fill="currentColor"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["gitlab.com", "gitlab"],
+      accent: "#fc6d26",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="m12 19.5 3.2-10H8.8L12 19.5Z" fill="currentColor"/>' +
+        '<path d="M5.5 9.5 8.8 9.5 7.4 5.3c-.1-.4-.6-.4-.8 0L5.5 9.5Z" fill="currentColor" opacity=".7"/>' +
+        '<path d="M18.5 9.5h-3.3l1.4-4.2c.1-.4.6-.4.8 0l1.1 4.2Z" fill="currentColor" opacity=".7"/>' +
+        '<path d="M5.5 9.5 4 14.1c-.1.4 0 .7.3 1L12 19.5 5.5 9.5Z" fill="currentColor" opacity=".45"/>' +
+        '<path d="m18.5 9.5 1.5 4.6c.1.4 0 .7-.3 1L12 19.5l6.5-10Z" fill="currentColor" opacity=".45"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["figma"],
+      accent: "#f24e1e",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="6" y="3" width="6" height="6" rx="3" fill="currentColor"/>' +
+        '<rect x="12" y="3" width="6" height="6" rx="3" fill="currentColor" opacity=".88"/>' +
+        '<rect x="6" y="9" width="6" height="6" rx="3" fill="currentColor" opacity=".76"/>' +
+        '<circle cx="15" cy="12" r="3" fill="currentColor" opacity=".64"/>' +
+        '<rect x="6" y="15" width="6" height="6" rx="3" fill="currentColor" opacity=".52"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["notion"],
+      accent: "#111111",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="4.3" y="4.3" width="15.4" height="15.4" rx="1.7" fill="none" stroke="currentColor" stroke-width="1.7"/>' +
+        '<path d="M8 16V8.2l1.8.1 4.3 5.8V8h1.9v7.8h-1.7L10 10v6Z" fill="currentColor"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["spotify"],
+      accent: "#1db954",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M7 9.6c3.3-1 6.8-.8 10 .6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>' +
+        '<path d="M8 12.5c2.7-.8 5.5-.6 8 .5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".85"/>' +
+        '<path d="M9 15.2c2-.5 4-.4 5.8.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["slack"],
+      accent: "#4a154b",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="5" y="9.5" width="5" height="2.8" rx="1.4" fill="currentColor"/>' +
+        '<rect x="7.2" y="5" width="2.8" height="5.2" rx="1.4" fill="currentColor" opacity=".82"/>' +
+        '<rect x="14" y="5" width="2.8" height="5.2" rx="1.4" fill="currentColor"/>' +
+        '<rect x="14" y="13.8" width="5" height="2.8" rx="1.4" fill="currentColor" opacity=".82"/>' +
+        '<rect x="9.5" y="14" width="5" height="2.8" rx="1.4" fill="currentColor"/>' +
+        '<rect x="5" y="14" width="2.8" height="5" rx="1.4" fill="currentColor" opacity=".82"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["trello"],
+      accent: "#0079bf",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="4.2" y="5.2" width="15.6" height="13.6" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/>' +
+        '<rect x="7" y="8" width="3.3" height="7.5" rx="1.1" fill="currentColor"/>' +
+        '<rect x="13.7" y="8" width="3.3" height="5.2" rx="1.1" fill="currentColor" opacity=".78"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["dropbox"],
+      accent: "#0061ff",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="m7.2 5 4.3 2.7L7.2 10 3 7.3 7.2 5Zm9.6 0L21 7.3 16.8 10l-4.3-2.3L16.8 5ZM7.2 11l4.3 2.6-4.3 2.7L3 13.6 7.2 11Zm9.6 0 4.2 2.6-4.2 2.7-4.3-2.7 4.3-2.6ZM12 14.7l4.3 2.6L12 20l-4.3-2.7 4.3-2.6Z" fill="currentColor"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["docker"],
+      accent: "#2496ed",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="5" y="10" width="2.6" height="2.6" fill="currentColor"/>' +
+        '<rect x="8" y="10" width="2.6" height="2.6" fill="currentColor"/>' +
+        '<rect x="11" y="10" width="2.6" height="2.6" fill="currentColor"/>' +
+        '<rect x="8" y="7" width="2.6" height="2.6" fill="currentColor" opacity=".82"/>' +
+        '<rect x="11" y="7" width="2.6" height="2.6" fill="currentColor" opacity=".82"/>' +
+        '<path d="M4.5 14c.7 2.7 2.8 4.3 6.2 4.3h3.4c2.5 0 4.5-1.1 5.7-3.2.6.1 1.2-.1 1.7-.4-.2-.5-.7-1-1.2-1.3.1-.6 0-1.2-.2-1.7-.6.2-1.1.7-1.4 1.2-.5-.1-1-.1-1.4 0H4.5Z" fill="currentColor"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["cloudflare"],
+      accent: "#f48120",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M8.2 16.8c-.5 0-.9-.3-.8-.8.3-1.4 1.5-2.4 3-2.4h.2c.6-2.2 2.5-3.7 4.9-3.7 2.8 0 5.1 2.2 5.3 4.9.9.1 1.6.9 1.6 1.8 0 .1 0 .2-.1.2H8.2Z" fill="currentColor"/>' +
+        '<path d="M6.4 16.8c-.5 0-.9-.4-.8-.9.2-1.2 1.2-2 2.4-2h.6c.3-1.1 1.3-1.9 2.4-1.9.8 0 1.5.3 2 .8-.9.2-1.7.8-2.2 1.5h-.4c-1 0-1.9.6-2.2 1.6 0 .4-.4.7-.8.7H6.4Z" fill="currentColor" opacity=".72"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["instagram.com", "instagram", "insta"],
+      accent: "#e4405f",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="5" y="5" width="14" height="14" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
+        '<circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
+        '<circle cx="16.2" cy="7.8" r="1.1" fill="currentColor"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["whatsapp"],
+      accent: "#25d366",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M12 4.5a7.5 7.5 0 0 0-6.4 11.5L5 19.5l3.6-.5A7.5 7.5 0 1 0 12 4.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>' +
+        '<path d="M9.3 9.1c-.3-.7-.6-.7-.8-.7h-.7c-.3 0-.7.1-1 .5-.3.4-1.1 1-1.1 2.5s1.2 2.9 1.4 3.1c.2.2 2.2 3.4 5.5 4.6 2.7 1 3.3.8 3.9.7.6-.1 1.8-.8 2-1.6.3-.8.3-1.5.2-1.6-.1-.1-.5-.2-1.1-.5-.6-.3-1.4-.7-1.6-.8-.2-.1-.4-.1-.6.2-.2.3-.7.8-.9 1-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7.2-.2.3-.4.5-.6.2-.2.2-.4.3-.6.1-.2 0-.4-.1-.6-.1-.2-.7-1.7-.9-2.3Z" fill="currentColor"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["linkedin"],
+      accent: "#0a66c2",
+      svg: buildServiceGlyphSvg("in", 10, 700),
+    },
+    {
+      aliases: ["reddit"],
+      accent: "#ff4500",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<circle cx="9" cy="13" r="1.3" fill="currentColor"/>' +
+        '<circle cx="15" cy="13" r="1.3" fill="currentColor"/>' +
+        '<path d="M8.2 15.8c1 .8 2.3 1.2 3.8 1.2s2.8-.4 3.8-1.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+        '<path d="M7 10.8c-1.2.4-2 1.3-2 2.4 0 1.7 3.1 3.3 7 3.3s7-1.6 7-3.3c0-1.1-.8-2-2-2.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+        '<circle cx="19" cy="9.2" r="1.4" fill="currentColor"/>' +
+        '<path d="M13.2 8.5 14.3 5l2.4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["steam"],
+      accent: "#171a21",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<circle cx="15.8" cy="8.1" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
+        '<circle cx="8.2" cy="15.6" r="2.4" fill="currentColor"/>' +
+        '<path d="m10.4 14.7 3.2-2.2a3.2 3.2 0 1 0 1.2 1.6l-3.1 2.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["twitch"],
+      accent: "#9146ff",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M6 4h13v9l-3 3h-3l-2 2H8v-2H6V4Z" fill="currentColor"/>' +
+        '<rect x="10" y="8" width="1.8" height="4.5" fill="#0b0f14"/>' +
+        '<rect x="14" y="8" width="1.8" height="4.5" fill="#0b0f14"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["zoom"],
+      accent: "#2d8cff",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="4.5" y="7.5" width="9.8" height="9" rx="2.3" fill="currentColor"/>' +
+        '<path d="M15.6 10.3 20 8.2c.5-.2 1 .1 1 .7v6.2c0 .6-.5.9-1 .7l-4.4-2.1v-3.4Z" fill="currentColor" opacity=".82"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["trezor", "ledger"],
+      accent: "#101820",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="5" y="6" width="14" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/>' +
+        '<circle cx="12" cy="12" r="2.2" fill="currentColor"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["bitbucket"],
+      accent: "#2684ff",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="M5 6h14l-1.6 10.4a1.4 1.4 0 0 1-1.4 1.2H8a1.4 1.4 0 0 1-1.4-1.2L5 6Z" fill="currentColor"/>' +
+        '<path d="M8.4 10.2h7.4l-.7 4.7H9.2l-.8-4.7Z" fill="#0b0f14"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["jira", "atlassian"],
+      accent: "#0052cc",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="m12 4 4 4-4 4-4-4 4-4Z" fill="currentColor"/>' +
+        '<path d="m8 10 4 4-4 4-4-4 4-4Z" fill="currentColor" opacity=".72"/>' +
+        '<path d="m16 10 4 4-4 4-4-4 4-4Z" fill="currentColor" opacity=".5"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["microsoft", "outlook", "hotmail", "live.com", "office", "azure", "onedrive"],
+      accent: "#5e5e5e",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<rect x="4.5" y="4.5" width="6.5" height="6.5" fill="currentColor"/>' +
+        '<rect x="13" y="4.5" width="6.5" height="6.5" fill="currentColor" opacity=".82"/>' +
+        '<rect x="4.5" y="13" width="6.5" height="6.5" fill="currentColor" opacity=".82"/>' +
+        '<rect x="13" y="13" width="6.5" height="6.5" fill="currentColor" opacity=".64"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["facebook.com", "facebook"],
+      accent: "#1877f2",
+      svg: buildServiceGlyphSvg("f", 13, 700),
+    },
+    {
+      aliases: ["twitter.com", "twitter", "x.com"],
+      accent: "#111111",
+      svg: buildServiceGlyphSvg("X", 11, 700),
+    },
+    {
+      aliases: ["vk.com", "vkontakte", "вконтакте", "vk"],
+      accent: "#2787f5",
+      svg: buildServiceGlyphSvg("VK", 8.5, 700),
+    },
+    {
+      aliases: ["yandex.ru", "ya.ru", "yandex"],
+      accent: "#fc3f1d",
+      svg: buildServiceGlyphSvg("Y", 12, 700),
+    },
+    {
+      aliases: ["paypal"],
+      accent: "#003087",
+      svg: buildServiceGlyphSvg("P", 12, 700),
+    },
+    {
+      aliases: ["amazon web services", "aws", "amazon"],
+      accent: "#ff9900",
+      svg: buildServiceGlyphSvg("AWS", 6.3, 700),
+    },
+    {
+      aliases: ["google.com", "google", "workspace"],
+      accent: "#4285f4",
+      svg: buildServiceGlyphSvg("G", 12, 700),
+    },
+    {
+      aliases: ["tiktok"],
+      accent: "#111111",
+      svg: buildServiceGlyphSvg("TT", 7.5, 700),
+    },
+    {
+      aliases: ["netflix"],
+      accent: "#e50914",
+      svg: buildServiceGlyphSvg("N", 12, 700),
+    },
+    {
+      aliases: ["epic games", "epic"],
+      accent: "#2a2a2a",
+      svg: buildServiceGlyphSvg("EP", 7.5, 700),
+    },
+    {
+      aliases: ["roblox"],
+      accent: "#e2231a",
+      svg:
+        '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+        '<path d="m8.1 4.5 11.4 3.6-3.6 11.4-11.4-3.6L8.1 4.5Z" fill="currentColor"/>' +
+        '<path d="m11 9.7 3.2 1-1 3.2-3.2-1 1-3.2Z" fill="#0b0f14"/>' +
+        "</svg>",
+    },
+    {
+      aliases: ["apple", "icloud", "app store"],
+      accent: "#1f1f1f",
+      svg: buildServiceGlyphSvg("A", 12, 700),
+    },
+  ];
+
+  function findServiceIcon(title) {
+    var raw = String(title || "").trim().toLowerCase();
+    if (!raw) {
+      return null;
+    }
+
+    for (var i = 0; i < SERVICE_ICON_DEFINITIONS.length; i += 1) {
+      var definition = SERVICE_ICON_DEFINITIONS[i];
+      for (var j = 0; j < definition.aliases.length; j += 1) {
+        if (raw.indexOf(definition.aliases[j]) !== -1) {
+          return definition;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function renderServiceIcon(title) {
+    var matched = findServiceIcon(title);
+    if (!matched) {
+      var fallback = esc(String(title || "?").trim().charAt(0).toUpperCase() || "?");
+      return '<div class="card-ico">' + fallback + "</div>";
+    }
+
+    return (
+      '<div class="card-ico card-ico-brand" style="--service-accent:' +
+      matched.accent +
+      '">' +
+      matched.svg +
+      "</div>"
+    );
+  }
+
+  function parseEntryDateValue(value) {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === "number" && isFinite(value)) {
+      return new Date(value > 1000000000000 ? value : value * 1000);
+    }
+
+    if (typeof value === "string") {
+      var trimmed = value.trim();
+      if (!trimmed) {
+        return null;
+      }
+
+      if (/^\d+$/.test(trimmed)) {
+        var unix = Number(trimmed);
+        if (isFinite(unix) && unix > 0) {
+          return new Date(unix > 1000000000000 ? unix : unix * 1000);
+        }
+      }
+
+      var parsed = new Date(trimmed);
+      if (!isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+
+    if (typeof value === "object" && isFinite(Number(value.seconds))) {
+      return new Date(Number(value.seconds) * 1000);
+    }
+
+    return null;
+  }
+
+  function formatEntryDate(value) {
+    var parsed = parseEntryDateValue(value);
+    if (!parsed || isNaN(parsed.getTime())) {
+      return value ? String(value) : t("common.justNow");
+    }
+
+    return parsed.toLocaleString(getLanguage() === "en" ? "en-US" : "ru-RU", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
   async function loadPasswords() {
     var list = document.getElementById("pw-list");
     try {
@@ -2070,18 +3619,14 @@ function initApp(invoke) {
     card.className = "pw-card";
     card.style.animationDelay = idx * 0.06 + "s";
 
-    var initial = entry.title.charAt(0).toUpperCase();
-
     card.innerHTML =
-      '<div class="card-ico">' +
-      initial +
-      "</div>" +
+      renderServiceIcon(entry.title) +
       '<div class="card-info">' +
       '<div class="card-name">' +
       esc(entry.title) +
       "</div>" +
       '<div class="card-date">' +
-      (entry.created_at || t("common.justNow")) +
+      esc(formatEntryDate(entry.created_at)) +
       "</div>" +
       "</div>" +
       '<button class="card-del" title="' +
@@ -2149,8 +3694,47 @@ function initApp(invoke) {
   }
 
   renderSettings();
+  applyUiScale();
   applyTheme();
   applyTranslations();
+
+  if (settingsControls.backendModeProduction) {
+    settingsControls.backendModeProduction.addEventListener("change", function () {
+      if (!settingsControls.backendModeProduction.checked) {
+        return;
+      }
+      backendDraftMode = BACKEND_MODE_PRODUCTION;
+      renderSettings();
+    });
+  }
+
+  if (settingsControls.backendModeCustom) {
+    settingsControls.backendModeCustom.addEventListener("change", function () {
+      if (!settingsControls.backendModeCustom.checked) {
+        return;
+      }
+      backendDraftMode = BACKEND_MODE_CUSTOM;
+      renderSettings();
+    });
+  }
+
+  if (settingsControls.backendCustomUrl) {
+    settingsControls.backendCustomUrl.addEventListener("input", function () {
+      backendDraftCustomUrl = settingsControls.backendCustomUrl.value;
+    });
+  }
+
+  if (settingsControls.backendApply) {
+    settingsControls.backendApply.addEventListener("click", async function () {
+      await applyBackendSelection();
+    });
+  }
+
+  if (settingsControls.sessionsRefresh) {
+    settingsControls.sessionsRefresh.addEventListener("click", async function () {
+      await loadSessions();
+    });
+  }
 
   settingsControls.screenshotGuard.addEventListener(
     "change",
@@ -2265,6 +3849,20 @@ function initApp(invoke) {
           language: appSettings.language,
         },
         "language",
+      );
+    });
+  }
+
+  if (settingsControls.uiScale) {
+    settingsControls.uiScale.addEventListener("change", function () {
+      appSettings.uiScale = normalizeUiScale(settingsControls.uiScale.value);
+      saveSettings();
+      applyUiScale();
+      renderSettings();
+      notify(
+        t("notify.dpiChanged", {
+          value: Math.round(appSettings.uiScale * 100) + "%",
+        }),
       );
     });
   }
@@ -2650,6 +4248,7 @@ function initApp(invoke) {
 
   async function init() {
     renderSettings();
+    await syncBackendOnStart();
 
     var ok = false;
     try {

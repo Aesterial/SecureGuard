@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>SecureGuard</title>
+        <link rel="icon" type="image/svg+xml" href="favicon.svg" />
         <link rel="stylesheet" href="styles.css" />
     </head>
     <body>
@@ -12,356 +13,188 @@
                 <span id="notif-text"></span>
             </div>
 
+         
             <div id="page-login" class="page">
-                <div class="split-layout">
-                    <div class="split-left">
-                        <div class="split-left-grid"></div>
-                        <div class="brand">
-                            <div class="shield-wrap">
-                                <div class="shield-ring"></div>
-                                <div class="shield-ring2"></div>
-                                <div class="shield-ico">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.5-3.87-1.13-7-5.67-7-10.5V6.3l7-3.12z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <h1>SecureGuard</h1>
-                            <p>Надёжное хранилище паролей</p>
-                            <div class="brand-tag">
-                                <span class="brand-tag-dot"></span>
-                                E2E · AES-256-GCM · Argon2id
-                            </div>
-                        </div>
+
+              
+                <div class="auth-corner auth-corner--tl"></div>
+                <div class="auth-corner auth-corner--tr"></div>
+                <div class="auth-corner auth-corner--bl"></div>
+                <div class="auth-corner auth-corner--br"></div>
+
+              
+                <div class="auth-particles" id="login-particles"></div>
+
+              
+                <div class="auth-page-actions">
+                    <button type="button" class="auth-settings-btn" id="login-settings-btn" title="Настройки">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19.14 12.94c.04-.31.06-.62.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96c-.5-.38-1.04-.69-1.64-.94L14.36 2.7a.5.5 0 0 0-.49-.4h-3.74a.5.5 0 0 0-.49.4l-.37 2.62c-.6.25-1.14.56-1.64.94l-2.39-.96a.5.5 0 0 0-.61.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.62-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.5.38 1.04.69 1.64.94l.37 2.62a.5.5 0 0 0 .49.4h3.74a.5.5 0 0 0 .49-.4l.37-2.62c.6-.25 1.14-.56 1.64-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/>
+                        </svg>
+                        <span>Настройки</span>
+                    </button>
+                </div>
+
+              
+                <div class="auth-icon-wrap">
+                    <div class="auth-icon-core">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.5-3.87-1.13-7-5.67-7-10.5V6.3l7-3.12z"/>
+                        </svg>
                     </div>
-                    <div class="split-right">
-                        <div class="auth-page-actions">
-                            <button
-                                type="button"
-                                class="auth-settings-btn"
-                                id="login-settings-btn"
-                                title="Настройки"
-                            >
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M19.14 12.94c.04-.31.06-.62.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96c-.5-.38-1.04-.69-1.64-.94L14.36 2.7a.5.5 0 0 0-.49-.4h-3.74a.5.5 0 0 0-.49.4l-.37 2.62c-.6.25-1.14.56-1.64.94l-2.39-.96a.5.5 0 0 0-.61.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.62-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.5.38 1.04.69 1.64.94l.37 2.62a.5.5 0 0 0 .49.4h3.74a.5.5 0 0 0 .49-.4l.37-2.62c.6-.25 1.14-.56 1.64-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"
-                                    />
-                                </svg>
-                                <span>Настройки</span>
-                            </button>
+                    <div class="auth-icon-glow"></div>
+                </div>
+
+                <div class="auth-card">
+                    <div class="auth-card-header">
+                        <h2 class="auth-card-title">Вход</h2>
+                        <p class="auth-card-subtitle">// Введите учётные данные</p>
+                    </div>
+                    <div class="auth-divider"></div>
+
+                    <form id="login-form" class="form" onsubmit="return false;">
+                        <div class="field">
+                            <label>Логин</label>
+                            <input type="text" id="login-user" placeholder="Введите логин" autocomplete="off"/>
                         </div>
-                        <div class="form-wrap">
-                            <h2>Вход</h2>
-                            <p class="form-subtitle">// Введите учётные данные</p>
-                            <form
-                                id="login-form"
-                                class="form"
-                                onsubmit="return false;"
-                            >
-                                <div class="field">
-                                    <label>Логин</label>
-                                    <input
-                                        type="text"
-                                        id="login-user"
-                                        placeholder="Введите логин"
-                                        autocomplete="off"
-                                    />
-                                </div>
-                                <div class="field">
-                                    <label>Пароль</label>
-                                    <div class="pass-wrap">
-                                        <input
-                                            type="password"
-                                            id="login-pass"
-                                            placeholder="Введите пароль"
-                                        />
-                                        <button
-                                            type="button"
-                                            class="eye"
-                                            data-target="login-pass"
-                                        >
-                                            <svg
-                                                viewBox="0 0 24 24"
-                                                class="eye-show"
-                                            >
-                                                <path
-                                                    d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"
-                                                />
-                                            </svg>
-                                            <svg
-                                                viewBox="0 0 24 24"
-                                                class="eye-hide hidden"
-                                            >
-                                                <path
-                                                    d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <button
-                                    type="button"
-                                    class="btn btn-white btn-full"
-                                    id="login-btn"
-                                >
-                                    <span class="btn-t">Войти</span>
-                                    <div class="btn-spin hidden">
-                                        <div class="spinner"></div>
-                                    </div>
+                        <div class="field">
+                            <label>Пароль</label>
+                            <div class="pass-wrap">
+                                <input type="password" id="login-pass" placeholder="Введите пароль"/>
+                                <button type="button" class="eye" data-target="login-pass">
+                                    <svg viewBox="0 0 24 24" class="eye-show"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
+                                    <svg viewBox="0 0 24 24" class="eye-hide hidden"><path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"/></svg>
                                 </button>
-                                <div class="link-row">
-                                    <span>Нет аккаунта?</span>
-                                    <button
-                                        type="button"
-                                        class="link-btn"
-                                        id="go-register"
-                                    >
-                                        Создать
-                                    </button>
-                                </div>
-                            </form>
+                            </div>
                         </div>
-                    </div>
+                        <button type="button" class="btn btn-white btn-full" id="login-btn">
+                            <span class="btn-t">Войти</span>
+                            <div class="btn-spin hidden"><div class="spinner"></div></div>
+                        </button>
+                        <div class="link-row">
+                            <span>Нет аккаунта?</span>
+                            <button type="button" class="link-btn" id="go-register">Создать</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
+        
             <div id="page-register" class="page">
-                <div class="split-layout">
-                    <div class="split-left">
-                        <div class="split-left-grid"></div>
-                        <div class="brand">
-                            <div class="shield-wrap">
-                                <div class="shield-ring"></div>
-                                <div class="shield-ring2"></div>
-                                <div class="shield-ico">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.5-3.87-1.13-7-5.67-7-10.5V6.3l7-3.12z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <h1>SecureGuard</h1>
-                            <p>Создайте защищённый аккаунт</p>
-                            <div class="brand-tag">
-                                <span class="brand-tag-dot"></span>
-                                Zero-knowledge · Client-side enc
-                            </div>
-                        </div>
+
+          
+                <div class="auth-corner auth-corner--tl"></div>
+                <div class="auth-corner auth-corner--tr"></div>
+                <div class="auth-corner auth-corner--bl"></div>
+                <div class="auth-corner auth-corner--br"></div>
+
+           
+                <div class="auth-particles" id="register-particles"></div>
+
+                <div class="auth-page-actions">
+                    <button type="button" class="auth-settings-btn" id="register-settings-btn" title="Настройки">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19.14 12.94c.04-.31.06-.62.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96c-.5-.38-1.04-.69-1.64-.94L14.36 2.7a.5.5 0 0 0-.49-.4h-3.74a.5.5 0 0 0-.49.4l-.37 2.62c-.6.25-1.14.56-1.64.94l-2.39-.96a.5.5 0 0 0-.61.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.62-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.5.38 1.04.69 1.64.94l.37 2.62a.5.5 0 0 0 .49.4h3.74a.5.5 0 0 0 .49-.4l.37-2.62c.6-.25 1.14-.56 1.64-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/>
+                        </svg>
+                        <span>Настройки</span>
+                    </button>
+                </div>
+
+             
+                <div class="auth-icon-wrap">
+                    <div class="auth-icon-core">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.83-3.13 9.37-7 10.5-3.87-1.13-7-5.67-7-10.5V6.3l7-3.12z"/>
+                        </svg>
                     </div>
-                    <div class="split-right">
-                        <div class="auth-page-actions">
-                            <button
-                                type="button"
-                                class="auth-settings-btn"
-                                id="register-settings-btn"
-                                title="Настройки"
-                            >
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M19.14 12.94c.04-.31.06-.62.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96c-.5-.38-1.04-.69-1.64-.94L14.36 2.7a.5.5 0 0 0-.49-.4h-3.74a.5.5 0 0 0-.49.4l-.37 2.62c-.6.25-1.14.56-1.64.94l-2.39-.96a.5.5 0 0 0-.61.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.62-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.5.38 1.04.69 1.64.94l.37 2.62a.5.5 0 0 0 .49.4h3.74a.5.5 0 0 0 .49-.4l.37-2.62c.6-.25 1.14-.56 1.64-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"
-                                    />
-                                </svg>
-                                <span>Настройки</span>
-                            </button>
+                    <div class="auth-icon-glow"></div>
+                </div>
+
+             
+                <div class="auth-card">
+                    <div class="auth-card-header">
+                        <h2 class="auth-card-title">Регистрация</h2>
+                        <p class="auth-card-subtitle">// Создайте новый аккаунт</p>
+                    </div>
+                    <div class="auth-divider"></div>
+
+                    <form id="register-form" class="form" onsubmit="return false;">
+                        <div class="field">
+                            <label>Логин</label>
+                            <input type="text" id="reg-user" placeholder="Минимум 3 символа" autocomplete="off"/>
                         </div>
-                        <div class="form-wrap">
-                            <h2>Регистрация</h2>
-                            <p class="form-subtitle">// Создайте новый аккаунт</p>
-                            <form
-                                id="register-form"
-                                class="form"
-                                onsubmit="return false;"
-                            >
-                                <div class="field">
-                                    <label>Логин</label>
-                                    <input
-                                        type="text"
-                                        id="reg-user"
-                                        placeholder="Минимум 3 символа"
-                                        autocomplete="off"
-                                    />
-                                </div>
-                                <div class="field">
-                                    <label>Пароль</label>
-                                    <div class="pass-wrap">
-                                        <input
-                                            type="password"
-                                            id="reg-pass"
-                                            placeholder="Минимум 8 символов"
-                                        />
-                                        <button
-                                            type="button"
-                                            class="eye"
-                                            data-target="reg-pass"
-                                        >
-                                            <svg
-                                                viewBox="0 0 24 24"
-                                                class="eye-show"
-                                            >
-                                                <path
-                                                    d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"
-                                                />
-                                            </svg>
-                                            <svg
-                                                viewBox="0 0 24 24"
-                                                class="eye-hide hidden"
-                                            >
-                                                <path
-                                                    d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <div class="str-track">
-                                        <div
-                                            class="str-fill"
-                                            id="str-bar"
-                                        ></div>
-                                    </div>
-                                </div>
-                                <div class="field">
-                                    <label>Подтверждение пароля</label>
-                                    <input
-                                        type="password"
-                                        id="reg-pass2"
-                                        placeholder="Повторите пароль"
-                                    />
-                                </div>
-                                <div class="field">
-                                    <label>
-                                        <span id="reg-seed-label-text"
-                                            >Сид-фраза</span
-                                        >
-                                        <span class="info-wrap">
-                                            <span
-                                                class="info"
-                                                aria-hidden="true"
-                                                >?</span
-                                            >
-                                            <span
-                                                class="info-tip"
-                                                id="reg-seed-info-tip"
-                                                role="tooltip"
-                                                >Сид-фраза используется только
-                                                локально для шифрования и
-                                                расшифровки паролей. Сервер не
-                                                хранит и не возвращает ее в
-                                                исходном виде.</span
-                                            >
-                                        </span>
-                                    </label>
-                                    <div class="pass-wrap">
-                                        <input
-                                            type="password"
-                                            id="reg-seed"
-                                            placeholder="Секретная фраза (мин. 1 слово)"
-                                        />
-                                        <button
-                                            type="button"
-                                            class="eye"
-                                            data-target="reg-seed"
-                                        >
-                                            <svg
-                                                viewBox="0 0 24 24"
-                                                class="eye-show"
-                                            >
-                                                <path
-                                                    d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"
-                                                />
-                                            </svg>
-                                            <svg
-                                                viewBox="0 0 24 24"
-                                                class="eye-hide hidden"
-                                            >
-                                                <path
-                                                    d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <span class="warn" id="reg-seed-warn"
-                                        >⚠ Запишите фразу и храните локально.
-                                        Без нее расшифровка невозможна.</span
-                                    >
-                                </div>
-                                <button
-                                    type="button"
-                                    class="btn btn-white btn-full"
-                                    id="reg-btn"
-                                >
-                                    <span class="btn-t">Создать аккаунт</span>
-                                    <div class="btn-spin hidden">
-                                        <div class="spinner"></div>
-                                    </div>
+                        <div class="field">
+                            <label>Пароль</label>
+                            <div class="pass-wrap">
+                                <input type="password" id="reg-pass" placeholder="Минимум 8 символов"/>
+                                <button type="button" class="eye" data-target="reg-pass">
+                                    <svg viewBox="0 0 24 24" class="eye-show"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
+                                    <svg viewBox="0 0 24 24" class="eye-hide hidden"><path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"/></svg>
                                 </button>
-                                <div class="link-row">
-                                    <span>Уже есть аккаунт?</span>
-                                    <button
-                                        type="button"
-                                        class="link-btn"
-                                        id="go-login"
-                                    >
-                                        Войти
-                                    </button>
-                                </div>
-                            </form>
+                            </div>
+                            <div class="str-track"><div class="str-fill" id="str-bar"></div></div>
                         </div>
-                    </div>
+                        <div class="field">
+                            <label>Подтверждение пароля</label>
+                            <input type="password" id="reg-pass2" placeholder="Повторите пароль"/>
+                        </div>
+                        <div class="field">
+                            <label>
+                                <span id="reg-seed-label-text">Сид-фраза</span>
+                                <span class="info-wrap">
+                                    <span class="info" aria-hidden="true">?</span>
+                                    <span class="info-tip" id="reg-seed-info-tip" role="tooltip">Сид-фраза используется только локально для шифрования и расшифровки паролей. Сервер не хранит и не возвращает ее в исходном виде.</span>
+                                </span>
+                            </label>
+                            <div class="pass-wrap">
+                                <input type="password" id="reg-seed" placeholder="Секретная фраза (мин. 1 слово)"/>
+                                <button type="button" class="eye" data-target="reg-seed">
+                                    <svg viewBox="0 0 24 24" class="eye-show"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
+                                    <svg viewBox="0 0 24 24" class="eye-hide hidden"><path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"/></svg>
+                                </button>
+                            </div>
+                            <span class="warn" id="reg-seed-warn">⚠ Запишите фразу и храните локально. Без нее расшифровка невозможна.</span>
+                        </div>
+                        <button type="button" class="btn btn-white btn-full" id="reg-btn">
+                            <span class="btn-t">Создать аккаунт</span>
+                            <div class="btn-spin hidden"><div class="spinner"></div></div>
+                        </button>
+                        <div class="link-row">
+                            <span>Уже есть аккаунт?</span>
+                            <button type="button" class="link-btn" id="go-login">Войти</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
+          
             <div id="page-dashboard" class="page">
                 <div class="dash">
                     <div class="dash-top">
                         <div class="dash-brand">
                             <svg viewBox="0 0 24 24" class="dash-shield">
-                                <path
-                                    d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"
-                                />
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
                             </svg>
                             <h1>Хранилище</h1>
                         </div>
                         <div class="dash-actions">
-                            <button
-                                class="btn-exit hidden"
-                                id="admin-btn"
-                                title="Админ-панель"
-                            >
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 2l7 4v6c0 4.8-3.1 9.3-7 10.5C8.1 21.3 5 16.8 5 12V6l7-4zm0 3.1L8 7.3V12c0 3.5 2.1 6.8 4 7.9 1.9-1.1 4-4.4 4-7.9V7.3l-4-2.2zM11 8h2v5h-2V8zm0 6h2v2h-2v-2z"
-                                    />
-                                </svg>
+                            <button class="btn-exit hidden" id="admin-btn" title="Админ-панель">
+                                <svg viewBox="0 0 24 24"><path d="M12 2l7 4v6c0 4.8-3.1 9.3-7 10.5C8.1 21.3 5 16.8 5 12V6l7-4zm0 3.1L8 7.3V12c0 3.5 2.1 6.8 4 7.9 1.9-1.1 4-4.4 4-7.9V7.3l-4-2.2zM11 8h2v5h-2V8zm0 6h2v2h-2v-2z"/></svg>
                                 <span>Админ-панель</span>
                             </button>
-                            <button
-                                class="btn-exit"
-                                id="settings-btn"
-                                title="Настройки"
-                            >
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M19.14 12.94c.04-.31.06-.62.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96c-.5-.38-1.04-.69-1.64-.94L14.36 2.7a.5.5 0 0 0-.49-.4h-3.74a.5.5 0 0 0-.49.4l-.37 2.62c-.6.25-1.14.56-1.64.94l-2.39-.96a.5.5 0 0 0-.61.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.62-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.5.38 1.04.69 1.64.94l.37 2.62a.5.5 0 0 0 .49.4h3.74a.5.5 0 0 0 .49-.4l.37-2.62c.6-.25 1.14-.56 1.64-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"
-                                    />
-                                </svg>
+                            <button class="btn-exit" id="settings-btn" title="Настройки">
+                                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.62.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96c-.5-.38-1.04-.69-1.64-.94L14.36 2.7a.5.5 0 0 0-.49-.4h-3.74a.5.5 0 0 0-.49.4l-.37 2.62c-.6.25-1.14.56-1.64.94l-2.39-.96a.5.5 0 0 0-.61.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.62-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.5.38 1.04.69 1.64.94l.37 2.62a.5.5 0 0 0 .49.4h3.74a.5.5 0 0 0 .49-.4l.37-2.62c.6-.25 1.14-.56 1.64-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/></svg>
                                 <span>Настройки</span>
                             </button>
-                            <button
-                                class="btn-exit"
-                                id="logout-btn"
-                                title="Выйти"
-                            >
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M17 7l-1.4 1.4L18.2 11H8v2h10.2l-2.6 2.6L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"
-                                    />
-                                </svg>
+                            <button class="btn-exit" id="logout-btn" title="Выйти">
+                                <svg viewBox="0 0 24 24"><path d="M17 7l-1.4 1.4L18.2 11H8v2h10.2l-2.6 2.6L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
                                 <span>Выйти</span>
                             </button>
                         </div>
                     </div>
                     <div id="pw-list" class="pw-list">
                         <div class="empty" id="empty-state">
-                            <div class="empty-icon">
+                            <div class="empty-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none">
                                     <path d="M8 10V7.75C8 5.13 9.79 3 12 3s4 2.13 4 4.75V10"/>
                                     <rect x="5" y="10" width="14" height="11" rx="3"/>
@@ -375,140 +208,67 @@
                     </div>
                     <div class="dash-bottom">
                         <button class="btn btn-white btn-full" id="add-btn">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                            </svg>
+                            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                             <span>Добавить пароль</span>
                         </button>
                     </div>
                 </div>
             </div>
 
+          
             <div id="page-add" class="page">
                 <div class="dash">
                     <div class="dash-top">
                         <div class="dash-brand">
                             <button class="btn-back" id="back-btn">
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z"
-                                    />
-                                </svg>
+                                <svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z"/></svg>
                             </button>
                             <h1>Новый пароль</h1>
                         </div>
                     </div>
                     <div class="add-content">
-                        <form
-                            id="add-form"
-                            class="form"
-                            onsubmit="return false;"
-                        >
+                        <form id="add-form" class="form" onsubmit="return false;">
                             <div class="field">
                                 <label>Название</label>
-                                <input
-                                    type="text"
-                                    id="add-title"
-                                    placeholder="Gmail, GitHub, VK..."
-                                    autocomplete="off"
-                                />
+                                <input type="text" id="add-title" placeholder="Gmail, GitHub, VK..." autocomplete="off"/>
                             </div>
                             <div class="field">
                                 <label>Пароль</label>
                                 <div class="pass-wrap">
-                                    <input
-                                        type="password"
-                                        id="add-pass"
-                                        placeholder="Пароль для сохранения"
-                                    />
-                                    <button
-                                        type="button"
-                                        class="eye"
-                                        data-target="add-pass"
-                                    >
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            class="eye-show"
-                                        >
-                                            <path
-                                                d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"
-                                            />
-                                        </svg>
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            class="eye-hide hidden"
-                                        >
-                                            <path
-                                                d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"
-                                            />
-                                        </svg>
+                                    <input type="password" id="add-pass" placeholder="Пароль для сохранения"/>
+                                    <button type="button" class="eye" data-target="add-pass">
+                                        <svg viewBox="0 0 24 24" class="eye-show"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
+                                        <svg viewBox="0 0 24 24" class="eye-hide hidden"><path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"/></svg>
                                     </button>
                                 </div>
                             </div>
                             <div class="field">
                                 <label>Сид-фраза</label>
                                 <div class="pass-wrap">
-                                    <input
-                                        type="password"
-                                        id="add-seed"
-                                        placeholder="Ваша сид-фраза для шифрования"
-                                    />
-                                    <button
-                                        type="button"
-                                        class="eye"
-                                        data-target="add-seed"
-                                    >
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            class="eye-show"
-                                        >
-                                            <path
-                                                d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"
-                                            />
-                                        </svg>
-                                        <svg
-                                            viewBox="0 0 24 24"
-                                            class="eye-hide hidden"
-                                        >
-                                            <path
-                                                d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"
-                                            />
-                                        </svg>
+                                    <input type="password" id="add-seed" placeholder="Ваша сид-фраза для шифрования"/>
+                                    <button type="button" class="eye" data-target="add-seed">
+                                        <svg viewBox="0 0 24 24" class="eye-show"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
+                                        <svg viewBox="0 0 24 24" class="eye-hide hidden"><path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"/></svg>
                                     </button>
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                class="btn btn-white btn-full"
-                                id="save-btn"
-                            >
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M18 8h-1V6c0-2.8-2.2-5-5-5S7 3.2 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.7 1.4-3.1 3.1-3.1s3.1 1.4 3.1 3.1v2z"
-                                    />
-                                </svg>
-                                <span class="btn-t"
-                                    >Зашифровать и сохранить</span
-                                >
-                                <div class="btn-spin hidden">
-                                    <div class="spinner"></div>
-                                </div>
+                            <button type="button" class="btn btn-white btn-full" id="save-btn">
+                                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.8-2.2-5-5-5S7 3.2 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.7 1.4-3.1 3.1-3.1s3.1 1.4 3.1 3.1v2z"/></svg>
+                                <span class="btn-t">Зашифровать и сохранить</span>
+                                <div class="btn-spin hidden"><div class="spinner"></div></div>
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
+          
             <div id="page-settings" class="page">
                 <div class="dash">
                     <div class="dash-top">
                         <div class="dash-brand">
                             <button class="btn-back" id="settings-back-btn">
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z"
-                                    />
-                                </svg>
+                                <svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z"/></svg>
                             </button>
                             <h1>Настройки</h1>
                         </div>
@@ -518,9 +278,7 @@
                             <div class="settings-item settings-item-inline">
                                 <div class="settings-copy">
                                     <h3 id="setting-language-title">Язык</h3>
-                                    <p id="setting-language-desc">
-                                        Выберите язык интерфейса приложения.
-                                    </p>
+                                    <p id="setting-language-desc">Выберите язык интерфейса приложения.</p>
                                 </div>
                                 <select id="setting-language" class="select">
                                     <option value="ru">Русский</option>
@@ -529,111 +287,107 @@
                             </div>
                             <div class="settings-item settings-item-inline">
                                 <div class="settings-copy">
-                                    <h3 id="setting-encryption-title">
-                                        Алгоритм шифрования
-                                    </h3>
-                                    <p id="setting-encryption-desc">
-                                        Выберите, как шифровать пароли вашей
-                                        локальной сид-фразой.
-                                    </p>
+                                    <h3 id="setting-ui-scale-title">Масштаб интерфейса</h3>
+                                    <p id="setting-ui-scale-desc">Меняет DPI/масштаб самой приложухи без изменения системного масштаба.</p>
                                 </div>
-                                <select
-                                    id="setting-encryption-algorithm"
-                                    class="select"
-                                >
-                                    <option value="aes256gcm-argon2id">
-                                        AES-256-GCM + Argon2id (рекомендуется)
-                                    </option>
-                                    <option value="aes256gcm-sha256">
-                                        AES-256-GCM + SHA-256 (быстро)
-                                    </option>
+                                <select id="setting-ui-scale" class="select">
+                                    <option value="0.9">90%</option>
+                                    <option value="1">100%</option>
+                                    <option value="1.1">110%</option>
+                                    <option value="1.25">125%</option>
+                                    <option value="1.5">150%</option>
                                 </select>
                             </div>
+                            <div class="settings-item settings-item-inline">
+                                <div class="settings-copy">
+                                    <h3 id="setting-encryption-title">Алгоритм шифрования</h3>
+                                    <p id="setting-encryption-desc">Выберите, как шифровать пароли вашей локальной сид-фразой.</p>
+                                </div>
+                                <select id="setting-encryption-algorithm" class="select">
+                                    <option value="aes256gcm-argon2id">AES-256-GCM + Argon2id (рекомендуется)</option>
+                                    <option value="aes256gcm-sha256">AES-256-GCM + SHA-256 (быстро)</option>
+                                </select>
+                            </div>
+                            <div class="settings-item settings-item-stack">
+                                <div class="settings-copy">
+                                    <h3 id="setting-backend-title">Backend</h3>
+                                    <p id="setting-backend-desc">Production endpoint или custom HTTPS URL.</p>
+                                </div>
+                                <div class="backend-panel">
+                                    <div class="backend-mode">
+                                        <label class="backend-choice">
+                                            <input type="radio" name="setting-backend-mode" id="setting-backend-mode-production" value="production"/>
+                                            <span id="setting-backend-mode-production-label">Production</span>
+                                        </label>
+                                        <label class="backend-choice">
+                                            <input type="radio" name="setting-backend-mode" id="setting-backend-mode-custom" value="custom"/>
+                                            <span id="setting-backend-mode-custom-label">Custom URL</span>
+                                        </label>
+                                    </div>
+                                    <div class="backend-custom-row">
+                                        <input id="setting-backend-custom-url" class="backend-input" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="http://127.0.0.1:8080"/>
+                                        <button class="btn-exit" id="setting-backend-apply-btn" type="button">Применить</button>
+                                    </div>
+                                    <div class="backend-effective">
+                                        <span id="setting-backend-effective-label">Effective endpoint</span>
+                                        <code id="setting-backend-effective-endpoint">http://127.0.0.1:8080</code>
+                                    </div>
+                                    <div class="backend-status" id="setting-backend-status-card">
+                                        <div class="backend-status-head">
+                                            <strong id="setting-backend-status-title">Статус сервера</strong>
+                                            <span class="backend-status-badge is-idle" id="setting-backend-status-badge">Не проверен</span>
+                                        </div>
+                                        <p class="backend-status-summary" id="setting-backend-status-summary">Укажите endpoint и нажмите «Применить», чтобы проверить сервер.</p>
+                                        <div class="backend-status-details hidden" id="setting-backend-status-details"></div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3 id="setting-sg-title">
-                                        Screenshot Guard
-                                    </h3>
-                                    <p id="setting-sg-desc">
-                                        Блокирует скриншоты и инструменты
-                                        захвата экрана.
-                                    </p>
+                                    <h3 id="setting-sg-title">Screenshot Guard</h3>
+                                    <p id="setting-sg-desc">Блокирует скриншоты и инструменты захвата экрана.</p>
                                 </div>
                                 <label class="switch">
-                                    <input
-                                        type="checkbox"
-                                        id="setting-screenshot-guard"
-                                    />
+                                    <input type="checkbox" id="setting-screenshot-guard"/>
                                     <span class="switch-slider"></span>
                                 </label>
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3 id="setting-light-theme-title">
-                                        Белая тема
-                                    </h3>
-                                    <p id="setting-light-theme-desc">
-                                        Использовать светлое оформление
-                                        интерфейса.
-                                    </p>
+                                    <h3 id="setting-light-theme-title">Белая тема</h3>
+                                    <p id="setting-light-theme-desc">Использовать светлое оформление интерфейса.</p>
                                 </div>
                                 <label class="switch">
-                                    <input
-                                        type="checkbox"
-                                        id="setting-light-theme"
-                                    />
+                                    <input type="checkbox" id="setting-light-theme"/>
                                     <span class="switch-slider"></span>
                                 </label>
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3 id="setting-startup-title">
-                                        Запуск с Windows
-                                    </h3>
-                                    <p id="setting-startup-desc">
-                                        Автоматически запускать SecureGuard при
-                                        входе в систему.
-                                    </p>
+                                    <h3 id="setting-startup-title">Запуск с Windows</h3>
+                                    <p id="setting-startup-desc">Автоматически запускать SecureGuard при входе в систему.</p>
                                 </div>
                                 <label class="switch">
-                                    <input
-                                        type="checkbox"
-                                        id="setting-startup-enabled"
-                                    />
+                                    <input type="checkbox" id="setting-startup-enabled"/>
                                     <span class="switch-slider"></span>
                                 </label>
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3 id="setting-auto-lock-title">
-                                        Авто-локаут
-                                    </h3>
-                                    <p id="setting-auto-lock-desc">
-                                        Автоматический выход при бездействии.
-                                    </p>
+                                    <h3 id="setting-auto-lock-title">Авто-локаут</h3>
+                                    <p id="setting-auto-lock-desc">Автоматический выход при бездействии.</p>
                                 </div>
                                 <label class="switch">
-                                    <input
-                                        type="checkbox"
-                                        id="setting-auto-lock-enabled"
-                                    />
+                                    <input type="checkbox" id="setting-auto-lock-enabled"/>
                                     <span class="switch-slider"></span>
                                 </label>
                             </div>
                             <div class="settings-item settings-item-inline">
                                 <div class="settings-copy">
-                                    <h3 id="setting-auto-lock-minutes-title">
-                                        Таймер авто-локаута
-                                    </h3>
-                                    <p id="setting-auto-lock-minutes-desc">
-                                        Через сколько минут бездействия выйти из
-                                        аккаунта.
-                                    </p>
+                                    <h3 id="setting-auto-lock-minutes-title">Таймер авто-локаута</h3>
+                                    <p id="setting-auto-lock-minutes-desc">Через сколько минут бездействия выйти из аккаунта.</p>
                                 </div>
-                                <select
-                                    id="setting-auto-lock-minutes"
-                                    class="select"
-                                >
+                                <select id="setting-auto-lock-minutes" class="select">
                                     <option value="1">1 минута</option>
                                     <option value="3">3 минуты</option>
                                     <option value="5">5 минут</option>
@@ -642,18 +396,10 @@
                             </div>
                             <div class="settings-item settings-item-inline">
                                 <div class="settings-copy">
-                                    <h3 id="setting-clipboard-timeout-title">
-                                        Таймаут буфера обмена
-                                    </h3>
-                                    <p id="setting-clipboard-timeout-desc">
-                                        Через сколько секунд очищать буфер
-                                        обмена после копирования пароля.
-                                    </p>
+                                    <h3 id="setting-clipboard-timeout-title">Таймаут буфера обмена</h3>
+                                    <p id="setting-clipboard-timeout-desc">Через сколько секунд очищать буфер обмена после копирования пароля.</p>
                                 </div>
-                                <select
-                                    id="setting-clipboard-timeout"
-                                    class="select"
-                                >
+                                <select id="setting-clipboard-timeout" class="select">
                                     <option value="15">15 с</option>
                                     <option value="30">30 с</option>
                                     <option value="60">60 с</option>
@@ -662,149 +408,79 @@
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3 id="setting-confirm-delete-title">
-                                        Подтверждение удаления
-                                    </h3>
-                                    <p id="setting-confirm-delete-desc">
-                                        Показывать диалог перед удалением
-                                        записи.
-                                    </p>
+                                    <h3 id="setting-confirm-delete-title">Подтверждение удаления</h3>
+                                    <p id="setting-confirm-delete-desc">Показывать диалог перед удалением записи.</p>
                                 </div>
                                 <label class="switch">
-                                    <input
-                                        type="checkbox"
-                                        id="setting-confirm-delete"
-                                    />
+                                    <input type="checkbox" id="setting-confirm-delete"/>
                                     <span class="switch-slider"></span>
                                 </label>
                             </div>
                             <div class="settings-item">
                                 <div class="settings-copy">
-                                    <h3 id="setting-block-context-title">
-                                        Блокировка контекстного меню
-                                    </h3>
-                                    <p id="setting-block-context-desc">
-                                        Отключает правую кнопку мыши внутри
-                                        приложения.
-                                    </p>
+                                    <h3 id="setting-block-context-title">Блокировка контекстного меню</h3>
+                                    <p id="setting-block-context-desc">Отключает правую кнопку мыши внутри приложения.</p>
                                 </div>
                                 <label class="switch">
-                                    <input
-                                        type="checkbox"
-                                        id="setting-block-context-menu"
-                                    />
+                                    <input type="checkbox" id="setting-block-context-menu"/>
                                     <span class="switch-slider"></span>
                                 </label>
+                            </div>
+                            <div class="settings-item settings-item-stack">
+                                <div class="settings-copy">
+                                    <h3 id="setting-sessions-title">Активные сессии</h3>
+                                    <p id="setting-sessions-desc">Просмотр активных устройств и отключение других сессий.</p>
+                                </div>
+                                <div class="settings-section-head">
+                                    <button class="btn-exit" id="setting-sessions-refresh-btn" type="button">Обновить</button>
+                                </div>
+                                <div class="sessions-list" id="setting-sessions-list"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+           
             <div id="page-admin" class="page">
                 <div class="dash">
                     <div class="dash-top">
                         <div class="dash-brand">
                             <button class="btn-back" id="admin-back-btn">
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z"
-                                    />
-                                </svg>
+                                <svg viewBox="0 0 24 24"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z"/></svg>
                             </button>
                             <h1>Админ-панель</h1>
                         </div>
                         <div class="dash-actions">
-                            <button
-                                class="btn-exit"
-                                id="admin-refresh-btn"
-                                title="Обновить"
-                            >
-                                <svg viewBox="0 0 24 24">
-                                    <path
-                                        d="M17.7 6.3A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.2L13 11h7V4l-2.3 2.3z"
-                                    />
-                                </svg>
+                            <button class="btn-exit" id="admin-refresh-btn" title="Обновить">
+                                <svg viewBox="0 0 24 24"><path d="M17.7 6.3A8 8 0 1 0 20 12h-2a6 6 0 1 1-1.8-4.2L13 11h7V4l-2.3 2.3z"/></svg>
                                 <span>Обновить</span>
                             </button>
                         </div>
                     </div>
                     <div class="admin-content">
-                        <div class="admin-note" id="admin-readonly-note">
-                            Только просмотр статистики. Управление
-                            пользователями недоступно.
-                        </div>
-
+                        <div class="admin-note" id="admin-readonly-note">Только просмотр статистики. Управление пользователями недоступно.</div>
                         <div class="admin-grid">
-                            <div class="admin-card">
-                                <span id="admin-total-users-label"
-                                    >Пользователи</span
-                                >
-                                <strong id="admin-total-users">0</strong>
-                            </div>
-                            <div class="admin-card">
-                                <span id="admin-total-admins-label"
-                                    >Администраторы</span
-                                >
-                                <strong id="admin-total-admins">0</strong>
-                            </div>
-                            <div class="admin-card">
-                                <span id="admin-total-passwords-label"
-                                    >Пароли</span
-                                >
-                                <strong id="admin-total-passwords">0</strong>
-                            </div>
-                            <div class="admin-card">
-                                <span id="admin-total-sessions-label"
-                                    >Активные сессии</span
-                                >
-                                <strong id="admin-total-sessions">0</strong>
-                            </div>
+                            <div class="admin-card"><span id="admin-total-users-label">Пользователи</span><strong id="admin-total-users">0</strong></div>
+                            <div class="admin-card"><span id="admin-total-admins-label">Администраторы</span><strong id="admin-total-admins">0</strong></div>
+                            <div class="admin-card"><span id="admin-total-passwords-label">Пароли</span><strong id="admin-total-passwords">0</strong></div>
+                            <div class="admin-card"><span id="admin-total-sessions-label">Активные сессии</span><strong id="admin-total-sessions">0</strong></div>
                         </div>
-
                         <div class="admin-panels">
                             <section class="admin-panel">
-                                <div class="admin-panel-head">
-                                    <h3 id="admin-activity-title">
-                                        Активность пользователей
-                                    </h3>
-                                </div>
-                                <div
-                                    id="admin-activity-graph"
-                                    class="admin-chart"
-                                ></div>
+                                <div class="admin-panel-head"><h3 id="admin-activity-title">Активность пользователей</h3></div>
+                                <div id="admin-activity-graph" class="admin-chart"></div>
                             </section>
-
                             <section class="admin-panel">
-                                <div class="admin-panel-head">
-                                    <h3 id="admin-register-title">
-                                        Регистрации
-                                    </h3>
-                                </div>
-                                <div
-                                    id="admin-register-graph"
-                                    class="admin-chart"
-                                ></div>
+                                <div class="admin-panel-head"><h3 id="admin-register-title">Регистрации</h3></div>
+                                <div id="admin-register-graph" class="admin-chart"></div>
                             </section>
-
                             <section class="admin-panel">
-                                <div class="admin-panel-head">
-                                    <h3 id="admin-top-services-title">
-                                        Топ сервисов
-                                    </h3>
-                                </div>
-                                <div
-                                    id="admin-top-services"
-                                    class="admin-bars"
-                                ></div>
+                                <div class="admin-panel-head"><h3 id="admin-top-services-title">Топ сервисов</h3></div>
+                                <div id="admin-top-services" class="admin-bars"></div>
                             </section>
-
                             <section class="admin-panel">
-                                <div class="admin-panel-head">
-                                    <h3 id="admin-crypt-title">
-                                        Использование шифрования
-                                    </h3>
-                                </div>
+                                <div class="admin-panel-head"><h3 id="admin-crypt-title">Использование шифрования</h3></div>
                                 <div id="admin-crypt" class="admin-bars"></div>
                             </section>
                         </div>
@@ -812,29 +488,16 @@
                 </div>
             </div>
 
+          
             <div id="weak-modal" class="modal hidden">
                 <div class="modal-bg"></div>
                 <div class="modal-box">
                     <h2 id="weak-title">Слабые данные</h2>
-                    <p id="weak-text">
-                        Точно использовать такую сид-фразу/пароль?
-                    </p>
+                    <p id="weak-text">Точно использовать такую сид-фразу/пароль?</p>
                     <ul id="weak-list" class="weak-list"></ul>
                     <div class="modal-btns">
-                        <button
-                            type="button"
-                            class="btn btn-ghost"
-                            id="weak-no"
-                        >
-                            Отмена
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-danger"
-                            id="weak-yes"
-                        >
-                            Использовать
-                        </button>
+                        <button type="button" class="btn btn-ghost" id="weak-no">Отмена</button>
+                        <button type="button" class="btn btn-danger" id="weak-yes">Использовать</button>
                     </div>
                 </div>
             </div>
@@ -846,50 +509,18 @@
                     <p>Для локальной расшифровки и копирования пароля</p>
                     <div class="field">
                         <div class="pass-wrap">
-                            <input
-                                type="password"
-                                id="modal-seed"
-                                placeholder="Ваша сид-фраза"
-                                autocomplete="off"
-                            />
-                            <button
-                                type="button"
-                                class="eye"
-                                data-target="modal-seed"
-                            >
-                                <svg viewBox="0 0 24 24" class="eye-show">
-                                    <path
-                                        d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"
-                                    />
-                                </svg>
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    class="eye-hide hidden"
-                                >
-                                    <path
-                                        d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"
-                                    />
-                                </svg>
+                            <input type="password" id="modal-seed" placeholder="Ваша сид-фраза" autocomplete="off"/>
+                            <button type="button" class="eye" data-target="modal-seed">
+                                <svg viewBox="0 0 24 24" class="eye-show"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
+                                <svg viewBox="0 0 24 24" class="eye-hide hidden"><path d="M12 7c2.8 0 5 2.2 5 5 0 .6-.1 1.3-.4 1.8l2.9 2.9c1.5-1.3 2.7-2.9 3.5-4.7-1.7-4.4-6-7.5-11-7.5-1.4 0-2.7.3-4 .7l2.2 2.2c.5-.3 1.2-.4 1.8-.4zM2 4.3l2.3 2.3.4.4C3.2 8.3 2 10 1 12c1.7 4.4 6 7.5 11 7.5 1.6 0 3-.3 4.4-.8l.4.4 2.9 2.9 1.3-1.3L3.3 3 2 4.3zm5.5 5.5l1.6 1.6c0 .2-.1.4-.1.6 0 1.7 1.3 3 3 3 .2 0 .4 0 .6-.1l1.6 1.6c-.7.3-1.4.5-2.2.5-2.8 0-5-2.2-5-5 0-.8.2-1.5.5-2.2z"/></svg>
                             </button>
                         </div>
                     </div>
                     <div class="modal-btns">
-                        <button
-                            type="button"
-                            class="btn btn-ghost"
-                            id="modal-no"
-                        >
-                            Отмена
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-white"
-                            id="modal-yes"
-                        >
+                        <button type="button" class="btn btn-ghost" id="modal-no">Отмена</button>
+                        <button type="button" class="btn btn-white" id="modal-yes">
                             <span class="btn-t">Скопировать</span>
-                            <div class="btn-spin hidden">
-                                <div class="spinner"></div>
-                            </div>
+                            <div class="btn-spin hidden"><div class="spinner"></div></div>
                         </button>
                     </div>
                 </div>
@@ -902,21 +533,44 @@
                     <p>Это действие необратимо</p>
                     <div class="del-name" id="del-name"></div>
                     <div class="modal-btns">
-                        <button type="button" class="btn btn-ghost" id="del-no">
-                            Отмена
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-danger"
-                            id="del-yes"
-                        >
-                            Удалить
-                        </button>
+                        <button type="button" class="btn btn-ghost" id="del-no">Отмена</button>
+                        <button type="button" class="btn btn-danger" id="del-yes">Удалить</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <script src="main.js"></script>
+
+      
+        <script>
+            (function() {
+                function spawnParticles(containerId, count) {
+                    var container = document.getElementById(containerId);
+                    if (!container) return;
+                    for (var i = 0; i < count; i++) {
+                        var p = document.createElement('div');
+                        p.className = 'auth-particle';
+                        var size = Math.random() * 2 + 1;
+                        var x = Math.random() * 100;
+                        var dur = Math.random() * 10 + 8;
+                        var delay = Math.random() * 12;
+                        var dx = (Math.random() - 0.5) * 120;
+                        p.style.cssText = [
+                            'left:' + x + '%',
+                            'bottom:0',
+                            'width:' + size + 'px',
+                            'height:' + size + 'px',
+                            '--dur:' + dur + 's',
+                            '--delay:' + delay + 's',
+                            '--dx:' + dx + 'px'
+                        ].join(';');
+                        container.appendChild(p);
+                    }
+                }
+                spawnParticles('login-particles', 22);
+                spawnParticles('register-particles', 22);
+            })();
+        </script>
     </body>
 </html>

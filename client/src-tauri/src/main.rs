@@ -8,7 +8,10 @@ mod crypto;
 mod protection;
 mod screenshot_guard;
 
-use api::{AdminStats, ApiClient, AuthProfile, PasswordEntry};
+use api::{
+    AdminStats, ApiClient, AuthProfile, BackendEndpointResponse, PasswordEntry,
+    ServerProbeResponse, SessionSummary,
+};
 use crypto::{
     decrypt_password, decrypt_password_with_master_key, default_encryption_algorithm,
     encrypt_password_with_master_key, generate_master_key, prepare_master_key_envelope,
@@ -168,6 +171,38 @@ async fn logout(state: State<'_, AppState>) -> Result<(), String> {
     }
     clear_auth_state(&state, &mut api);
     Ok(())
+}
+
+#[tauri::command]
+async fn get_backend_endpoint(state: State<'_, AppState>) -> Result<String, String> {
+    let api = state.api.lock().await;
+    Ok(api.backend().to_string())
+}
+
+#[tauri::command]
+async fn set_backend_endpoint(
+    state: State<'_, AppState>,
+    endpoint: String,
+) -> Result<BackendEndpointResponse, String> {
+    let mut api = state.api.lock().await;
+    let reauth_required = state.authenticated.load(Ordering::SeqCst);
+    let changed = api.set_backend(&endpoint)?;
+    let applied_endpoint = api.backend().to_string();
+
+    if changed {
+        clear_auth_state(&state, &mut api);
+    }
+
+    Ok(BackendEndpointResponse {
+        endpoint: applied_endpoint,
+        reauth_required: changed && reauth_required,
+    })
+}
+
+#[tauri::command]
+async fn probe_backend_server(state: State<'_, AppState>) -> Result<ServerProbeResponse, String> {
+    let api = state.api.lock().await;
+    Ok(api.probe_server().await)
 }
 
 #[tauri::command]
@@ -592,6 +627,43 @@ async fn delete_password(state: State<'_, AppState>, entry_id: String) -> Result
 }
 
 #[tauri::command]
+async fn list_sessions(state: State<'_, AppState>) -> Result<Vec<SessionSummary>, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+    }
+    let mut api = state.api.lock().await;
+    match api.list_sessions().await {
+        Ok(entries) => Ok(entries),
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(&state, &mut api);
+            }
+            Err(err)
+        }
+    }
+}
+
+#[tauri::command]
+async fn revoke_session(state: State<'_, AppState>, session_id: String) -> Result<(), String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("РќРµ Р°РІС‚РѕСЂРёР·РѕРІР°РЅ".into());
+    }
+    if session_id.trim().is_empty() {
+        return Err("РќРµ РЅР°Р№РґРµРЅРѕ".into());
+    }
+    let mut api = state.api.lock().await;
+    match api.revoke_session(&session_id).await {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(&state, &mut api);
+            }
+            Err(err)
+        }
+    }
+}
+
+#[tauri::command]
 async fn is_authenticated(state: State<'_, AppState>) -> Result<bool, String> {
     let api = state.api.lock().await;
     let authenticated = state.authenticated.load(Ordering::SeqCst) && api.is_authenticated();
@@ -697,8 +769,14 @@ fn chrono_now() -> String {
         .to_string()
 }
 
+fn install_rustls_provider() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 fn main() {
-    #[cfg(all(target_os = "windows", not(debug_assertions)))]
+    install_rustls_provider();
+
+
     protection::init_protection();
 
     tauri::Builder::default()
@@ -719,6 +797,9 @@ fn main() {
             prepare_local_master_key_envelope,
             login,
             logout,
+            get_backend_endpoint,
+            set_backend_endpoint,
+            probe_backend_server,
             get_session_user,
             get_admin_stats,
             set_theme_preference,
@@ -728,6 +809,8 @@ fn main() {
             add_password,
             copy_password,
             delete_password,
+            list_sessions,
+            revoke_session,
             is_authenticated,
             get_screenshot_guard_status,
             set_screenshot_guard_enabled,

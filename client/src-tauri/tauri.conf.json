@@ -35,9 +35,11 @@
     "windows": [
       {
         "title": "SecureGuard",
-        "width": 900,
-        "height": 500,
-        "resizable": false,
+        "width": 1200,
+        "height": 760,
+        "minWidth": 980,
+        "minHeight": 640,
+        "resizable": true,
         "center": true,
         "decorations": true,
         "transparent": false

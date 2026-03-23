@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
+use reqwest::Url;
 use tonic::metadata::MetadataValue;
 use tonic::transport::{Channel, Endpoint};
 use tonic::{Code, Request, Status};
@@ -8,6 +9,19 @@ use zeroize::{Zeroize, Zeroizing};
 
 pub mod xyz {
     pub mod secureguard {
+        pub mod api {
+            pub mod v1 {
+                pub mod meta {
+                    pub mod v1 {
+                        include!(concat!(
+                            env!("CARGO_MANIFEST_DIR"),
+                            "/../grpc/xyz/secureguard/api/v1/meta/v1/xyz.secureguard.api.v1.meta.v1.rs"
+                        ));
+                    }
+                }
+            }
+        }
+
         pub mod v1 {
             include!(concat!(
                 env!("CARGO_MANIFEST_DIR"),
@@ -49,22 +63,31 @@ pub mod xyz {
                     ));
                 }
             }
+
+            pub mod sessions {
+                pub mod v1 {
+                    include!(concat!(
+                        env!("CARGO_MANIFEST_DIR"),
+                        "/../grpc/xyz/secureguard/v1/sessions/v1/xyz.secureguard.v1.sessions.v1.rs"
+                    ));
+                }
+            }
         }
     }
 }
 
 use self::xyz::secureguard::v1 as shared_contract_v1;
+use self::xyz::secureguard::api::v1::meta::v1 as api_meta_contract_v1;
 use self::xyz::secureguard::v1::login::v1 as login_contract_v1;
 use self::xyz::secureguard::v1::passwords::v1 as passwords_contract_v1;
+use self::xyz::secureguard::v1::sessions::v1 as sessions_contract_v1;
 use self::xyz::secureguard::v1::stats::v1 as stats_contract_v1;
 use self::xyz::secureguard::v1::users::v1 as users_contract_v1;
 
-#[cfg(debug_assertions)]
 const DEFAULT_BACKEND: &str = "http://127.0.0.1:8080";
-#[cfg(not(debug_assertions))]
-const DEFAULT_BACKEND: &str = "";
-
 const DEFAULT_ENCRYPTION_ALGORITHM: &str = "aes256gcm-argon2id";
+const CLIENT_API_VERSION: f32 = 1.0;
+const PAGE_SIZE: i32 = 200;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PasswordEntry {
@@ -112,6 +135,45 @@ pub struct AdminStats {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct BackendEndpointResponse {
+    pub endpoint: String,
+    pub reauth_required: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct ServerMetadata {
+    pub name: String,
+    pub version: String,
+    pub runtime_version: String,
+    pub supported_api_versions: Vec<f32>,
+    pub commit_hash: String,
+    pub repository: String,
+    pub build_time_unix: Option<i64>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct ServerProbeResponse {
+    pub endpoint: String,
+    pub healthy: bool,
+    pub health_error: String,
+    pub compatibility_checked: bool,
+    pub compatible: bool,
+    pub compatibility_error: String,
+    pub reasons: Vec<String>,
+    pub client_api_version: f32,
+    pub info: Option<ServerMetadata>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct SessionSummary {
+    pub id: String,
+    pub is_current: bool,
+    pub created_at_unix: i64,
+    pub expires_at_unix: i64,
+    pub last_seen_unix: Option<i64>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 struct PasswordPayload {
     #[serde(default)]
     id: String,
@@ -143,6 +205,8 @@ impl ApiClient {
             .or_else(|| env::var("SECUREGUARD_BACKEND").ok())
             .filter(|v| !v.trim().is_empty())
             .unwrap_or_else(|| DEFAULT_BACKEND.to_string());
+        let backend = validate_backend_endpoint(&backend)
+            .unwrap_or_else(|_| DEFAULT_BACKEND.to_string());
 
         let client_hash = format!(
             "tauri-{}-{}",
@@ -167,28 +231,36 @@ impl ApiClient {
         }
     }
 
-    async fn connect(&self) -> Result<Channel, String> {
-        let endpoint = Endpoint::from_shared(self.backend.clone())
-            .map_err(|e| format!("Backend endpoint: {}", e))?;
+    pub fn backend(&self) -> &str {
+        &self.backend
+    }
 
-        #[cfg(not(debug_assertions))]
-        {
-            if !self.backend.starts_with("https://") {
-                return Err("Production requires TLS endpoint (https://)".into());
-            }
-            return endpoint
+    pub fn set_backend(&mut self, endpoint: &str) -> Result<bool, String> {
+        let normalized = validate_backend_endpoint(endpoint)?;
+        if self.backend == normalized {
+            return Ok(false);
+        }
+        self.backend = normalized;
+        Ok(true)
+    }
+
+    async fn connect(&self) -> Result<Channel, String> {
+        let endpoint_url = validate_backend_endpoint(&self.backend)?;
+        let endpoint = Endpoint::from_shared(endpoint_url.clone())
+            .map_err(|e| format!("Backend endpoint: {}", e))?;
+        if endpoint_url.starts_with("https://") {
+            endpoint
                 .tls_config(tonic::transport::ClientTlsConfig::new())
                 .map_err(|e| format!("TLS config: {}", e))?
                 .connect()
                 .await
-                .map_err(|e| format!("Backend connection: {}", e));
+                .map_err(|e| format!("Backend connection: {}", e))
+        } else {
+            endpoint
+                .connect()
+                .await
+                .map_err(|e| format!("Backend connection: {}", e))
         }
-
-        #[cfg(debug_assertions)]
-        endpoint
-            .connect()
-            .await
-            .map_err(|e| format!("Backend connection: {}", e))
     }
 
     fn with_client_metadata<T>(&self, mut req: Request<T>) -> Result<Request<T>, String> {
@@ -315,7 +387,6 @@ impl ApiClient {
 
         let channel = self.connect().await?;
         let mut client = PasswordServiceClient::new(channel);
-        const PAGE_SIZE: i32 = 200;
         let mut out = Vec::new();
         let mut offset = 0_i32;
 
@@ -513,6 +584,158 @@ impl ApiClient {
         client.delete(req).await.map_err(map_tonic_error)?;
         Ok(())
     }
+
+    pub async fn list_sessions(&self) -> Result<Vec<SessionSummary>, String> {
+        use sessions_contract_v1::sessions_service_client::SessionsServiceClient;
+        use shared_contract_v1::RequestWithBooleanLimitOffset;
+
+        let channel = self.connect().await?;
+        let mut client = SessionsServiceClient::new(channel);
+        let mut out = Vec::new();
+        let mut offset = 0_i32;
+
+        loop {
+            let request = RequestWithBooleanLimitOffset {
+                value: true,
+                limit: PAGE_SIZE,
+                offset,
+            };
+            let req = self.with_auth_metadata(Request::new(request))?;
+            let response = match client.get_list(req).await {
+                Ok(response) => response,
+                Err(status) if status.code() == Code::NotFound => break,
+                Err(status) => return Err(map_tonic_error(status)),
+            };
+            let payload = response.into_inner();
+            let mut batch_len = 0_i32;
+
+            for item in payload.list {
+                if item.id.trim().is_empty() {
+                    continue;
+                }
+                batch_len += 1;
+                out.push(SessionSummary {
+                    id: item.id,
+                    is_current: item.hash == self.client_hash,
+                    created_at_unix: timestamp_to_unix_seconds(item.created_at),
+                    expires_at_unix: timestamp_to_unix_seconds(item.expires_at),
+                    last_seen_unix: timestamp_to_unix_seconds_option(item.last_seen),
+                });
+            }
+
+            if batch_len == 0 {
+                break;
+            }
+            offset += batch_len;
+            if batch_len < PAGE_SIZE {
+                break;
+            }
+        }
+
+        Ok(out)
+    }
+
+    pub async fn revoke_session(&self, id: &str) -> Result<(), String> {
+        use sessions_contract_v1::sessions_service_client::SessionsServiceClient;
+        use shared_contract_v1::RequestWithId;
+
+        let channel = self.connect().await?;
+        let mut client = SessionsServiceClient::new(channel);
+        let request = RequestWithId { id: id.to_string() };
+        let req = self.with_auth_metadata(Request::new(request))?;
+        client.revoke(req).await.map_err(map_tonic_error)?;
+        Ok(())
+    }
+
+    pub async fn probe_server(&self) -> ServerProbeResponse {
+        use api_meta_contract_v1::meta_service_client::MetaServiceClient;
+
+        let mut response = ServerProbeResponse {
+            endpoint: self.backend.clone(),
+            client_api_version: CLIENT_API_VERSION,
+            ..ServerProbeResponse::default()
+        };
+
+        let channel = match self.connect().await {
+            Ok(channel) => channel,
+            Err(err) => {
+                response.health_error = err;
+                return response;
+            }
+        };
+
+        let mut client = MetaServiceClient::new(channel);
+        let info_request = match self.with_client_metadata(Request::new(())) {
+            Ok(request) => request,
+            Err(err) => {
+                response.health_error = err;
+                return response;
+            }
+        };
+
+        let info_response = match client.server_information(info_request).await {
+            Ok(result) => result.into_inner(),
+            Err(err) => {
+                response.health_error = map_tonic_error(err);
+                return response;
+            }
+        };
+
+        response.healthy = true;
+        response.info = info_response.info.map(serialize_server_metadata);
+
+        let compatibility_request =
+            api_meta_contract_v1::CompatibilityRequest {
+                client_api_version: CLIENT_API_VERSION,
+                r#type: resolve_client_type() as i32,
+            };
+        let compatibility_request =
+            match self.with_client_metadata(Request::new(compatibility_request)) {
+                Ok(request) => request,
+                Err(err) => {
+                    response.compatibility_error = err;
+                    return response;
+                }
+            };
+
+        match client.client_compatibility(compatibility_request).await {
+            Ok(result) => {
+                let payload = result.into_inner();
+                response.compatibility_checked = true;
+                response.compatible = payload.value;
+                response.reasons = payload.reasons;
+            }
+            Err(err) => {
+                response.compatibility_error = map_tonic_error(err);
+            }
+        }
+
+        response
+    }
+}
+
+fn validate_backend_endpoint(value: &str) -> Result<String, String> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return Err("Invalid backend endpoint".into());
+    }
+
+    let mut url = Url::parse(trimmed).map_err(|_| "Invalid backend endpoint".to_string())?;
+    if (url.scheme() != "https" && url.scheme() != "http")
+        || url.host_str().is_none()
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.query().is_some()
+        || url.fragment().is_some()
+        || (!url.path().is_empty() && url.path() != "/")
+    {
+        return Err("Invalid backend endpoint".into());
+    }
+
+    url.set_path("/");
+    url.set_query(None);
+    url.set_fragment(None);
+    Ok(url.to_string().trim_end_matches('/').to_string())
 }
 
 fn normalize_encryption(value: &str) -> String {
@@ -538,6 +761,18 @@ fn serialize_graph_points(points: &[stats_contract_v1::GraphPoint]) -> Vec<Stats
             value: point.value,
         })
         .collect()
+}
+
+fn serialize_server_metadata(info: api_meta_contract_v1::ServerInfo) -> ServerMetadata {
+    ServerMetadata {
+        name: info.name,
+        version: info.version,
+        runtime_version: info.runtime_version,
+        supported_api_versions: info.supporing_ver,
+        commit_hash: info.commit_hash,
+        repository: info.reporitory,
+        build_time_unix: timestamp_to_unix_seconds_option(info.build_time),
+    }
 }
 
 fn decode_password_entry(
@@ -671,6 +906,10 @@ fn timestamp_to_unix_seconds(value: Option<prost_types::Timestamp>) -> i64 {
     value.map(|ts| ts.seconds).unwrap_or_default()
 }
 
+fn timestamp_to_unix_seconds_option(value: Option<prost_types::Timestamp>) -> Option<i64> {
+    value.map(|ts| ts.seconds)
+}
+
 fn map_theme(value: i32) -> bool {
     use users_contract_v1::Theme;
 
@@ -695,6 +934,31 @@ fn map_crypt(value: i32) -> String {
         Some(Crypt::Argon2id) => "aes256gcm-argon2id".to_string(),
         _ => String::new(),
     }
+}
+
+fn resolve_client_type() -> api_meta_contract_v1::ClientType {
+    #[cfg(target_os = "windows")]
+    {
+        return api_meta_contract_v1::ClientType::SecureguardWindows;
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        return api_meta_contract_v1::ClientType::SecureguardMac;
+    }
+
+    #[cfg(target_os = "android")]
+    {
+        return api_meta_contract_v1::ClientType::SecureguardAndroid;
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        return api_meta_contract_v1::ClientType::SecureguardIos;
+    }
+
+    #[allow(unreachable_code)]
+    api_meta_contract_v1::ClientType::SecureguardUnspecified
 }
 
 fn map_tonic_error(status: Status) -> String {

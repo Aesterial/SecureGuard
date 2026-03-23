@@ -1,11 +1,9 @@
+
+
 #[cfg(target_os = "windows")]
 use winapi::shared::minwindef::*;
-// #[cfg(target_os = "windows")]
-// use winapi::shared::ntdef::NULL;
 #[cfg(target_os = "windows")]
 use winapi::um::debugapi::*;
-// #[cfg(target_os = "windows")]
-// use winapi::um::errhandlingapi::*;
 #[cfg(target_os = "windows")]
 use winapi::um::handleapi::*;
 #[cfg(target_os = "windows")]
@@ -20,11 +18,105 @@ use winapi::um::tlhelp32::*;
 use winapi::um::winnt::*;
 #[cfg(target_os = "windows")]
 use winapi::um::winuser::FindWindowA;
+#[cfg(target_os = "windows")]
+use winapi::um::errhandlingapi::*;
 
 use std::process;
 use std::ptr;
 use std::thread;
 use std::time::{Duration, Instant};
+
+
+
+macro_rules! junk_ops {
+    () => {
+        #[cfg(target_arch = "x86_64")]
+        unsafe {
+            let _junk: u64;
+            core::arch::asm!(
+                "mov {tmp}, rsp",
+                "xor {tmp}, 0x5A5A5A5A",
+                "rol {tmp}, 13",
+                "xor {tmp}, 0x3C3C3C3C",
+                "ror {tmp}, 7",
+                "bswap {tmp}",
+                "not {tmp}",
+                "xor {tmp}, 0x1F1F1F1F",
+                tmp = out(reg) _junk,
+                options(nomem, nostack, preserves_flags),
+            );
+        }
+    };
+}
+
+macro_rules! junk_branch {
+    () => {
+        #[cfg(target_arch = "x86_64")]
+        unsafe {
+            let _flag: u64;
+            core::arch::asm!(
+                "rdtsc",
+                "xor rax, rdx",
+                "test rax, 0x80000",
+                "cmovz {out}, rax",
+                "cmovnz {out}, rdx",
+                "xor {out}, 0x55AA55AA",
+                out = out(reg) _flag,
+                out("rax") _,
+                out("rdx") _,
+                options(nomem, nostack),
+            );
+        }
+    };
+}
+
+macro_rules! junk_mem {
+    () => {{
+        let mut _sink: [u64; 4] = [0xDEAD_BEEF_CAFE_BABE, 0x1337_7331_DEAD_C0DE,
+                                     0xFEED_FACE_0BAD_F00D, 0xAAAA_BBBB_CCCC_DDDD];
+        for _i in 0..4 {
+            _sink[_i] = _sink[_i].wrapping_mul(0x5DEECE66D).wrapping_add(0xB);
+            _sink[_i] = _sink[_i].rotate_left((_i as u32 + 1) * 7);
+            _sink[_i] ^= _sink[(3 - _i) % 4];
+        }
+        std::hint::black_box(_sink);
+    }};
+}
+
+macro_rules! junk_loop {
+    () => {{
+        let mut _acc: u64 = 0xCAFE_BABE;
+        for _k in 0u64..16 {
+            _acc = _acc.wrapping_mul(_k | 1).wrapping_add(0x9E3779B97F4A7C15);
+            _acc = _acc.rotate_right((_k as u32) & 0x3F);
+            _acc ^= _acc >> 17;
+        }
+        std::hint::black_box(_acc);
+    }};
+}
+
+macro_rules! junk_float {
+    () => {{
+        let mut _fv: f64 = 3.14159265358979;
+        for _n in 1..8 {
+            _fv = (_fv * 2.718281828).sin().abs() + 0.001;
+            _fv = (_fv * 1.4142135).cos().abs() + 0.001;
+        }
+        std::hint::black_box(_fv);
+    }};
+}
+
+macro_rules! junk_scatter {
+    () => {
+        junk_ops!();
+        junk_mem!();
+        junk_branch!();
+        junk_loop!();
+        junk_float!();
+    };
+}
+
+
 
 #[cfg(target_os = "windows")]
 fn spawn_guard_thread<F>(name: &str, f: F)
@@ -32,7 +124,7 @@ where
     F: FnOnce() + Send + 'static,
 {
     if let Err(err) = thread::Builder::new().name(name.to_string()).spawn(f) {
-        eprintln!("SecureGuard protection thread '{}' failed: {}", name, err);
+        eprintln!("SecureGuard thread '{}' failed: {}", name, err);
     }
 }
 
@@ -52,12 +144,20 @@ fn hash_lower(s: &str) -> u32 {
     djb2_hash(&lower)
 }
 
+fn silent_exit() -> ! {
+    process::exit(0);
+}
+
+fn corrupt_and_exit() -> ! {
+    junk_mem!();
+    silent_exit()
+}
+
+
+
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 mod raw_syscall {
     use super::*;
-
-    ///   4C 8B D1          mov r10, rcx
-    ///   B8 XX XX 00 00    mov eax, <syscall_number>
 
     unsafe fn get_ssn(func_name: &[u8]) -> Option<u32> {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
@@ -72,16 +172,16 @@ mod raw_syscall {
 
         let ptr = func as *const u8;
 
+        // clean - 4C 8B D1  B8 XX XX 00 00
         if *ptr == 0x4C && *ptr.add(1) == 0x8B && *ptr.add(2) == 0xD1 && *ptr.add(3) == 0xB8 {
             let ssn = std::ptr::read_unaligned(ptr.add(4) as *const u32);
             return Some(ssn);
         }
 
-        resolve_ssn_from_neighbors(ntdll, ptr, func_name)
+        resolve_ssn_from_neighbors(ptr, func_name)
     }
 
     unsafe fn resolve_ssn_from_neighbors(
-        _ntdll: winapi::shared::minwindef::HMODULE,
         hooked_func: *const u8,
         func_name: &[u8],
     ) -> Option<u32> {
@@ -271,7 +371,6 @@ mod raw_syscall {
 
             let func_file_offset = rva_to_offset(func_rva)?;
 
-            // 4C 8B D1 B8 XX XX 00 00
             if func_file_offset + 8 <= data.len()
                 && data[func_file_offset] == 0x4C
                 && data[func_file_offset + 1] == 0x8B
@@ -297,7 +396,7 @@ mod raw_syscall {
     unsafe fn do_syscall4(ssn: u32, arg1: u64, arg2: u64, arg3: u64, arg4: u64) -> i32 {
         let result: i32;
         core::arch::asm!(
-            "mov r10, rcx",  // r10 == first arg
+            "mov r10, rcx",
             "syscall",
             in("eax") ssn,
             in("rcx") arg1,
@@ -312,7 +411,6 @@ mod raw_syscall {
         result
     }
 
-    // DIRECT SYSCALLS $$$
     pub unsafe fn syscall_nt_query_info_process(
         process: HANDLE,
         info_class: u32,
@@ -320,6 +418,7 @@ mod raw_syscall {
         buffer_size: u32,
         return_length: *mut u32,
     ) -> i32 {
+        junk_ops!();
         let ssn = match get_ssn(b"NtQueryInformationProcess\0") {
             Some(n) => n,
             None => return -1,
@@ -328,7 +427,7 @@ mod raw_syscall {
         let result: i32;
         core::arch::asm!(
             "mov r10, rcx",
-            "sub rsp, 0x28",       // shadow space + 5th arg
+            "sub rsp, 0x28",
             "mov [rsp+0x20], {arg5}",
             "syscall",
             "add rsp, 0x28",
@@ -351,6 +450,7 @@ mod raw_syscall {
         buffer: *mut std::ffi::c_void,
         buffer_size: u32,
     ) -> i32 {
+        junk_branch!();
         let ssn = match get_ssn(b"NtSetInformationThread\0") {
             Some(n) => n,
             None => return -1,
@@ -365,25 +465,25 @@ mod raw_syscall {
         )
     }
 
-    pub unsafe fn syscall_nt_query_sys_info(
-        info_class: u32,
-        buffer: *mut std::ffi::c_void,
-        buffer_size: u32,
-        return_length: *mut u32,
-    ) -> i32 {
-        let ssn = match get_ssn(b"NtQuerySystemInformation\0") {
-            Some(n) => n,
-            None => return -1,
-        };
+    // pub unsafe fn syscall_nt_query_sys_info(
+    //     info_class: u32,
+    //     buffer: *mut std::ffi::c_void,
+    //     buffer_size: u32,
+    //     return_length: *mut u32,
+    // ) -> i32 {
+    //     let ssn = match get_ssn(b"NtQuerySystemInformation\0") {
+    //         Some(n) => n,
+    //         None => return -1,
+    //     };
 
-        do_syscall4(
-            ssn,
-            info_class as u64,
-            buffer as u64,
-            buffer_size as u64,
-            return_length as u64,
-        )
-    }
+    //     do_syscall4(
+    //         ssn,
+    //         info_class as u64,
+    //         buffer as u64,
+    //         buffer_size as u64,
+    //         return_length as u64,
+    //     )
+    // }
 
     pub unsafe fn syscall_nt_close(handle: HANDLE) -> i32 {
         let ssn = match get_ssn(b"NtClose\0") {
@@ -406,11 +506,12 @@ mod raw_syscall {
     }
 
     pub fn check_debug_port_direct() {
+        junk_ops!();
         unsafe {
             let mut debug_port: usize = 0;
             let status = syscall_nt_query_info_process(
                 GetCurrentProcess(),
-                0x07, // ProcessDebugPort
+                0x07,
                 &mut debug_port as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<usize>() as u32,
                 ptr::null_mut(),
@@ -423,11 +524,12 @@ mod raw_syscall {
     }
 
     pub fn check_debug_object_direct() {
+        junk_mem!();
         unsafe {
             let mut debug_obj: usize = 0;
             let status = syscall_nt_query_info_process(
                 GetCurrentProcess(),
-                0x1E, // ProcessDebugObjectHandle
+                0x1E,
                 &mut debug_obj as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<usize>() as u32,
                 ptr::null_mut(),
@@ -440,11 +542,12 @@ mod raw_syscall {
     }
 
     pub fn check_debug_flags_direct() {
+        junk_branch!();
         unsafe {
             let mut debug_flags: u32 = 1;
             let status = syscall_nt_query_info_process(
                 GetCurrentProcess(),
-                0x1F, // ProcessDebugFlags
+                0x1F,
                 &mut debug_flags as *mut _ as *mut std::ffi::c_void,
                 std::mem::size_of::<u32>() as u32,
                 ptr::null_mut(),
@@ -460,48 +563,15 @@ mod raw_syscall {
         unsafe {
             syscall_nt_set_info_thread(
                 GetCurrentThread(),
-                0x11, // ThreadHideFromDebugger
+                0x11,
                 ptr::null_mut(),
                 0,
             );
         }
     }
 
-    pub fn check_kernel_debugger_direct() {
-        unsafe {
-            #[repr(C)]
-            struct KernelDebuggerInfo {
-                debugger_enabled: u8,
-                debugger_not_present: u8,
-            }
-
-            let mut info: KernelDebuggerInfo = std::mem::zeroed();
-            let status = syscall_nt_query_sys_info(
-                0x23, // SystemKernelDebuggerInformation
-                &mut info as *mut _ as *mut std::ffi::c_void,
-                std::mem::size_of::<KernelDebuggerInfo>() as u32,
-                ptr::null_mut(),
-            );
-
-            if status == 0 && info.debugger_enabled != 0 && info.debugger_not_present == 0 {
-                super::corrupt_and_exit();
-            }
-        }
-    }
-
-    pub fn close_handle_trap_direct() {
-        unsafe {
-            let invalid: HANDLE = 0xDEADBEEFusize as HANDLE;
-            let status = syscall_nt_close(invalid);
-            // STATUS_INVALID_HANDLE = 0xC0000008
-            if status != -1073741816i32 {
-                // 0xC0000008 as i32
-                super::corrupt_and_exit();
-            }
-        }
-    }
-
     pub fn check_ntdll_hooks() {
+        junk_scatter!();
         unsafe {
             let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
             if ntdll.is_null() {
@@ -526,37 +596,39 @@ mod raw_syscall {
                 }
 
                 let ptr = func as *const u8;
-
-                // 4C 8B D1 (mov r10, rcx)
-                // B8 XX XX 00 00 (mov eax, ssn)
                 let b0 = *ptr;
 
-                // E9 = JMP rel32 (detour)
-                // FF 25 = JMP [rip+disp32]
-                // 68 = PUSH imm32 (push-ret)
-                // CC = INT3 (breakpoint)
                 if b0 == 0xE9 || b0 == 0xCC || b0 == 0x68 {
                     super::corrupt_and_exit();
                 }
 
-                // FF 25 check
                 if b0 == 0xFF && *ptr.add(1) == 0x25 {
                     super::corrupt_and_exit();
                 }
 
-                // 4C 8B D1 on x64
                 if b0 != 0x4C || *ptr.add(1) != 0x8B || *ptr.add(2) != 0xD1 {
-                    super::corrupt_and_exit(); // hooked !!!
+                    super::corrupt_and_exit();
                 }
+            }
+        }
+    }
+
+    pub fn close_handle_trap_direct() {
+        unsafe {
+            let invalid: HANDLE = 0xDEADBEEFusize as HANDLE;
+            let status = syscall_nt_close(invalid);
+            if status != -1073741816i32 {
+                super::corrupt_and_exit();
             }
         }
     }
 }
 
+
+
 #[cfg(target_os = "windows")]
 fn blacklisted_hashes() -> Vec<u32> {
     vec![
-        // debuggers
         hash_lower("ollydbg.exe"),
         hash_lower("x64dbg.exe"),
         hash_lower("x32dbg.exe"),
@@ -575,7 +647,6 @@ fn blacklisted_hashes() -> Vec<u32> {
         hash_lower("ntkd.exe"),
         hash_lower("ntsd.exe"),
         hash_lower("cdb.exe"),
-        // RE tools
         hash_lower("ghidra.exe"),
         hash_lower("ghidrarun.exe"),
         hash_lower("javaw.exe"),
@@ -585,7 +656,6 @@ fn blacklisted_hashes() -> Vec<u32> {
         hash_lower("cutter.exe"),
         hash_lower("rizin.exe"),
         hash_lower("hopper.exe"),
-        // memory tools
         hash_lower("cheatengine-x86_64.exe"),
         hash_lower("cheatengine-i386.exe"),
         hash_lower("cheatengine.exe"),
@@ -597,7 +667,6 @@ fn blacklisted_hashes() -> Vec<u32> {
         hash_lower("procmon64.exe"),
         hash_lower("procexp.exe"),
         hash_lower("procexp64.exe"),
-        // dumpers / unpackers
         hash_lower("scylla.exe"),
         hash_lower("scylla_x64.exe"),
         hash_lower("scylla_x86.exe"),
@@ -606,18 +675,15 @@ fn blacklisted_hashes() -> Vec<u32> {
         hash_lower("pestudio.exe"),
         hash_lower("pe-bear.exe"),
         hash_lower("die.exe"),
-        // network
         hash_lower("fiddler.exe"),
         hash_lower("wireshark.exe"),
         hash_lower("httpdebugger.exe"),
         hash_lower("httpdebuggerpro.exe"),
         hash_lower("charlesdebug.exe"),
-        // .NET
         hash_lower("dnspy.exe"),
         hash_lower("dnspy-x86.exe"),
         hash_lower("dotpeek.exe"),
         hash_lower("ilspy.exe"),
-        // misc
         hash_lower("hiew.exe"),
         hash_lower("immunitydebugger.exe"),
         hash_lower("importrec.exe"),
@@ -627,70 +693,33 @@ fn blacklisted_hashes() -> Vec<u32> {
     ]
 }
 
+
+
 pub fn init_protection() {
     #[cfg(target_os = "windows")]
     {
+        junk_scatter!();
+
         check_debugger();
         check_hardware_breakpoints();
+        check_int2d_trap();
+        check_output_debug_string_trap();
 
-        // safe checks ?
-        spawn_guard_thread("sg-startup-checks", || {
+        spawn_guard_thread("sg-startup", || {
             thread::sleep(Duration::from_millis(500));
 
+            junk_ops!();
             check_ntquery_debug_port();
             check_ntquery_debug_object();
             check_ntquery_debug_flags();
-            check_heap_flags();
-            check_kernel_debugger();
-        });
-        
-        thread::spawn(|| {
-            thread::sleep(Duration::from_secs(2));
-            erase_pe_header();
+            check_closehandle_trap();
+            check_yield_trap();
         });
 
-        spawn_watchdog();
-        spawn_integrity_watchdog();
-        spawn_syscall_watchdog();
-    }
-}
-
-/*
-pub fn init_protection() {
-    #[cfg(target_os = "windows")]
-    {
-        check_debugger();
-        check_hardware_breakpoints();
-
-        #[cfg(target_arch = "x86_64")]
-        {
-            raw_syscall::check_debug_port_direct();
-            raw_syscall::check_debug_object_direct();
-            raw_syscall::check_debug_flags_direct();
-            raw_syscall::check_ntdll_hooks();
-            raw_syscall::hide_thread_direct();
-        }
-
-        hide_thread();
-        patch_dbg_attach();
-
-        thread::spawn(|| {
-            thread::sleep(Duration::from_millis(500));
-
-            #[cfg(target_arch = "x86_64")]
-            {
-                raw_syscall::check_debug_port_direct();
-                raw_syscall::check_debug_object_direct();
-                raw_syscall::check_debug_flags_direct();
-                raw_syscall::check_kernel_debugger_direct();
-                raw_syscall::close_handle_trap_direct();
-            }
-
-            check_ntquery_debug_port();
-            check_ntquery_debug_object();
-            check_ntquery_debug_flags();
-            check_heap_flags();
-            check_kernel_debugger();
+        spawn_guard_thread("sg-patch", || {
+            thread::sleep(Duration::from_millis(300));
+            hide_thread();
+            patch_dbg_attach();
         });
 
         thread::spawn(|| {
@@ -703,10 +732,12 @@ pub fn init_protection() {
         spawn_syscall_watchdog();
     }
 }
-*/
+
+
 
 #[cfg(target_os = "windows")]
 fn check_debugger() {
+    junk_ops!();
     unsafe {
         if IsDebuggerPresent() != 0 {
             corrupt_and_exit();
@@ -717,35 +748,7 @@ fn check_debugger() {
             corrupt_and_exit();
         }
 
-        // Keep lightweight checks to reduce false positives on real user machines.
         check_peb_debug_flag();
-    }
-}
-
-#[cfg(target_os = "windows")]
-fn check_peb_flag() {
-    #[cfg(target_arch = "x86_64")]
-    unsafe {
-        let peb: u64;
-        core::arch::asm!("mov {}, gs:[0x60]", out(reg) peb);
-        if peb != 0 {
-            let flags = ptr::read_unaligned((peb + 0xBC) as *const u32);
-            if flags & 0x70 != 0 {
-                corrupt_and_exit();
-            }
-        }
-    }
-
-    #[cfg(target_arch = "x86")]
-    unsafe {
-        let peb: u32;
-        core::arch::asm!("mov {}, fs:[0x30]", out(reg) peb);
-        if peb != 0 {
-            let flags = ptr::read_unaligned((peb + 0x68) as *const u32);
-            if flags & 0x70 != 0 {
-                corrupt_and_exit();
-            }
-        }
     }
 }
 
@@ -766,6 +769,7 @@ fn check_peb_debug_flag() {
 
 #[cfg(target_os = "windows")]
 fn check_hardware_breakpoints() {
+    junk_branch!();
     unsafe {
         let mut ctx: CONTEXT = std::mem::zeroed();
         ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
@@ -780,9 +784,119 @@ fn check_hardware_breakpoints() {
         }
     }
 }
+#[cfg(all(target_os = "windows", target_arch = "x86_64"))]
+fn check_int2d_trap() {
+    junk_ops!();
+    unsafe {
+        use winapi::um::errhandlingapi::{AddVectoredExceptionHandler, RemoveVectoredExceptionHandler};
+        use winapi::um::winnt::{EXCEPTION_POINTERS, LONG};
+
+        unsafe extern "system" fn int2d_handler(info: *mut EXCEPTION_POINTERS) -> LONG {
+            let code = (*(*info).ExceptionRecord).ExceptionCode;
+            // EXCEPTION_BREAKPOINT = 0x80000003
+            if code == 0x80000003 {
+                (*(*info).ContextRecord).Rip += 2;
+                return -1; // EXCEPTION_CONTINUE_EXECUTION
+            }
+            0 // EXCEPTION_CONTINUE_SEARCH
+        }
+
+        let handler = AddVectoredExceptionHandler(1, Some(int2d_handler));
+
+        let was_debugged: u64;
+        core::arch::asm!(
+            "mov {result}, 1",   
+            "int 0x2d",
+            "nop",
+            "mov {result}, 0",   
+            result = out(reg) was_debugged,
+            options(nomem, nostack),
+        );
+
+        if !handler.is_null() {
+            RemoveVectoredExceptionHandler(handler);
+        }
+
+        if was_debugged == 1 {
+            corrupt_and_exit();
+        }
+    }
+}
+
+#[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
+fn check_int2d_trap() {}
+#[cfg(target_os = "windows")]
+fn check_output_debug_string_trap() {
+    junk_mem!();
+    unsafe {
+        use winapi::um::debugapi::OutputDebugStringA;
+
+        SetLastError(0x1337);
+        OutputDebugStringA(b"SecureGuard\0".as_ptr() as *const i8);
+        let err = GetLastError();
+        if err == 0x1337 {
+            let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
+            if !ntdll.is_null() {
+                let func = GetProcAddress(ntdll, b"NtQueryInformationProcess\0".as_ptr() as *const i8);
+                if !func.is_null() {
+                    type NtQueryInfoProc = unsafe extern "system" fn(
+                        HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32,
+                    ) -> i32;
+                    let nt_query: NtQueryInfoProc = std::mem::transmute(func);
+
+                    let mut debug_port: usize = 0;
+                    let status = nt_query(
+                        GetCurrentProcess(),
+                        0x07,
+                        &mut debug_port as *mut _ as *mut std::ffi::c_void,
+                        std::mem::size_of::<usize>() as u32,
+                        ptr::null_mut(),
+                    );
+
+                    if status == 0 && debug_port != 0 {
+                        corrupt_and_exit();
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 #[cfg(target_os = "windows")]
+fn check_yield_trap() {
+    junk_loop!();
+    unsafe {
+        let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
+        if ntdll.is_null() {
+            return;
+        }
+
+        let func = GetProcAddress(ntdll, b"NtYieldExecution\0".as_ptr() as *const i8);
+        if func.is_null() {
+            return;
+        }
+
+        type NtYieldFn = unsafe extern "system" fn() -> i32;
+        let nt_yield: NtYieldFn = std::mem::transmute(func);
+
+        let mut success_count = 0u32;
+        for _ in 0..20 {
+            let status = nt_yield();
+            if status == 0 {
+                success_count += 1;
+            }
+        }
+
+
+        if success_count >= 18 {
+            corrupt_and_exit();
+        }
+    }
+}
+#[cfg(target_os = "windows")]
 fn check_ntquery_debug_port() {
+    junk_ops!();
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
         if ntdll.is_null() {
@@ -796,7 +910,6 @@ fn check_ntquery_debug_port() {
 
         type NtQueryInfoProc =
             unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
-
         let nt_query: NtQueryInfoProc = std::mem::transmute(func);
 
         let mut debug_port: usize = 0;
@@ -816,6 +929,7 @@ fn check_ntquery_debug_port() {
 
 #[cfg(target_os = "windows")]
 fn check_ntquery_debug_object() {
+    junk_branch!();
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
         if ntdll.is_null() {
@@ -829,7 +943,6 @@ fn check_ntquery_debug_object() {
 
         type NtQueryInfoProc =
             unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
-
         let nt_query: NtQueryInfoProc = std::mem::transmute(func);
 
         let mut debug_obj: usize = 0;
@@ -841,6 +954,7 @@ fn check_ntquery_debug_object() {
             ptr::null_mut(),
         );
 
+
         if status == 0 {
             corrupt_and_exit();
         }
@@ -849,6 +963,7 @@ fn check_ntquery_debug_object() {
 
 #[cfg(target_os = "windows")]
 fn check_ntquery_debug_flags() {
+    junk_mem!();
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
         if ntdll.is_null() {
@@ -862,7 +977,6 @@ fn check_ntquery_debug_flags() {
 
         type NtQueryInfoProc =
             unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
-
         let nt_query: NtQueryInfoProc = std::mem::transmute(func);
 
         let mut debug_flags: u32 = 1;
@@ -881,100 +995,62 @@ fn check_ntquery_debug_flags() {
 }
 
 #[cfg(target_os = "windows")]
-fn check_heap_flags() {
-    #[cfg(target_arch = "x86_64")]
-    unsafe {
-        let peb: u64;
-        core::arch::asm!("mov {}, gs:[0x60]", out(reg) peb);
-        if peb == 0 {
-            return;
-        }
-
-        let process_heap = ptr::read_unaligned((peb + 0x30) as *const u64);
-        if process_heap == 0 {
-            return;
-        }
-
-        let flags = ptr::read_unaligned((process_heap + 0x70) as *const u32);
-        let force_flags = ptr::read_unaligned((process_heap + 0x74) as *const u32);
-
-        if flags != 2 || force_flags != 0 {
-            corrupt_and_exit();
-        }
-    }
-}
-
-#[cfg(target_os = "windows")]
-fn check_kernel_debugger() {
-    unsafe {
-        let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
-        if ntdll.is_null() {
-            return;
-        }
-
-        let func = GetProcAddress(ntdll, b"NtQuerySystemInformation\0".as_ptr() as *const i8);
-        if func.is_null() {
-            return;
-        }
-
-        type NtQuerySysInfo =
-            unsafe extern "system" fn(u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
-
-        let nt_query: NtQuerySysInfo = std::mem::transmute(func);
-
-        #[repr(C)]
-        struct KernelDebuggerInfo {
-            debugger_enabled: u8,
-            debugger_not_present: u8,
-        }
-
-        let mut info: KernelDebuggerInfo = std::mem::zeroed();
-        let status = nt_query(
-            0x23,
-            &mut info as *mut _ as *mut std::ffi::c_void,
-            std::mem::size_of::<KernelDebuggerInfo>() as u32,
-            ptr::null_mut(),
-        );
-
-        if status == 0 && info.debugger_enabled != 0 && info.debugger_not_present == 0 {
-            corrupt_and_exit();
-        }
-    }
-}
-
-#[cfg(target_os = "windows")]
 fn check_closehandle_trap() {
+    junk_float!();
     unsafe {
-        let result = std::panic::catch_unwind(|| {
-            let invalid: HANDLE = 0xDEADBEEF as HANDLE;
-            CloseHandle(invalid);
-        });
-        if result.is_err() {
-            corrupt_and_exit();
+        use winapi::um::handleapi::CloseHandle;
+        SetLastError(0);
+        let invalid: HANDLE = 0xDEADBEEFusize as HANDLE;
+        CloseHandle(invalid);
+        let err = GetLastError();
+        if err != 6 && err != 0 {
+            let mut present: BOOL = 0;
+            if CheckRemoteDebuggerPresent(GetCurrentProcess(), &mut present) != 0 && present != 0 {
+                corrupt_and_exit();
+            }
         }
     }
 }
+
+
 
 #[cfg(target_os = "windows")]
 fn check_timing() {
-    let t1: u64;
-    let t2: u64;
-    unsafe {
-        core::arch::asm!("rdtsc", "shl rdx, 32", "or rax, rdx", out("rax") t1, out("rdx") _);
-    }
+    junk_ops!();
 
-    let mut dummy: u64 = 0;
-    for i in 0..500_000u64 {
-        dummy = dummy.wrapping_add(i);
-    }
-    let _ = dummy;
+    #[cfg(target_arch = "x86_64")]
+    {
+        let t1: u64;
+        let t2: u64;
+        unsafe {
+            core::arch::asm!(
+                "rdtsc",
+                "shl rdx, 32",
+                "or rax, rdx",
+                out("rax") t1,
+                out("rdx") _,
+            );
+        }
 
-    unsafe {
-        core::arch::asm!("rdtsc", "shl rdx, 32", "or rax, rdx", out("rax") t2, out("rdx") _);
-    }
+        let mut dummy: u64 = 0;
+        for i in 0..500_000u64 {
+            dummy = dummy.wrapping_add(i);
+        }
+        std::hint::black_box(dummy);
 
-    if t2.wrapping_sub(t1) > 100_000_000 {
-        corrupt_and_exit();
+        unsafe {
+            core::arch::asm!(
+                "rdtsc",
+                "shl rdx, 32",
+                "or rax, rdx",
+                out("rax") t2,
+                out("rdx") _,
+            );
+        }
+
+        if t2.wrapping_sub(t1) > 100_000_000 {
+            corrupt_and_exit();
+        }
     }
 
     let start = Instant::now();
@@ -982,14 +1058,17 @@ fn check_timing() {
     for i in 0..200_000u64 {
         v = v.wrapping_mul(i.wrapping_add(1));
     }
-    let _ = v;
+    std::hint::black_box(v);
     if start.elapsed().as_millis() > 300 {
         corrupt_and_exit();
     }
 }
 
+
+
 #[cfg(target_os = "windows")]
 fn patch_dbg_attach() {
+    junk_loop!();
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
         if ntdll.is_null() {
@@ -1016,10 +1095,9 @@ fn patch_dbg_attach() {
                 let exit_proc = GetProcAddress(kernel32, b"ExitProcess\0".as_ptr() as *const i8);
                 if !exit_proc.is_null() {
                     let target = func as *mut u8;
-                    // mov, ecx 0
-                    *target = 0x31; // xor ecx, ecx
+                    *target = 0x31;         // xor ecx, ecx
                     *target.add(1) = 0xC9;
-                    *target.add(2) = 0xE9;
+                    *target.add(2) = 0xE9;  // jmp rel32
                     let rel_addr = (exit_proc as isize) - (target.add(7) as isize);
                     ptr::write_unaligned(target.add(3) as *mut i32, rel_addr as i32);
                 }
@@ -1041,6 +1119,7 @@ fn patch_dbg_attach() {
 
 #[cfg(target_os = "windows")]
 fn hide_thread() {
+    junk_ops!();
     unsafe {
         let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
         if ntdll.is_null() {
@@ -1054,7 +1133,6 @@ fn hide_thread() {
 
         type NtSetInfoThread =
             unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32) -> i32;
-
         let nt_set: NtSetInfoThread = std::mem::transmute(func);
         nt_set(GetCurrentThread(), 0x11, ptr::null_mut(), 0);
     }
@@ -1062,6 +1140,7 @@ fn hide_thread() {
 
 #[cfg(target_os = "windows")]
 fn erase_pe_header() {
+    junk_scatter!();
     unsafe {
         let module = GetModuleHandleA(ptr::null());
         if module.is_null() {
@@ -1077,17 +1156,22 @@ fn erase_pe_header() {
         let mut old_protect: DWORD = 0;
 
         if VirtualProtect(base as *mut _, size, PAGE_READWRITE, &mut old_protect) != 0 {
+            let mut rng: u64 = 0x5DEECE66D_u64;
             for i in 0..size {
-                let garbage = ((i * 0x5DEECE66D + 0xB) & 0xFF) as u8;
-                *base.add(i) = garbage;
+                rng = rng.wrapping_mul(0x5DEECE66D).wrapping_add(0xB);
+                *base.add(i) = (rng >> 16) as u8;
             }
             VirtualProtect(base as *mut _, size, old_protect, &mut old_protect);
         }
     }
 }
 
+
+
 #[cfg(target_os = "windows")]
 unsafe fn check_debugger_windows() {
+    junk_branch!();
+
     let window_classes: &[&[u8]] = &[
         b"OLLYDBG\0",
         b"x64dbg\0",
@@ -1136,6 +1220,8 @@ unsafe fn check_debugger_windows() {
 
 #[cfg(target_os = "windows")]
 unsafe fn check_blacklisted_processes() {
+    junk_mem!();
+
     let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if snapshot == INVALID_HANDLE_VALUE {
         return;
@@ -1173,37 +1259,9 @@ unsafe fn check_blacklisted_processes() {
 }
 
 #[cfg(target_os = "windows")]
-unsafe fn check_suspicious_drivers() {
-    let devices: &[&[u8]] = &[
-        b"\\\\.\\NTICE\0",
-        b"\\\\.\\SICE\0",
-        b"\\\\.\\SIWVID\0",
-        b"\\\\.\\REGVXG\0",
-        b"\\\\.\\FILEVXG\0",
-        b"\\\\.\\TRW\0",
-        b"\\\\.\\ICEEXT\0",
-    ];
-
-    for dev in devices {
-        let handle = winapi::um::fileapi::CreateFileA(
-            dev.as_ptr() as *const i8,
-            GENERIC_READ,
-            0,
-            ptr::null_mut(),
-            winapi::um::fileapi::OPEN_EXISTING,
-            0,
-            ptr::null_mut(),
-        );
-
-        if handle != INVALID_HANDLE_VALUE {
-            CloseHandle(handle);
-            corrupt_and_exit();
-        }
-    }
-}
-
-#[cfg(target_os = "windows")]
 unsafe fn check_parent_process() {
+    junk_loop!();
+
     let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
     if ntdll.is_null() {
         return;
@@ -1216,10 +1274,8 @@ unsafe fn check_parent_process() {
 
     type NtQueryInfoProc =
         unsafe extern "system" fn(HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32) -> i32;
-
     let nt_query: NtQueryInfoProc = std::mem::transmute(func);
 
-    // PROCESS_BASIC_INFORMATION
     #[repr(C)]
     struct ProcessBasicInfo {
         exit_status: usize,
@@ -1234,7 +1290,7 @@ unsafe fn check_parent_process() {
     let mut info: ProcessBasicInfo = std::mem::zeroed();
     let status = nt_query(
         GetCurrentProcess(),
-        0, // ProcessBasicInformation
+        0,
         &mut info as *mut _ as *mut std::ffi::c_void,
         std::mem::size_of::<ProcessBasicInfo>() as u32,
         ptr::null_mut(),
@@ -1263,8 +1319,7 @@ unsafe fn check_parent_process() {
                     .collect();
 
                 if let Ok(name) = String::from_utf8(name_bytes) {
-                    let lower = name.to_lowercase();
-                    let h = hash_lower(&lower);
+                    let h = hash_lower(&name);
                     let hashes = blacklisted_hashes();
                     if hashes.contains(&h) {
                         CloseHandle(snapshot);
@@ -1283,14 +1338,17 @@ unsafe fn check_parent_process() {
     CloseHandle(snapshot);
 }
 
+
+
 #[cfg(target_os = "windows")]
 fn spawn_watchdog() {
     spawn_guard_thread("sg-watchdog", || {
         hide_thread();
-
         thread::sleep(Duration::from_secs(3));
 
         loop {
+            junk_scatter!();
+
             let sleep_ms = 2000
                 + (std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
@@ -1312,15 +1370,15 @@ fn spawn_watchdog() {
                     corrupt_and_exit();
                 }
 
-                check_debugger_windows(); // tested, work
-                check_blacklisted_processes(); // tested, work
-                check_suspicious_drivers(); // not tested
-                check_parent_process() // tested, work
+                check_debugger_windows();
+                check_blacklisted_processes();
+                check_parent_process();
             }
 
-            check_hardware_breakpoints(); // tested (ida, cannot to handling types), work
-            check_ntquery_debug_port(); // not tested
-            check_ntquery_debug_flags(); // not tested
+            check_hardware_breakpoints();
+            check_ntquery_debug_port();
+            check_ntquery_debug_flags();
+            check_yield_trap();
         }
     });
 }
@@ -1330,11 +1388,13 @@ fn spawn_integrity_watchdog() {
     let check_debugger_addr = check_debugger as *const () as usize;
     let initial_hash = unsafe { hash_code_region(check_debugger_addr, 64) };
 
-    spawn_guard_thread("sg-integrity-watchdog", move || {
+    spawn_guard_thread("sg-integrity", move || {
         hide_thread();
         thread::sleep(Duration::from_secs(7));
 
         loop {
+            junk_loop!();
+
             thread::sleep(Duration::from_secs(5));
 
             let current_hash = unsafe { hash_code_region(check_debugger_addr, 64) };
@@ -1349,6 +1409,7 @@ fn spawn_integrity_watchdog() {
                     check_debugger as *const () as usize,
                     check_hardware_breakpoints as *const () as usize,
                     check_ntquery_debug_port as *const () as usize,
+                    check_int2d_trap as *const () as usize,
                     silent_exit as *const () as usize,
                 ];
 
@@ -1365,11 +1426,13 @@ fn spawn_integrity_watchdog() {
 
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 fn spawn_syscall_watchdog() {
-    spawn_guard_thread("sg-syscall-watchdog", || {
+    spawn_guard_thread("sg-syscall", || {
         raw_syscall::hide_thread_direct();
         thread::sleep(Duration::from_secs(4));
 
         loop {
+            junk_scatter!();
+
             let jitter = (std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
@@ -1381,13 +1444,18 @@ fn spawn_syscall_watchdog() {
             raw_syscall::check_debug_port_direct();
             raw_syscall::check_debug_object_direct();
             raw_syscall::check_debug_flags_direct();
-            raw_syscall::check_kernel_debugger_direct();
             raw_syscall::check_ntdll_hooks();
+            raw_syscall::close_handle_trap_direct();
             check_hardware_breakpoints();
             check_timing();
         }
     });
 }
+
+#[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
+fn spawn_syscall_watchdog() {}
+
+
 
 #[cfg(target_os = "windows")]
 unsafe fn hash_code_region(addr: usize, len: usize) -> u32 {
@@ -1398,14 +1466,3 @@ unsafe fn hash_code_region(addr: usize, len: usize) -> u32 {
     }
     hash
 }
-
-fn silent_exit() -> ! {
-    process::exit(0); // or 0xdeadbeef bsod
-}
-
-fn corrupt_and_exit() -> ! {
-    silent_exit()
-}
-
-#[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
-fn spawn_syscall_watchdog() {}
