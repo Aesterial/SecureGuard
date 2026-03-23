@@ -14,17 +14,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/go-link-static.yml">
-    <img src="https://github.com/Aesterial/SecureGuard/actions/workflows/go-link-static.yml/badge.svg?branch=main" alt="Статус Go CI" />
-  </a>
-  <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/rust-link-static.yml">
-    <img src="https://github.com/Aesterial/SecureGuard/actions/workflows/rust-link-static.yml/badge.svg?branch=main" alt="Статус Rust CI" />
-  </a>
-  <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/license-AGPL--3.0-3e4c75.svg?style=flat-square" alt="Лицензия AGPL-3.0" />
-  </a>
-  <img src="https://img.shields.io/badge/platform-Windows-0078D6?style=flat-square&logo=windows" alt="Платформа Windows" />
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-3e4c75.svg?style=flat-square" alt="Лицензия AGPL-3.0" /></a>
   <img src="https://img.shields.io/badge/stack-Tauri%20%2B%20Rust%20%2B%20Go%20%2B%20PostgreSQL-222?style=flat-square" alt="Технологический стек" />
+  <img src="https://img.shields.io/badge/platform-Windows-0078D6?style=flat-square&logo=windows" alt="Платформа Windows" />
+  <br />
+  <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/go-link-static.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aesterial/SecureGuard/go-link-static.yml?branch=main&style=flat-square&label=Go%20Test" alt="Статус Go Test" /></a>
+  <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/rust-link-static.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aesterial/SecureGuard/rust-link-static.yml?branch=main&style=flat-square&label=Rust%20Test" alt="Статус Rust Test" /></a>
 </p>
 
 ## Обзор
