@@ -34,10 +34,8 @@
 
 ## Документация
 
-Материалы проекта для разработки и презентации:
+Материалы по API и генерации:
 
-- [docs/PROJECT_DOCS.md](./docs/PROJECT_DOCS.md) - полная документация проекта
-- [docs/USER_FAQ.md](./docs/USER_FAQ.md) - FAQ для пользователей
 - [api/README.md](./api/README.md) - заметки по protobuf и генерации
 
 ## Текущее состояние
@@ -111,7 +109,6 @@ SecureGuard/
 |-- api/
 |   |-- xyz/secureguard/... # Protobuf-контракты
 |   `-- third_party/        # Proto-зависимости
-|-- docs/                   # Документация проекта и FAQ
 |-- run.bat                 # Основной локальный helper-скрипт для Windows
 `-- .github/                # CI workflows и repository assets
 ```

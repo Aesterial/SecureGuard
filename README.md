@@ -34,10 +34,8 @@ The repository is currently an active MVP. The desktop app already covers the co
 
 ## Documentation
 
-Project materials prepared for development and presentation:
+API and generation notes:
 
-- [docs/PROJECT_DOCS.md](./docs/PROJECT_DOCS.md) - full project documentation
-- [docs/USER_FAQ.md](./docs/USER_FAQ.md) - end-user FAQ
 - [api/README.md](./api/README.md) - protobuf and generation notes
 
 ## Current State
@@ -111,7 +109,6 @@ SecureGuard/
 |-- api/
 |   |-- xyz/secureguard/... # Protobuf contracts
 |   `-- third_party/        # Proto dependencies
-|-- docs/                   # Project docs and FAQ
 |-- run.bat                 # Main local run helper for Windows
 `-- .github/                # CI workflows and repository assets
 ```
