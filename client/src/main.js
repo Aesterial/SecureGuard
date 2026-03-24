@@ -466,6 +466,7 @@ var MASTER_KEY_ENVELOPES_KEY = "secureguard.master-keys.v1";
 var ENCRYPTION_ALGORITHM_AES256_GCM_ARGON2ID = "aes256gcm-argon2id";
 var ENCRYPTION_ALGORITHM_AES256_GCM_SHA256 = "aes256gcm-sha256";
 var DEFAULT_BACKEND_ENDPOINT = "http://127.0.0.1:8080";
+var DEFAULT_BACKEND_FALLBACK_ENDPOINT = "http://127.0.0.1:50051";
 var BACKEND_MODE_PRODUCTION = "production";
 var BACKEND_MODE_CUSTOM = "custom";
 var CLIENT_API_VERSION = 1.0;
@@ -2870,6 +2871,93 @@ function initApp(invoke) {
     }
   }
 
+  function buildBackendEndpointCandidates(preferredEndpoint) {
+    var out = [];
+
+    function push(value) {
+      try {
+        var normalized = validateBackendEndpoint(value);
+        if (out.indexOf(normalized) === -1) {
+          out.push(normalized);
+        }
+      } catch (e) {}
+    }
+
+    push(preferredEndpoint || DEFAULT_BACKEND_ENDPOINT);
+    push(DEFAULT_BACKEND_ENDPOINT);
+    push(DEFAULT_BACKEND_FALLBACK_ENDPOINT);
+    return out;
+  }
+
+  async function applyBackendEndpointRuntime(endpoint) {
+    var result = await invoke("set_backend_endpoint", {
+      endpoint: endpoint,
+    });
+    currentBackendEndpoint =
+      result && result.endpoint ? String(result.endpoint) : endpoint;
+    resetServerProbe();
+    return {
+      endpoint: currentBackendEndpoint,
+      reauthRequired: !!(result && result.reauth_required),
+    };
+  }
+
+  async function resolveProductionBackendRuntime(preferredEndpoint) {
+    var candidates = buildBackendEndpointCandidates(preferredEndpoint);
+    var selected = null;
+    var selectedStatus = null;
+    var selectedReauthRequired = false;
+    var lastError = null;
+
+    for (var i = 0; i < candidates.length; i++) {
+      var candidate = candidates[i];
+
+      try {
+        var applied = await applyBackendEndpointRuntime(candidate);
+        var status = normalizeServerStatus(await invoke("probe_backend_server"));
+        if (!status.endpoint) {
+          status.endpoint = applied.endpoint;
+        }
+
+        if (!selected) {
+          selected = applied;
+          selectedStatus = status;
+          selectedReauthRequired = applied.reauthRequired;
+        }
+
+        if (status.healthy) {
+          serverStatus = status;
+          lastProbedBackendEndpoint = applied.endpoint;
+          return {
+            endpoint: applied.endpoint,
+            reauthRequired: applied.reauthRequired,
+            status: status,
+          };
+        }
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (selected) {
+      currentBackendEndpoint = selected.endpoint;
+      serverStatus = selectedStatus || createEmptyServerStatus();
+      serverStatus.endpoint = selected.endpoint;
+      lastProbedBackendEndpoint = selected.endpoint;
+      return {
+        endpoint: selected.endpoint,
+        reauthRequired: selectedReauthRequired,
+        status: selectedStatus,
+      };
+    }
+
+    if (lastError) {
+      throw lastError;
+    }
+
+    throw "Invalid backend endpoint";
+  }
+
   async function applyBackendSelection() {
     if (backendSyncInProgress) {
       return;
@@ -2891,14 +2979,10 @@ function initApp(invoke) {
     updateSettingsAvailability();
 
     try {
-      var result = await invoke("set_backend_endpoint", {
-        endpoint: requestedEndpoint,
-      });
-      currentBackendEndpoint =
-        result && result.endpoint
-          ? String(result.endpoint)
-          : requestedEndpoint;
-      resetServerProbe();
+      var result =
+        backendDraftMode === BACKEND_MODE_CUSTOM
+          ? await applyBackendEndpointRuntime(requestedEndpoint)
+          : await resolveProductionBackendRuntime(requestedEndpoint);
       appSettings.backendMode = backendDraftMode;
       appSettings.backendCustomUrl =
         backendDraftMode === BACKEND_MODE_CUSTOM
@@ -2939,14 +3023,11 @@ function initApp(invoke) {
     updateSettingsAvailability();
 
     try {
-      var result = await invoke("set_backend_endpoint", {
-        endpoint: requestedEndpoint,
-      });
-      currentBackendEndpoint =
-        result && result.endpoint
-          ? String(result.endpoint)
-          : requestedEndpoint;
-      resetServerProbe();
+      if (appSettings.backendMode === BACKEND_MODE_CUSTOM) {
+        await applyBackendEndpointRuntime(requestedEndpoint);
+      } else {
+        await resolveProductionBackendRuntime(requestedEndpoint);
+      }
       if (appSettings.backendMode === BACKEND_MODE_CUSTOM) {
         appSettings.backendCustomUrl = currentBackendEndpoint;
         backendDraftCustomUrl = currentBackendEndpoint;
@@ -2956,13 +3037,7 @@ function initApp(invoke) {
       currentBackendEndpoint = DEFAULT_BACKEND_ENDPOINT;
       resetServerProbe();
       try {
-        var fallback = await invoke("set_backend_endpoint", {
-          endpoint: DEFAULT_BACKEND_ENDPOINT,
-        });
-        if (fallback && fallback.endpoint) {
-          currentBackendEndpoint = String(fallback.endpoint);
-          resetServerProbe();
-        }
+        await applyBackendEndpointRuntime(DEFAULT_BACKEND_ENDPOINT);
       } catch (ignored) {}
     } finally {
       backendSyncInProgress = false;
