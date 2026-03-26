@@ -28,8 +28,9 @@ const (
 	ClientType_CLIENT_TYPE_SECUREGUARD_UNSPECIFIED ClientType = 0
 	ClientType_CLIENT_TYPE_SECUREGUARD_WINDOWS     ClientType = 1
 	ClientType_CLIENT_TYPE_SECUREGUARD_MAC         ClientType = 2
-	ClientType_CLIENT_TYPE_SECUREGUARD_ANDROID     ClientType = 3
-	ClientType_CLIENT_TYPE_SECUREGUARD_IOS         ClientType = 4
+	ClientType_CLIENT_TYPE_SECUREGUARD_LINUX       ClientType = 3
+	ClientType_CLIENT_TYPE_SECUREGUARD_ANDROID     ClientType = 4
+	ClientType_CLIENT_TYPE_SECUREGUARD_IOS         ClientType = 5
 )
 
 // Enum value maps for ClientType.
@@ -38,15 +39,17 @@ var (
 		0: "CLIENT_TYPE_SECUREGUARD_UNSPECIFIED",
 		1: "CLIENT_TYPE_SECUREGUARD_WINDOWS",
 		2: "CLIENT_TYPE_SECUREGUARD_MAC",
-		3: "CLIENT_TYPE_SECUREGUARD_ANDROID",
-		4: "CLIENT_TYPE_SECUREGUARD_IOS",
+		3: "CLIENT_TYPE_SECUREGUARD_LINUX",
+		4: "CLIENT_TYPE_SECUREGUARD_ANDROID",
+		5: "CLIENT_TYPE_SECUREGUARD_IOS",
 	}
 	ClientType_value = map[string]int32{
 		"CLIENT_TYPE_SECUREGUARD_UNSPECIFIED": 0,
 		"CLIENT_TYPE_SECUREGUARD_WINDOWS":     1,
 		"CLIENT_TYPE_SECUREGUARD_MAC":         2,
-		"CLIENT_TYPE_SECUREGUARD_ANDROID":     3,
-		"CLIENT_TYPE_SECUREGUARD_IOS":         4,
+		"CLIENT_TYPE_SECUREGUARD_LINUX":       3,
+		"CLIENT_TYPE_SECUREGUARD_ANDROID":     4,
+		"CLIENT_TYPE_SECUREGUARD_IOS":         5,
 	}
 )
 
@@ -342,14 +345,15 @@ const file_xyz_secureguard_v1_meta_v1_domain_proto_rawDesc = "" +
 	"\x04type\x18\x02 \x01(\x0e2*.xyz.secureguard.api.v1.meta.v1.ClientTypeR\x04type\"G\n" +
 	"\x15CompatibilityResponse\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\bR\x05value\x12\x18\n" +
-	"\areasons\x18\x02 \x03(\tR\areasons*\xc1\x01\n" +
+	"\areasons\x18\x02 \x03(\tR\areasons*\xe4\x01\n" +
 	"\n" +
 	"ClientType\x12'\n" +
 	"#CLIENT_TYPE_SECUREGUARD_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fCLIENT_TYPE_SECUREGUARD_WINDOWS\x10\x01\x12\x1f\n" +
-	"\x1bCLIENT_TYPE_SECUREGUARD_MAC\x10\x02\x12#\n" +
-	"\x1fCLIENT_TYPE_SECUREGUARD_ANDROID\x10\x03\x12\x1f\n" +
-	"\x1bCLIENT_TYPE_SECUREGUARD_IOS\x10\x04B?Z=github.com/aesterial/secureguard/internal/api/v1/meta/v1;metab\x06proto3"
+	"\x1bCLIENT_TYPE_SECUREGUARD_MAC\x10\x02\x12!\n" +
+	"\x1dCLIENT_TYPE_SECUREGUARD_LINUX\x10\x03\x12#\n" +
+	"\x1fCLIENT_TYPE_SECUREGUARD_ANDROID\x10\x04\x12\x1f\n" +
+	"\x1bCLIENT_TYPE_SECUREGUARD_IOS\x10\x05B?Z=github.com/aesterial/secureguard/internal/api/v1/meta/v1;metab\x06proto3"
 
 var (
 	file_xyz_secureguard_v1_meta_v1_domain_proto_rawDescOnce sync.Once

@@ -201,10 +201,9 @@ func (c Crypt) PB() userpb.Crypt {
 }
 
 type Preferences struct {
-	Theme  Theme
-	Lang   Language
-	Crypt  Crypt
-	Phrase *string
+	Theme Theme
+	Lang  Language
+	Crypt Crypt
 }
 
 type User struct {
@@ -225,7 +224,6 @@ func (u *User) ProtobufSelf() *userpb.UserSelf {
 		Id:       u.ID.String(),
 		Username: u.Username,
 		Joined:   timestamppb.New(u.Joined),
-		Phrase:   p.Phrase,
 		Staff:    u.Staff,
 		Preferences: &userpb.Preferences{
 			Theme: p.Theme.PB(),
@@ -244,7 +242,6 @@ func (u *User) ProtobufPublic() *userpb.UserPublic {
 		Username:  u.Username,
 		Lang:      p.Lang.PB(),
 		Crypt:     p.Crypt.PB(),
-		PhraseSet: u.Preferences.Phrase != nil,
 	}
 }
 

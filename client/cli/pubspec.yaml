@@ -1,0 +1,18 @@
+name: secureguard_cli
+description: CLI client for secureguard
+version: 0.0.1
+repository: https://github.com/aesterial/secureguard
+
+environment:
+  sdk: ^3.11.3
+
+dependencies:
+  args: ^2.7.0
+  fixnum: ^1.1.1
+  grpc: ^5.1.0
+  protobuf: ^6.0.0
+  uuid: ^4.5.3
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6

@@ -16,6 +16,11 @@ plugins:
       - module=github.com/aesterial/secureguard/internal
       - require_unimplemented_servers=false
   - local: protoc-gen-prost
-    out: ../client/grpc
+    out: ../client/desktop/grpc
   - local: protoc-gen-tonic
-    out: ../client/grpc
+    out: ../client/desktop/grpc
+  - local: protoc-gen-dart
+    out: ../client/cli/lib/src/api
+    opt:
+      - grpc
+    include_imports: true
