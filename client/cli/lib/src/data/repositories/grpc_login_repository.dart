@@ -1,3 +1,4 @@
+import 'package:grpc/grpc.dart';
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/login/v1/domain.pb.dart';
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/types.pb.dart';
 import 'package:secureguard_cli/src/clients/login_grpc_client.dart';
@@ -8,7 +9,7 @@ import 'package:secureguard_cli/src/models/user.dart';
 class GrpcLoginRepository implements LoginRepository {
   final LoginGrpcClient _client;
 
-  GrpcLoginRepository(this._client);
+  GrpcLoginRepository({required ClientChannel channel}) : _client = LoginGrpcClient(channel);
 
   @override
   Future<AuthSession> register({

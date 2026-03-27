@@ -1,6 +1,5 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/types.pb.dart';
-import 'package:secureguard_cli/src/api/xyz/secureguard/v1/users/v1/domain.pb.dart';
 import 'package:secureguard_cli/src/domain/models/auth_session.dart';
 import 'package:secureguard_cli/src/domain/repositories/login_repository.dart';
 import 'package:secureguard_cli/src/models/client.dart';

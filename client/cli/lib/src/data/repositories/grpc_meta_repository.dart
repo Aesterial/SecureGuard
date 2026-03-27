@@ -1,3 +1,4 @@
+import 'package:grpc/grpc.dart';
 import 'package:secureguard_cli/src/clients/meta_grpc_client.dart';
 import 'package:secureguard_cli/src/domain/models/server_info.dart';
 import 'package:secureguard_cli/src/domain/repositories/meta_repository.dart';
@@ -5,7 +6,7 @@ import 'package:secureguard_cli/src/domain/repositories/meta_repository.dart';
 class GrpcMetaRepository implements MetaRepository {
   final MetaGrpcClient _client;
 
-  GrpcMetaRepository(this._client);
+  GrpcMetaRepository({required ClientChannel channel}) : _client = MetaGrpcClient(channel);
 
   @override
   Future<ServerMetadata> getServerInfo() async {
