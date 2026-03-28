@@ -1,9 +1,11 @@
 import 'package:grpc/grpc.dart';
 import 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart';
+import 'package:secureguard_cli/src/api/xyz/secureguard/v1/types.pb.dart';
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/users/v1/domain.pb.dart' as userpb;
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/users/v1/service.pbgrpc.dart';
 import 'package:secureguard_cli/src/clients/interceptors/global_interceptor.dart';
 import 'package:secureguard_cli/src/domain/repositories/user_repository.dart';
+import 'package:secureguard_cli/src/models/passwords.dart';
 import 'package:secureguard_cli/src/models/user.dart';
 
 class GrpcUserRepository implements UserRepository {
@@ -64,5 +66,12 @@ class GrpcUserRepository implements UserRepository {
     } on GrpcError {
       rethrow;
     }
+  }
+
+  @override
+  Future<void> changeKey(
+      {required String wrappedMasterKey, required KdfParams kdf}) async {
+    await _client.changeKey(
+        RequestWithValueAndKdf(value: wrappedMasterKey, kdf: kdf.protobuf()));
   }
 }

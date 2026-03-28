@@ -1,20 +1,31 @@
+import 'package:fixnum/fixnum.dart';
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/passwords/v1/domain.pb.dart' as passwords;
+import 'package:secureguard_cli/src/api/xyz/secureguard/v1/types.pb.dart';
 
 class KdfParams {
   final String alg;
   final String salt;
-  final int memory;
+  final Int64 memory;
   final int iterations;
   final int parallelism;
   final int keyLength;
-  const KdfParams(
+  final int version;
+
+  KdfParams(
     this.alg,
     this.salt,
-    this.memory,
+      mem,
     this.iterations,
     this.parallelism,
     this.keyLength,
-  );
+      this.version,) : memory = Int64(mem);
+
+  Kdf protobuf() {
+    return Kdf(version: version,
+        parallelism: parallelism,
+        memory: memory,
+        iterations: iterations);
+  }
 }
 
 class Crypted {

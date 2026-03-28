@@ -800,7 +800,7 @@ fn main() {
     configure_webview2_runtime();
 
 
-    protection::init_protection();
+//     protection::init_protection();
 
     tauri::Builder::default()
         .manage(AppState {

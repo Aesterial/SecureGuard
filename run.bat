@@ -14,7 +14,7 @@ cd /d "%~dp0" || (
 )
 
 set "ROOT=%CD%"
-set "CLIENT_DIR=%ROOT%\client"
+set "CLIENT_DIR=%ROOT%\client\desktop"
 set "SERVER_DIR=%ROOT%\server\starter"
 set "SERVER_ENV=%SERVER_DIR%\.env"
 set "SERVER_ENV_EXAMPLE=%SERVER_DIR%\.env.example"

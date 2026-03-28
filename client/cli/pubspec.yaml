@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   args: ^2.7.0
+  dart_console: ^4.1.2
   fixnum: ^1.1.1
   grpc: ^5.1.0
   protobuf: ^6.0.0
