@@ -25,24 +25,28 @@ var File_xyz_secureguard_v1_meta_v1_service_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_meta_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"(xyz/secureguard/v1/meta/v1/service.proto\x12\x1exyz.secureguard.api.v1.meta.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a'xyz/secureguard/v1/meta/v1/domain.proto2\xf3\x01\n" +
+	"(xyz/secureguard/v1/meta/v1/service.proto\x12\x1exyz.secureguard.api.v1.meta.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a'xyz/secureguard/v1/meta/v1/domain.proto2\xd1\x02\n" +
 	"\vMetaService\x12_\n" +
 	"\x11ServerInformation\x12\x16.google.protobuf.Empty\x1a2.xyz.secureguard.api.v1.meta.v1.ServerInfoResponse\x12\x82\x01\n" +
-	"\x13ClientCompatibility\x124.xyz.secureguard.api.v1.meta.v1.CompatibilityRequest\x1a5.xyz.secureguard.api.v1.meta.v1.CompatibilityResponseB?Z=github.com/aesterial/secureguard/internal/api/v1/meta/v1;metab\x06proto3"
+	"\x13ClientCompatibility\x124.xyz.secureguard.api.v1.meta.v1.CompatibilityRequest\x1a5.xyz.secureguard.api.v1.meta.v1.CompatibilityResponse\x12\\\n" +
+	"\fLocalisation\x12\x16.google.protobuf.Empty\x1a4.xyz.secureguard.api.v1.meta.v1.LocalisationResponseB?Z=github.com/aesterial/secureguard/internal/api/v1/meta/v1;metab\x06proto3"
 
 var file_xyz_secureguard_v1_meta_v1_service_proto_goTypes = []any{
 	(*emptypb.Empty)(nil),         // 0: google.protobuf.Empty
 	(*CompatibilityRequest)(nil),  // 1: xyz.secureguard.api.v1.meta.v1.CompatibilityRequest
 	(*ServerInfoResponse)(nil),    // 2: xyz.secureguard.api.v1.meta.v1.ServerInfoResponse
 	(*CompatibilityResponse)(nil), // 3: xyz.secureguard.api.v1.meta.v1.CompatibilityResponse
+	(*LocalisationResponse)(nil),  // 4: xyz.secureguard.api.v1.meta.v1.LocalisationResponse
 }
 var file_xyz_secureguard_v1_meta_v1_service_proto_depIdxs = []int32{
 	0, // 0: xyz.secureguard.api.v1.meta.v1.MetaService.ServerInformation:input_type -> google.protobuf.Empty
 	1, // 1: xyz.secureguard.api.v1.meta.v1.MetaService.ClientCompatibility:input_type -> xyz.secureguard.api.v1.meta.v1.CompatibilityRequest
-	2, // 2: xyz.secureguard.api.v1.meta.v1.MetaService.ServerInformation:output_type -> xyz.secureguard.api.v1.meta.v1.ServerInfoResponse
-	3, // 3: xyz.secureguard.api.v1.meta.v1.MetaService.ClientCompatibility:output_type -> xyz.secureguard.api.v1.meta.v1.CompatibilityResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	0, // 2: xyz.secureguard.api.v1.meta.v1.MetaService.Localisation:input_type -> google.protobuf.Empty
+	2, // 3: xyz.secureguard.api.v1.meta.v1.MetaService.ServerInformation:output_type -> xyz.secureguard.api.v1.meta.v1.ServerInfoResponse
+	3, // 4: xyz.secureguard.api.v1.meta.v1.MetaService.ClientCompatibility:output_type -> xyz.secureguard.api.v1.meta.v1.CompatibilityResponse
+	4, // 5: xyz.secureguard.api.v1.meta.v1.MetaService.Localisation:output_type -> xyz.secureguard.api.v1.meta.v1.LocalisationResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

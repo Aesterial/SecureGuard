@@ -1,0 +1,26 @@
+| SecureGuard CLI v%version%                                       %username% |
+| Screen: %screen_name%                                   %uid% %staffMember% |
+|_____________________________________________________________________________|
+|                                                                             |
+| > [1] Primary action                                                        |
+|   [2] Secondary action                                                      |
+|                                                            |
+|                                                                             |
+| %content%                                                                   |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|_____________________________________________________________________________|
+| Shift+L Login | Shift+S Sessions | Shift+P Passwords                        |
+| Shift+T Settings | Shift+A Stats | [1..9] items | Enter select | Esc back   |
+
+Notes:
+if some screen is active it was have to disappear from available hotkeys
+welcome screen should appear only 1 time when app starts. It may display 2 chooses: open settings screen and open login screen

@@ -38,3 +38,8 @@ message CompatibilityResponse {
   bool value = 1;
   repeated string reasons = 2;
 }
+
+message LocalisationResponse {
+  map<string, string> ru = 1;
+  map<string, string> en = 2;
+}

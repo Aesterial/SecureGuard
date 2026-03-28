@@ -17,6 +17,18 @@ type ServerInfo struct {
 	BuildTime      time.Time
 }
 
+type Localisation struct {
+	English map[string]string
+	Russian map[string]string
+}
+
+func (l *Localisation) Protobuf() *metapb.LocalisationResponse {
+	return &metapb.LocalisationResponse{
+		En: l.English,
+		Ru: l.Russian,
+	}
+}
+
 func (s *ServerInfo) Protobuf() *metapb.ServerInfo {
 	if s == nil {
 		return nil

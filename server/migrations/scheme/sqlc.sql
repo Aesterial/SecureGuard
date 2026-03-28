@@ -73,3 +73,15 @@ create table if not exists activity (
   at timestamptz not null
 );
 create index if not exists activity_at_idx on activity (at);
+
+create type localisation_type as enum ('ru', 'en');
+
+create table if not exists localisations
+(
+  key        varchar(64)       not null,
+  content    text              not null,
+  locale     localisation_type not null,
+  created_at timestamptz       not null default now(),
+  updated_at timestamptz,
+  unique (key, locale)
+);

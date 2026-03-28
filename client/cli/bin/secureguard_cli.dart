@@ -4,6 +4,7 @@ import 'package:args/args.dart';
 import 'package:secureguard_cli/secureguard_cli.dart';
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/meta/v1/domain.pb.dart';
 import 'package:secureguard_cli/src/core/constants.dart';
+import 'package:secureguard_cli/src/tui/tui.dart';
 
 ArgParser initParser() {
   return ArgParser()
@@ -47,7 +48,10 @@ Future<void> main(List<String> arguments) async {
 
     if (results.flag('version')) {
       stdout.writeln('$appName $version');
+      return;
     }
+
+    await Tui(app).run();
   } on Exception catch (e) {
     app.logger.critical('exception in main loop', e, []);
     rethrow;

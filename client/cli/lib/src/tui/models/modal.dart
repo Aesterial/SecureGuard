@@ -1,11 +1,45 @@
-enum ModalType { confirm() }
+class ModalField {
+  final String name;
+  final String label;
+  final String? defaultValue;
+  final bool obscure;
 
-class Modal {
-  final ModalType type;
+  const ModalField({
+    required this.name,
+    required this.label,
+    this.defaultValue,
+    this.obscure = false,
+  });
+}
+
+class ModalRequest {
   final String title;
-  final String text;
-  final List<Map<String, Type>> actions;
-  int selected = 0;
+  final String description;
 
-  Modal(this.type, this.title, this.text, this.actions);
+  const ModalRequest({
+    required this.title,
+    required this.description,
+  });
+}
+
+class ConfirmModal extends ModalRequest {
+  final String confirmLabel;
+  final String cancelLabel;
+
+  const ConfirmModal({
+    required super.title,
+    required super.description,
+    required this.confirmLabel,
+    required this.cancelLabel,
+  });
+}
+
+class ValueModal extends ModalRequest {
+  final List<ModalField> fields;
+
+  const ValueModal({
+    required super.title,
+    required super.description,
+    required this.fields,
+  });
 }

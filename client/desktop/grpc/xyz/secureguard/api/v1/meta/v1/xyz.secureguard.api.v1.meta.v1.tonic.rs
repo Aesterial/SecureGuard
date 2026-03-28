@@ -8,8 +8,9 @@ pub mod meta_service_client {
         clippy::wildcard_imports,
         clippy::let_unit_value,
     )]
-    use tonic::codegen::*;
-    use tonic::codegen::http::Uri;
+  use tonic::codegen::http::Uri;
+  use tonic::codegen::*;
+  ///
     #[derive(Debug, Clone)]
     pub struct MetaServiceClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -150,6 +151,36 @@ pub mod meta_service_client {
                 );
             self.inner.unary(req, path, codec).await
         }
+      ///
+      pub async fn localisation(
+        &mut self,
+        request: impl tonic::IntoRequest<()>,
+      ) -> std::result::Result<
+        tonic::Response<super::LocalisationResponse>,
+        tonic::Status,
+      > {
+        self.inner
+          .ready()
+          .await
+          .map_err(|e| {
+            tonic::Status::unknown(
+              format!("Service was not ready: {}", e.into()),
+            )
+          })?;
+        let codec = tonic_prost::ProstCodec::default();
+        let path = http::uri::PathAndQuery::from_static(
+          "/xyz.secureguard.api.v1.meta.v1.MetaService/Localisation",
+        );
+        let mut req = request.into_request();
+        req.extensions_mut()
+          .insert(
+            GrpcMethod::new(
+              "xyz.secureguard.api.v1.meta.v1.MetaService",
+              "Localisation",
+            ),
+          );
+        self.inner.unary(req, path, codec).await
+      }
     }
 }
 /// Generated server implementations.
@@ -161,8 +192,8 @@ pub mod meta_service_server {
         clippy::wildcard_imports,
         clippy::let_unit_value,
     )]
-    use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with MetaServiceServer.
+  use tonic::codegen::*;
+  /// Generated trait containing gRPC methods that should be implemented for use with MetaServiceServer.
     #[async_trait]
     pub trait MetaService: std::marker::Send + std::marker::Sync + 'static {
         ///
@@ -181,7 +212,16 @@ pub mod meta_service_server {
             tonic::Response<super::CompatibilityResponse>,
             tonic::Status,
         >;
+    ///
+    async fn localisation(
+      &self,
+      request: tonic::Request<()>,
+    ) -> std::result::Result<
+      tonic::Response<super::LocalisationResponse>,
+      tonic::Status,
+        >;
     }
+  ///
     #[derive(Debug)]
     pub struct MetaServiceServer<T> {
         inner: Arc<T>,
@@ -336,6 +376,46 @@ pub mod meta_service_server {
                                 accept_compression_encodings,
                                 send_compression_encodings,
                             )
+                          .apply_max_message_size_config(
+                            max_decoding_message_size,
+                            max_encoding_message_size,
+                          );
+                      let res = grpc.unary(method, req).await;
+                      Ok(res)
+                    };
+                  Box::pin(fut)
+                }
+              "/xyz.secureguard.api.v1.meta.v1.MetaService/Localisation" => {
+                #[allow(non_camel_case_types)]
+                struct LocalisationSvc<T: MetaService>(pub Arc<T>);
+                impl<T: MetaService> tonic::server::UnaryService<()>
+                for LocalisationSvc<T> {
+                  type Response = super::LocalisationResponse;
+                  type Future = BoxFuture<
+                    tonic::Response<Self::Response>,
+                    tonic::Status,
+                  >;
+                  fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                    let inner = Arc::clone(&self.0);
+                    let fut = async move {
+                      <T as MetaService>::localisation(&inner, request).await
+                    };
+                    Box::pin(fut)
+                  }
+                }
+                let accept_compression_encodings = self.accept_compression_encodings;
+                let send_compression_encodings = self.send_compression_encodings;
+                let max_decoding_message_size = self.max_decoding_message_size;
+                let max_encoding_message_size = self.max_encoding_message_size;
+                let inner = self.inner.clone();
+                let fut = async move {
+                  let method = LocalisationSvc(inner);
+                  let codec = tonic_prost::ProstCodec::default();
+                  let mut grpc = tonic::server::Grpc::new(codec)
+                    .apply_compression_config(
+                      accept_compression_encodings,
+                      send_compression_encodings,
+                    )
                             .apply_max_message_size_config(
                                 max_decoding_message_size,
                                 max_encoding_message_size,

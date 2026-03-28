@@ -335,6 +335,73 @@ class CompatibilityResponse extends $pb.GeneratedMessage {
   $pb.PbList<$core.String> get reasons => $_getList(1);
 }
 
+class LocalisationResponse extends $pb.GeneratedMessage {
+  factory LocalisationResponse({
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? ru,
+    $core.Iterable<$core.MapEntry<$core.String, $core.String>>? en,
+  }) {
+    final result = create();
+    if (ru != null) result.ru.addEntries(ru);
+    if (en != null) result.en.addEntries(en);
+    return result;
+  }
+
+  LocalisationResponse._();
+
+  factory LocalisationResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+
+  factory LocalisationResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'LocalisationResponse',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'xyz.secureguard.api.v1.meta.v1'),
+      createEmptyInstance: create)
+    ..m<$core.String, $core.String>(1, _omitFieldNames ? '' : 'ru',
+        entryClassName: 'LocalisationResponse.RuEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('xyz.secureguard.api.v1.meta.v1'))
+    ..m<$core.String, $core.String>(2, _omitFieldNames ? '' : 'en',
+        entryClassName: 'LocalisationResponse.EnEntry',
+        keyFieldType: $pb.PbFieldType.OS,
+        valueFieldType: $pb.PbFieldType.OS,
+        packageName: const $pb.PackageName('xyz.secureguard.api.v1.meta.v1'))
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LocalisationResponse clone() => deepCopy();
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  LocalisationResponse copyWith(void Function(LocalisationResponse) updates) =>
+      super.copyWith((message) => updates(message as LocalisationResponse))
+          as LocalisationResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static LocalisationResponse create() => LocalisationResponse._();
+
+  @$core.override
+  LocalisationResponse createEmptyInstance() => create();
+
+  @$core.pragma('dart2js:noInline')
+  static LocalisationResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<LocalisationResponse>(create);
+  static LocalisationResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbMap<$core.String, $core.String> get ru => $_getMap(0);
+
+  @$pb.TagNumber(2)
+  $pb.PbMap<$core.String, $core.String> get en => $_getMap(1);
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

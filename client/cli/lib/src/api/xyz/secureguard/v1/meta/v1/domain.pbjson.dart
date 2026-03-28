@@ -126,3 +126,56 @@ const CompatibilityResponse$json = {
 final $typed_data.Uint8List compatibilityResponseDescriptor = $convert.base64Decode(
     'ChVDb21wYXRpYmlsaXR5UmVzcG9uc2USFAoFdmFsdWUYASABKAhSBXZhbHVlEhgKB3JlYXNvbn'
     'MYAiADKAlSB3JlYXNvbnM=');
+
+@$core.Deprecated('Use localisationResponseDescriptor instead')
+const LocalisationResponse$json = {
+  '1': 'LocalisationResponse',
+  '2': [
+    {
+      '1': 'ru',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.xyz.secureguard.api.v1.meta.v1.LocalisationResponse.RuEntry',
+      '10': 'ru'
+    },
+    {
+      '1': 'en',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.xyz.secureguard.api.v1.meta.v1.LocalisationResponse.EnEntry',
+      '10': 'en'
+    },
+  ],
+  '3': [LocalisationResponse_RuEntry$json, LocalisationResponse_EnEntry$json],
+};
+
+@$core.Deprecated('Use localisationResponseDescriptor instead')
+const LocalisationResponse_RuEntry$json = {
+  '1': 'RuEntry',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {'1': 'value', '3': 2, '4': 1, '5': 9, '10': 'value'},
+  ],
+  '7': {'7': true},
+};
+
+@$core.Deprecated('Use localisationResponseDescriptor instead')
+const LocalisationResponse_EnEntry$json = {
+  '1': 'EnEntry',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {'1': 'value', '3': 2, '4': 1, '5': 9, '10': 'value'},
+  ],
+  '7': {'7': true},
+};
+
+/// Descriptor for `LocalisationResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List localisationResponseDescriptor = $convert.base64Decode(
+    'ChRMb2NhbGlzYXRpb25SZXNwb25zZRJMCgJydRgBIAMoCzI8Lnh5ei5zZWN1cmVndWFyZC5hcG'
+    'kudjEubWV0YS52MS5Mb2NhbGlzYXRpb25SZXNwb25zZS5SdUVudHJ5UgJydRJMCgJlbhgCIAMo'
+    'CzI8Lnh5ei5zZWN1cmVndWFyZC5hcGkudjEubWV0YS52MS5Mb2NhbGlzYXRpb25SZXNwb25zZS'
+    '5FbkVudHJ5UgJlbho1CgdSdUVudHJ5EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJ'
+    'UgV2YWx1ZToCOAEaNQoHRW5FbnRyeRIQCgNrZXkYASABKAlSA2tleRIUCgV2YWx1ZRgCIAEoCV'
+    'IFdmFsdWU6AjgB');

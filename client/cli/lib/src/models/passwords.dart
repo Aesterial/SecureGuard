@@ -46,14 +46,27 @@ class ServiceInfo {
 }
 
 class Password {
+  final String? id;
   final ServiceInfo service;
   final String login;
   final String pass;
   final DateTime createdAt;
 
-  Password({required this.service, required this.login, required this.pass, required this.createdAt});
+  Password({
+    required this.id,
+    required this.service,
+    required this.login,
+    required this.pass,
+    required this.createdAt,
+  });
 
   factory Password.fromProto({required passwords.Password password}) {
-    return Password(service: ServiceInfo.fromProto(service: password.serv), login: password.login, pass: password.pass, createdAt: password.createdAt.toDateTime());
+    return Password(
+      id: null,
+      service: ServiceInfo.fromProto(service: password.serv),
+      login: password.login,
+      pass: password.pass,
+      createdAt: password.createdAt.toDateTime(),
+    );
   }
 }

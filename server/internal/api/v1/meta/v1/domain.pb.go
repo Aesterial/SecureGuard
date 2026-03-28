@@ -320,6 +320,58 @@ func (x *CompatibilityResponse) GetReasons() []string {
 	return nil
 }
 
+type LocalisationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ru            map[string]string      `protobuf:"bytes,1,rep,name=ru,proto3" json:"ru,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	En            map[string]string      `protobuf:"bytes,2,rep,name=en,proto3" json:"en,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LocalisationResponse) Reset() {
+	*x = LocalisationResponse{}
+	mi := &file_xyz_secureguard_v1_meta_v1_domain_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LocalisationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LocalisationResponse) ProtoMessage() {}
+
+func (x *LocalisationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_xyz_secureguard_v1_meta_v1_domain_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LocalisationResponse.ProtoReflect.Descriptor instead.
+func (*LocalisationResponse) Descriptor() ([]byte, []int) {
+	return file_xyz_secureguard_v1_meta_v1_domain_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *LocalisationResponse) GetRu() map[string]string {
+	if x != nil {
+		return x.Ru
+	}
+	return nil
+}
+
+func (x *LocalisationResponse) GetEn() map[string]string {
+	if x != nil {
+		return x.En
+	}
+	return nil
+}
+
 var File_xyz_secureguard_v1_meta_v1_domain_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_meta_v1_domain_proto_rawDesc = "" +
@@ -345,7 +397,16 @@ const file_xyz_secureguard_v1_meta_v1_domain_proto_rawDesc = "" +
 	"\x04type\x18\x02 \x01(\x0e2*.xyz.secureguard.api.v1.meta.v1.ClientTypeR\x04type\"G\n" +
 	"\x15CompatibilityResponse\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\bR\x05value\x12\x18\n" +
-	"\areasons\x18\x02 \x03(\tR\areasons*\xe4\x01\n" +
+	"\areasons\x18\x02 \x03(\tR\areasons\"\xa0\x02\n" +
+	"\x14LocalisationResponse\x12L\n" +
+	"\x02ru\x18\x01 \x03(\v2<.xyz.secureguard.api.v1.meta.v1.LocalisationResponse.RuEntryR\x02ru\x12L\n" +
+	"\x02en\x18\x02 \x03(\v2<.xyz.secureguard.api.v1.meta.v1.LocalisationResponse.EnEntryR\x02en\x1a5\n" +
+	"\aRuEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a5\n" +
+	"\aEnEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01*\xe4\x01\n" +
 	"\n" +
 	"ClientType\x12'\n" +
 	"#CLIENT_TYPE_SECUREGUARD_UNSPECIFIED\x10\x00\x12#\n" +
@@ -368,24 +429,29 @@ func file_xyz_secureguard_v1_meta_v1_domain_proto_rawDescGZIP() []byte {
 }
 
 var file_xyz_secureguard_v1_meta_v1_domain_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_xyz_secureguard_v1_meta_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_xyz_secureguard_v1_meta_v1_domain_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_xyz_secureguard_v1_meta_v1_domain_proto_goTypes = []any{
 	(ClientType)(0),               // 0: xyz.secureguard.api.v1.meta.v1.ClientType
 	(*ServerInfo)(nil),            // 1: xyz.secureguard.api.v1.meta.v1.ServerInfo
 	(*ServerInfoResponse)(nil),    // 2: xyz.secureguard.api.v1.meta.v1.ServerInfoResponse
 	(*CompatibilityRequest)(nil),  // 3: xyz.secureguard.api.v1.meta.v1.CompatibilityRequest
 	(*CompatibilityResponse)(nil), // 4: xyz.secureguard.api.v1.meta.v1.CompatibilityResponse
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
+	(*LocalisationResponse)(nil),  // 5: xyz.secureguard.api.v1.meta.v1.LocalisationResponse
+	nil,                           // 6: xyz.secureguard.api.v1.meta.v1.LocalisationResponse.RuEntry
+	nil,                           // 7: xyz.secureguard.api.v1.meta.v1.LocalisationResponse.EnEntry
+	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
 }
 var file_xyz_secureguard_v1_meta_v1_domain_proto_depIdxs = []int32{
-	5, // 0: xyz.secureguard.api.v1.meta.v1.ServerInfo.build_time:type_name -> google.protobuf.Timestamp
+	8, // 0: xyz.secureguard.api.v1.meta.v1.ServerInfo.build_time:type_name -> google.protobuf.Timestamp
 	1, // 1: xyz.secureguard.api.v1.meta.v1.ServerInfoResponse.info:type_name -> xyz.secureguard.api.v1.meta.v1.ServerInfo
 	0, // 2: xyz.secureguard.api.v1.meta.v1.CompatibilityRequest.type:type_name -> xyz.secureguard.api.v1.meta.v1.ClientType
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	6, // 3: xyz.secureguard.api.v1.meta.v1.LocalisationResponse.ru:type_name -> xyz.secureguard.api.v1.meta.v1.LocalisationResponse.RuEntry
+	7, // 4: xyz.secureguard.api.v1.meta.v1.LocalisationResponse.en:type_name -> xyz.secureguard.api.v1.meta.v1.LocalisationResponse.EnEntry
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_xyz_secureguard_v1_meta_v1_domain_proto_init() }
@@ -399,7 +465,7 @@ func file_xyz_secureguard_v1_meta_v1_domain_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_xyz_secureguard_v1_meta_v1_domain_proto_rawDesc), len(file_xyz_secureguard_v1_meta_v1_domain_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

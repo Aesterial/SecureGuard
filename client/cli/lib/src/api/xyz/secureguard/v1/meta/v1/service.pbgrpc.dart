@@ -47,6 +47,13 @@ class MetaServiceClient extends $grpc.Client {
     return $createUnaryCall(_$clientCompatibility, request, options: options);
   }
 
+  $grpc.ResponseFuture<$1.LocalisationResponse> localisation(
+    $0.Empty request, {
+    $grpc.CallOptions? options,
+  }) {
+    return $createUnaryCall(_$localisation, request, options: options);
+  }
+
   // method descriptors
 
   static final _$serverInformation =
@@ -59,6 +66,11 @@ class MetaServiceClient extends $grpc.Client {
           '/xyz.secureguard.api.v1.meta.v1.MetaService/ClientCompatibility',
           ($1.CompatibilityRequest value) => value.writeToBuffer(),
           $1.CompatibilityResponse.fromBuffer);
+  static final _$localisation =
+      $grpc.ClientMethod<$0.Empty, $1.LocalisationResponse>(
+          '/xyz.secureguard.api.v1.meta.v1.MetaService/Localisation',
+          ($0.Empty value) => value.writeToBuffer(),
+          $1.LocalisationResponse.fromBuffer);
 }
 
 @$pb.GrpcServiceName('xyz.secureguard.api.v1.meta.v1.MetaService')
@@ -82,6 +94,13 @@ abstract class MetaServiceBase extends $grpc.Service {
             ($core.List<$core.int> value) =>
                 $1.CompatibilityRequest.fromBuffer(value),
             ($1.CompatibilityResponse value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.Empty, $1.LocalisationResponse>(
+        'Localisation',
+        localisation_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.Empty.fromBuffer(value),
+        ($1.LocalisationResponse value) => value.writeToBuffer()));
   }
 
   $async.Future<$1.ServerInfoResponse> serverInformation_Pre(
@@ -100,4 +119,12 @@ abstract class MetaServiceBase extends $grpc.Service {
 
   $async.Future<$1.CompatibilityResponse> clientCompatibility(
       $grpc.ServiceCall call, $1.CompatibilityRequest request);
+
+  $async.Future<$1.LocalisationResponse> localisation_Pre(
+      $grpc.ServiceCall $call, $async.Future<$0.Empty> $request) async {
+    return localisation($call, await $request);
+  }
+
+  $async.Future<$1.LocalisationResponse> localisation(
+      $grpc.ServiceCall call, $0.Empty request);
 }

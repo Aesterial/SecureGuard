@@ -41,3 +41,7 @@ func (s *MetaService) ServerInformation(ctx context.Context, _ *emptypb.Empty) (
 	}
 	return &metapb.ServerInfoResponse{Info: s.meta.ServerInformation().Protobuf()}, nil
 }
+
+func (s *MetaService) Localisation(context.Context, *emptypb.Empty) (*metapb.LocalisationResponse, error) {
+	return nil, nil
+}

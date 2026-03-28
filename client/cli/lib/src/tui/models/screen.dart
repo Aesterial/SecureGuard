@@ -1,8 +1,13 @@
-import 'package:dart_console/dart_console.dart';
+import 'package:secureguard_cli/src/tui/core/tui_context.dart';
 import 'package:secureguard_cli/src/tui/models/route.dart';
+import 'package:secureguard_cli/src/tui/models/screen_view.dart';
 
 abstract interface class Screen {
-  void render(Console console);
+  Route get route;
 
-  Route? onKey(Key key);
+  Future<void> onEnter(TuiContext context);
+
+  ScreenView buildView(TuiContext context);
+
+  Future<void> onSelect(TuiContext context, int index);
 }

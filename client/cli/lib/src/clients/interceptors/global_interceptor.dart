@@ -15,7 +15,8 @@ class GlobalInterceptor extends ClientInterceptor {
     }
     final metadata = <String, String>{'client': client.getClientHash()};
     if (client.isAuthorized) {
-      metadata['session'] = client.getSession()!;
+      final session = client.getSession()!;
+      metadata['session'] = session.startsWith('SG-') ? session : 'SG-$session';
     }
     final nextOptions = options.mergedWith(CallOptions(metadata: metadata));
     return invoker(method, request, nextOptions);

@@ -10,4 +10,5 @@ import "xyz/secureguard/v1/meta/v1/domain.proto";
 service MetaService {
   rpc ServerInformation(google.protobuf.Empty) returns (ServerInfoResponse);
   rpc ClientCompatibility(CompatibilityRequest) returns (CompatibilityResponse);
+  rpc Localisation(google.protobuf.Empty) returns (LocalisationResponse);
 }

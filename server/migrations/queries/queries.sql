@@ -206,3 +206,8 @@ select users, registers, at from activity where at >= $1 AND at < $2;
 
 -- name: GetExpiredSessions :many
 select id from sessions where expires < now();
+
+-- name: GetListByLocale :many
+select key, content
+from localisations
+where locale = $1;
