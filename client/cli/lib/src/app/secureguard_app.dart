@@ -15,6 +15,9 @@ import 'package:secureguard_cli/src/services/logger_service.dart';
 import 'package:secureguard_cli/src/services/login_service.dart';
 import 'package:secureguard_cli/src/services/meta_service.dart';
 import 'package:secureguard_cli/src/services/passwords_service.dart';
+import 'package:secureguard_cli/src/services/sessions_service.dart';
+import 'package:secureguard_cli/src/services/stats_service.dart';
+import 'package:secureguard_cli/src/services/user_service.dart';
 
 class SecureGuardApp {
   final ConfigService configService;
@@ -22,6 +25,9 @@ class SecureGuardApp {
   final LoginService loginService;
   final MetaService metaService;
   final PasswordsService passwordsService;
+  final SessionsService sessionsService;
+  final UserService userService;
+  final StatsService statsService;
   final ClientChannel _channel;
 
   SecureGuardApp._({
@@ -30,6 +36,9 @@ class SecureGuardApp {
     required this.loginService,
     required this.metaService,
     required this.passwordsService,
+    required this.userService,
+    required this.statsService,
+    required this.sessionsService,
     required ClientChannel channel,
   }) : _channel = channel;
 
@@ -56,6 +65,9 @@ class SecureGuardApp {
       loginService: LoginService(loginRepository, clientStore),
       metaService: MetaService(metaRepository),
       passwordsService: PasswordsService(passwordsRepository),
+      userService: UserService(userRepository),
+      statsService: StatsService(statsRepository),
+      sessionsService: SessionsService(sessionsRepository),
       channel: channel,
     );
   }

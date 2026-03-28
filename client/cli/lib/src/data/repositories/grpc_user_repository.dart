@@ -1,10 +1,10 @@
 import 'package:grpc/grpc.dart';
 import 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart';
-import 'package:secureguard_cli/src/api/xyz/secureguard/v1/users/v1/domain.pb.dart';
+import 'package:secureguard_cli/src/api/xyz/secureguard/v1/users/v1/domain.pb.dart' as userpb;
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/users/v1/service.pbgrpc.dart';
 import 'package:secureguard_cli/src/clients/interceptors/global_interceptor.dart';
 import 'package:secureguard_cli/src/domain/repositories/user_repository.dart';
-import 'package:secureguard_cli/src/models/user.dart' as user;
+import 'package:secureguard_cli/src/models/user.dart';
 
 class GrpcUserRepository implements UserRepository {
   final UserServiceClient _client;
@@ -12,40 +12,55 @@ class GrpcUserRepository implements UserRepository {
   GrpcUserRepository({required ClientChannel channel}) : _client = UserServiceClient(channel, interceptors: [GlobalInterceptor()]);
 
   @override
-  Future<Crypt> changeCrypt({required user.Crypt crypt}) async {
+  Future<Crypt> changeCrypt({required Crypt crypt}) async {
     try {
-      final response = await _client.changeCrypt(ChangeCryptRequest(value: crypt.protobuf));
-      return response.result;
+      final response = await _client.changeCrypt(
+          userpb.ChangeCryptRequest(value: crypt.protobuf));
+      if (!response.hasRequiredFields()) {
+        throw StateError("user repository failed to change crypt field");
+      }
+      return Crypt.fromProto(response.result);
     } on GrpcError {
       rethrow;
     }
   }
 
   @override
-  Future<Language> changeLanguage({required user.Languages lang}) async {
+  Future<Languages> changeLanguage({required Languages lang}) async {
     try {
-      final response = await _client.changeLanguage(ChangeLanguageRequest(value: lang.protobuf));
-      return response.result;
+      final response = await _client.changeLanguage(
+          userpb.ChangeLanguageRequest(value: lang.protobuf));
+      if (!response.hasRequiredFields()) {
+        throw StateError("user repository failed to change language field");
+      }
+      return Languages.fromProto(response.result);
     } on GrpcError {
       rethrow;
     }
   }
 
   @override
-  Future<Theme> changeTheme({required user.Themes theme}) async {
+  Future<Themes> changeTheme({required Themes theme}) async {
     try {
-      final response = await _client.changeTheme(ChangeThemeRequest(value: theme.protobuf));
-      return response.result;
+      final response = await _client.changeTheme(
+          userpb.ChangeThemeRequest(value: theme.protobuf));
+      if (!response.hasRequiredFields()) {
+        throw StateError("user repository failed to change theme field");
+      }
+      return Themes.fromProto(response.result);
     } on GrpcError {
       rethrow;
     }
   }
 
   @override
-  Future<UserSelf> info() async {
+  Future<User> info() async {
     try {
       final response = await _client.info(Empty());
-      return response.info;
+      if (!response.hasRequiredFields() || !response.hasInfo()) {
+        throw StateError("user repository failed to get user information");
+      }
+      return User.fromProto(usr: response.info);
     } on GrpcError {
       rethrow;
     }
