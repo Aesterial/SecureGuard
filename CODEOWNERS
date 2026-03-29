@@ -6,7 +6,8 @@
 /api/ @Ivanskem
 
 # Desktop client
-/client/ @xvalegendary
+/client/desktop @xvalegendary
+/client/cli @Ivanskem
 
 # Shared repository policy and automation
 /.github/ @Ivanskem @xvalegendary
@@ -16,4 +17,3 @@
 /docker-compose.yml @Ivanskem @xvalegendary
 /Caddyfile @Ivanskem @xvalegendary
 /run.bat @Ivanskem @xvalegendary
-/setup.bat @Ivanskem @xvalegendary

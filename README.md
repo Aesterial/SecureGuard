@@ -10,12 +10,12 @@
 </p>
 
 <p align="center">
-  <i>Windows-first desktop password vault with local encryption, OS hardening, and a Go gRPC backend.</i>
+  <i>Windows-first password vault with a Tauri desktop client, a Dart terminal client, and a Go gRPC backend.</i>
 </p>
 
 <p align="center">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-3e4c75.svg?style=flat-square" alt="AGPL-3.0 license" /></a>
-  <img src="https://img.shields.io/badge/stack-Tauri%20%2B%20Rust%20%2B%20Go%20%2B%20PostgreSQL-222?style=flat-square" alt="Tech stack" />
+  <img src="https://img.shields.io/badge/stack-Tauri%20%2B%20Rust%20%2B%20Dart%20%2B%20Go%20%2B%20PostgreSQL-222?style=flat-square" alt="Tech stack" />
   <img src="https://img.shields.io/badge/platform-Windows-0078D6?style=flat-square&logo=windows" alt="Windows platform" />
   <br />
   <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/go-link-static.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aesterial/SecureGuard/go-link-static.yml?branch=main&style=flat-square&label=Go%20Test" alt="Go Test status" /></a>
@@ -25,19 +25,17 @@
 
 ## Overview
 
-`SecureGuard` is a monorepo for a desktop password manager with three main parts:
+`SecureGuard` is a monorepo for a password manager with four main parts:
 
-- `client/`: Tauri desktop app (`Rust + HTML/CSS/JS`)
+- `client/desktop/`: Tauri desktop app (`Rust + HTML/CSS/JS`)
+- `client/cli/`: Dart terminal client with a TUI
 - `server/`: Go gRPC backend with layered `domain/app/infra` structure
-- `api/`: protobuf contracts and generation inputs for Go and Rust clients
-
-The repository is currently an active MVP. The desktop app already covers the core vault flow, while the backend exposes a broader API surface for sessions, settings, metadata, and admin statistics.
+- `api/`: protobuf contracts and generation inputs for Go, Rust, and Dart clients
 
 ## Documentation
 
-API and generation notes:
-
-- [api/README.md](./api/README.md) - protobuf and generation notes
+- [api/README.md](./api/README.md) - protobuf and code generation notes
+- [client/cli/README.md](./client/cli/README.md) - Dart CLI usage, navigation, and build notes
 
 ## Current State
 
@@ -69,6 +67,22 @@ API and generation notes:
   - context-menu blocking
 - Windows-specific screenshot protection, startup integration, and release-only protection hooks
 
+### CLI client
+
+- TUI flow for server setup, metadata loading, and compatibility checks
+- Account registration and login over gRPC
+- Local password encryption and decryption using the same wrapped key model as the desktop app
+- Password vault flow:
+  - create entries
+  - list entries
+  - update entries
+  - delete entries
+  - decrypt login or password and copy it to the clipboard for `30s`
+- Session listing and revoke flow
+- Staff-only statistics screen
+- RU/EN localization
+- Theme and crypt-mode toggles, with server sync after authorization
+
 ### Backend and API
 
 - gRPC services registered in `server/starter/start.go`:
@@ -84,25 +98,21 @@ API and generation notes:
 - Structured logging subsystem
 - Optional Kafka-backed log transport and log reader
 - Hourly and daily stats persistence workers
-- Buf-based protobuf generation for Go and Rust clients
-- GitHub Actions workflows for Go and Rust link/static analysis
-
-### Known boundaries
-
-- The desktop client currently focuses on authentication, vault management, settings, and staff stats.
-- The desktop UI does not expose password updates, session management, or key rotation, even though backend/API support exists for some of those flows.
-- The admin statistics screen depends on the Kafka log reader path. In the minimal local setup with `KAFKA_ENABLED=false`, staff analytics are not available.
-- The server does not receive the raw seed phrase during registration. It stores a wrapped master key plus salt/KDF params in `users_keys`, so the system is safer than the old design but still not a strict zero-knowledge vault.
-- The repository is Windows-first. The Tauri app contains Windows-only integrations for screenshot protection and startup management.
+- Buf-based protobuf generation for Go, Rust, and Dart clients
 
 ## Repository Layout
 
 ```text
 SecureGuard/
 |-- client/
-|   |-- src/                # Frontend HTML/CSS/JS
-|   |-- src-tauri/          # Tauri shell, crypto, OS integrations
-|   `-- grpc/               # Generated Rust gRPC stubs
+|   |-- desktop/
+|   |   |-- src/            # Frontend HTML/CSS/JS
+|   |   |-- src-tauri/      # Tauri shell, crypto, OS integrations
+|   |   `-- grpc/           # Generated Rust gRPC stubs
+|   `-- cli/
+|       |-- bin/            # CLI entrypoint
+|       |-- lib/            # TUI, services, generated Dart gRPC stubs
+|       `-- test/           # Dart tests
 |-- server/
 |   |-- internal/           # Domain, app, infra, generated Go stubs
 |   |-- starter/            # gRPC server bootstrap entrypoint
@@ -119,7 +129,8 @@ SecureGuard/
 - Windows 10/11
 - `Rust` stable
 - `Node.js` with `npm`
-- `Go 1.26.1` or compatible with the checked-in `go.mod`
+- `Dart SDK 3.11+`
+- `Go 1.26` or compatible with the checked-in `go.mod`
 - `Docker` if you want `run.bat` to auto-start PostgreSQL
 - `Git` with submodule support
 
@@ -138,12 +149,14 @@ cd SecureGuard
 git submodule update --init --recursive api/third_party/googleapis api/third_party/grpc-web
 ```
 
-3. Install frontend dependencies:
+3. Install client dependencies:
 
 ```bash
-cd client
+cd client/desktop
 npm ci
-cd ..
+cd ../cli
+dart pub get
+cd ../..
 ```
 
 4. Configure backend environment:
@@ -152,7 +165,7 @@ cd ..
 Copy-Item server/starter/.env.example server/starter/.env
 ```
 
-Update `server/starter/.env` so the desktop client and backend use the same port:
+Update `server/starter/.env` so local clients and backend use the same endpoint:
 
 ```env
 POSTGRES_HOST=127.0.0.1
@@ -169,13 +182,11 @@ KAFKA_ENABLED=false
 DEBUG_MODE=false
 ```
 
-Why `8080`: the Tauri client defaults to `http://127.0.0.1:8080` in `client/src-tauri/src/api.rs`.
-
 Notes:
 
-- `server/starter/.env.example` is tuned for the local desktop flow and keeps Kafka-backed analytics plus Redis rate limiting disabled by default.
+- `server/starter/.env.example` is tuned for the local desktop and CLI flow and keeps Kafka-backed analytics plus Redis rate limiting disabled by default.
 - The root `docker compose` stack still enables Kafka and rate limiting through its own container defaults, so you do not need to turn them on in the minimal local setup.
-- The minimal desktop flow works with the lean config above; the staff analytics screen does not.
+- The minimal local setup works for the desktop app and the CLI, but the staff analytics screen does not.
 
 5. Start everything with the helper script:
 
@@ -190,7 +201,7 @@ run.bat
 - start PostgreSQL in Docker if it is not running locally
 - apply `server/migrations/scheme/sqlc.sql`
 - start the Go gRPC backend
-- run the Tauri app in `dev` or `build` mode
+- run either the desktop client or the Dart CLI in `dev` or `build` mode
 
 ## Docker Compose
 
@@ -244,11 +255,11 @@ go run .
 ### 4. Start desktop app
 
 ```bash
-cd client
+cd client/desktop
 npm run dev
 ```
 
-If you want to keep the backend on another port, export one of these variables before launching the client:
+If you want to keep the backend on another port, export one of these variables before launching the desktop app:
 
 - `SECUREGUARD_GRPC_ENDPOINT`
 - `SECUREGUARD_BACKEND`
@@ -257,9 +268,24 @@ Example:
 
 ```powershell
 $env:SECUREGUARD_GRPC_ENDPOINT = "http://127.0.0.1:50051"
-cd client
+cd client/desktop
 npm run dev
 ```
+
+### 5. Start CLI app
+
+For the default local backend from `server/starter/.env`, pass an explicit non-TLS endpoint:
+
+```bash
+cd client/cli
+dart run bin/secureguard_cli.dart --server http://127.0.0.1:8080
+```
+
+Notes:
+
+- Without `--server`, the CLI defaults to `https://localhost`.
+- When `--server` is not provided, the endpoint can be changed from the server setup screen inside the TUI.
+- When `--server` is provided, the endpoint is locked for that session.
 
 ## Local Quality Checks
 
@@ -273,16 +299,22 @@ cd ../starter
 go test ./...
 ```
 
-### Rust
+### Rust desktop app
 
 ```bash
-cd client/src-tauri
+cd client/desktop/src-tauri
 cargo fmt --all -- --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo build --all-targets --all-features --locked
 ```
 
-These commands match the current CI workflows in `.github/workflows/go-link-static.yml` and `.github/workflows/rust-link-static.yml`.
+### Dart CLI
+
+```bash
+cd client/cli
+dart test
+dart compile exe bin/secureguard_cli.dart -o build/secureguard-cli.exe
+```
 
 ## API and Code Generation
 
@@ -297,12 +329,14 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 cargo install protoc-gen-prost
 cargo install protoc-gen-tonic
+dart pub global activate protoc_plugin
 ```
 
 2. Ensure generator binaries are in `PATH`:
 
 - Go: `%USERPROFILE%\go\bin`
 - Rust: `%USERPROFILE%\.cargo\bin`
+- Dart: `%LOCALAPPDATA%\Pub\Cache\bin`
 
 3. Generate code:
 
@@ -314,7 +348,8 @@ buf generate
 Generated outputs:
 
 - Go stubs: `server/internal/api/...`
-- Rust stubs: `client/grpc/...`
+- Rust stubs: `client/desktop/grpc/...`
+- Dart stubs: `client/cli/lib/src/api/...`
 
 ## Contributing
 
