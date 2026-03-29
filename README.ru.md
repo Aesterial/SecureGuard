@@ -20,6 +20,7 @@
   <br />
   <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/go-link-static.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aesterial/SecureGuard/go-link-static.yml?branch=main&style=flat-square&label=Go%20Test" alt="Статус Go Test" /></a>
   <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/rust-link-static.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aesterial/SecureGuard/rust-link-static.yml?branch=main&style=flat-square&label=Rust%20Test" alt="Статус Rust Test" /></a>
+  <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/dart-link-test.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aesterial/SecureGuard/dart-link-test.yml?branch=main&style=flat-square&label=Dart%20Test" alt="Статус Dart Test" /></a>
 </p>
 
 ## Обзор
