@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:secureguard_cli/src/crypto/engine.dart';
 import 'package:secureguard_cli/src/models/passwords.dart';
 import 'package:secureguard_cli/src/models/user.dart';
@@ -96,6 +98,47 @@ class PasswordCryptoService {
       return DecryptedPasswordRecord(login: login, password: decryptedPassword);
     } finally {
       masterKey.fillRange(0, masterKey.length, 0);
+    }
+  }
+
+  Future<DecryptedPasswordRecord> decryptEntryWithMasterKey({
+    required Password password,
+    required String masterKey,
+  }) async {
+    final rawKey = await _resolveMasterKey(
+      secret: masterKey,
+      password: password,
+    );
+
+    try {
+      final login = password.hasEncryptedLogin
+          ? await _engine.decryptPasswordWithMasterKey(
+              password.encryptedLogin,
+              rawKey,
+            )
+          : password.loginPreview;
+      final decryptedPassword = await _engine.decryptPasswordWithMasterKey(
+        password.encryptedPassword,
+        rawKey,
+      );
+      return DecryptedPasswordRecord(login: login, password: decryptedPassword);
+    } finally {
+      rawKey.fillRange(0, rawKey.length, 0);
+    }
+  }
+
+  Future<Uint8List> _resolveMasterKey({
+    required String secret,
+    required Password password,
+  }) async {
+    try {
+      return _engine.parseMasterKey(secret);
+    } on StateError {
+      final envelope = password.legacyEnvelope ?? _currentBundle?.envelope;
+      if (envelope == null || !envelope.isComplete) {
+        rethrow;
+      }
+      return _engine.unwrapMasterKey(envelope, secret);
     }
   }
 }

@@ -26,9 +26,6 @@ class PasswordsScreen extends BaseScreen {
     final items = <SelectorItem>[
       SelectorItem(label: context.tr('selector.refresh')),
       SelectorItem(label: context.tr('selector.createPassword')),
-      SelectorItem(label: context.tr('selector.revealPassword')),
-      SelectorItem(label: context.tr('selector.updatePassword')),
-      SelectorItem(label: context.tr('selector.deletePassword')),
     ];
 
     items.addAll(
@@ -117,21 +114,15 @@ class PasswordsScreen extends BaseScreen {
         await _createPassword(context);
         return;
       case 2:
-        await _revealPassword(context);
-        return;
-      case 3:
-        await _updatePassword(context);
-        return;
-      case 4:
-        await _deletePassword(context);
+        await _openPasswordActions(context);
         return;
       default:
-        context.setStatus(context.tr('status.selectionOnly'));
+        await _openPasswordActions(context);
     }
   }
 
   Password? _selectedPassword(TuiContext context) {
-    final index = context.state.selectionFor(route) - 5;
+    final index = context.state.selectionFor(route) - 2;
     if (index < 0 || index >= context.state.passwords.length) {
       return null;
     }
@@ -181,7 +172,7 @@ class PasswordsScreen extends BaseScreen {
     context.setStatus(context.tr('status.passwordCreated'));
   }
 
-  Future<void> _revealPassword(TuiContext context) async {
+  Future<void> _openPasswordActions(TuiContext context) async {
     if (!context.app.loginService.isAuthorized) {
       context.setStatus(context.tr('status.needAuthorization'), isError: true);
       return;
@@ -193,21 +184,48 @@ class PasswordsScreen extends BaseScreen {
       return;
     }
 
-    final seedValues = await context.prompt(buildSeedPhraseModal(context));
-    if (seedValues == null) {
-      context.setStatus(context.tr('common.cancelled'));
+    final selected = await context.pickAction(
+      buildPasswordActionsModal(context),
+    );
+    if (selected == null || selected == 3) {
       return;
     }
 
-    final decrypted = await context.app.passwordCryptoService.decryptEntry(
-      password: password,
-      seedPhrase: seedValues['seedPhrase']!,
-    );
+    switch (selected) {
+      case 0:
+        await _decryptPassword(context, password);
+        return;
+      case 1:
+        await _updatePassword(context, password);
+        return;
+      case 2:
+        await _deletePassword(context, password);
+        return;
+      default:
+        return;
+    }
+  }
+
+  Future<void> _decryptPassword(TuiContext context, Password password) async {
+    if (!context.app.loginService.isAuthorized) {
+      context.setStatus(context.tr('status.needAuthorization'), isError: true);
+      return;
+    }
+
+    final masterKeyValues = await context.prompt(buildMasterKeyModal(context));
+    if (masterKeyValues == null) {
+      return;
+    }
+
+    final decrypted = await context.app.passwordCryptoService
+        .decryptEntryWithMasterKey(
+          password: password,
+          masterKey: masterKeyValues['masterKey']!,
+        );
     final selected = await context.pickAction(
       buildRevealPasswordModal(context),
     );
     if (selected == null || selected == 2) {
-      context.setStatus(context.tr('common.cancelled'));
       return;
     }
 
@@ -216,15 +234,9 @@ class PasswordsScreen extends BaseScreen {
     context.setStatus(context.tr('status.copiedToClipboard'));
   }
 
-  Future<void> _updatePassword(TuiContext context) async {
+  Future<void> _updatePassword(TuiContext context, Password password) async {
     if (!context.app.loginService.isAuthorized) {
       context.setStatus(context.tr('status.needAuthorization'), isError: true);
-      return;
-    }
-
-    final password = _selectedPassword(context);
-    if (password == null) {
-      context.setStatus(context.tr('passwords.empty'), isError: true);
       return;
     }
 
@@ -283,15 +295,9 @@ class PasswordsScreen extends BaseScreen {
     context.setStatus(context.tr('status.passwordUpdated'));
   }
 
-  Future<void> _deletePassword(TuiContext context) async {
+  Future<void> _deletePassword(TuiContext context, Password password) async {
     if (!context.app.loginService.isAuthorized) {
       context.setStatus(context.tr('status.needAuthorization'), isError: true);
-      return;
-    }
-
-    final password = _selectedPassword(context);
-    if (password == null) {
-      context.setStatus(context.tr('passwords.empty'), isError: true);
       return;
     }
 

@@ -95,6 +95,31 @@ class PasswordCryptoEngine {
     }
   }
 
+  Uint8List parseMasterKey(String value) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      throw StateError('Master key is empty');
+    }
+
+    final base64Key = _tryDecodeBase64Key(normalized);
+    if (base64Key != null) {
+      return base64Key;
+    }
+
+    final hexKey = _tryDecodeHexKey(normalized);
+    if (hexKey != null) {
+      return hexKey;
+    }
+
+    final utf8Bytes = Uint8List.fromList(utf8.encode(normalized));
+    if (utf8Bytes.length == 32) {
+      return utf8Bytes;
+    }
+
+    utf8Bytes.fillRange(0, utf8Bytes.length, 0);
+    throw StateError('Invalid master key format');
+  }
+
   Future<String> encryptPasswordWithMasterKey(
     String plainText,
     List<int> masterKey,
@@ -181,5 +206,37 @@ class PasswordCryptoEngine {
     } on FormatException catch (error) {
       throw StateError('$prefix: ${error.message}');
     }
+  }
+
+  Uint8List? _tryDecodeBase64Key(String value) {
+    try {
+      final decoded = Uint8List.fromList(base64Decode(value));
+      if (decoded.length == 32) {
+        return decoded;
+      }
+      decoded.fillRange(0, decoded.length, 0);
+    } on FormatException {
+      return null;
+    }
+    return null;
+  }
+
+  Uint8List? _tryDecodeHexKey(String value) {
+    if (value.length != 64) {
+      return null;
+    }
+
+    final bytes = Uint8List(32);
+    for (var i = 0; i < bytes.length; i++) {
+      final start = i * 2;
+      final pair = value.substring(start, start + 2);
+      final parsed = int.tryParse(pair, radix: 16);
+      if (parsed == null) {
+        bytes.fillRange(0, bytes.length, 0);
+        return null;
+      }
+      bytes[i] = parsed;
+    }
+    return bytes;
   }
 }

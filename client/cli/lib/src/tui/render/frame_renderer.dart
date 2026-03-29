@@ -189,18 +189,20 @@ class FrameRenderer {
     final isFrame = row <= 3 || row >= totalLines - 4;
 
     if (context.state.theme.name == 'white') {
+      console.setBackgroundColor(ConsoleColor.white);
       if (isFrame) {
         console.setForegroundColor(ConsoleColor.brightBlack);
       } else {
-        console.resetColorAttributes();
+        console.setForegroundColor(ConsoleColor.black);
       }
       return;
     }
 
+    console.setBackgroundColor(ConsoleColor.black);
     if (isFrame) {
       console.setForegroundColor(ConsoleColor.white);
     } else {
-      console.resetColorAttributes();
+      console.setForegroundColor(ConsoleColor.brightWhite);
     }
   }
 }

@@ -57,6 +57,19 @@ ValueModal buildCreatePasswordModal(TuiContext context) {
   );
 }
 
+ActionModal buildPasswordActionsModal(TuiContext context) {
+  return ActionModal(
+    title: context.tr('modal.passwordActions.title'),
+    description: context.tr('modal.passwordActions.description'),
+    options: <ActionModalOption>[
+      ActionModalOption(label: context.tr('selector.revealPassword')),
+      ActionModalOption(label: context.tr('selector.updatePassword')),
+      ActionModalOption(label: context.tr('selector.deletePassword')),
+      ActionModalOption(label: context.tr('common.close')),
+    ],
+  );
+}
+
 ValueModal buildUpdatePasswordModal(
   TuiContext context, {
   required String serviceUrl,
@@ -84,6 +97,20 @@ ValueModal buildUpdatePasswordModal(
       ModalField(
         name: 'seedPhrase',
         label: context.tr('field.seedPhrase'),
+        obscure: true,
+      ),
+    ],
+  );
+}
+
+ValueModal buildMasterKeyModal(TuiContext context) {
+  return ValueModal(
+    title: context.tr('modal.masterKey.title'),
+    description: context.tr('modal.masterKey.description'),
+    fields: <ModalField>[
+      ModalField(
+        name: 'masterKey',
+        label: context.tr('field.masterKeyValue'),
         obscure: true,
       ),
     ],

@@ -228,6 +228,7 @@ class ModalRenderer {
     void repaint() {
       final value = buffer.toString();
       final visible = layout.obscure ? ('*' * value.length) : value;
+      _applyModalColors(context, header: false);
       console.cursorPosition = Coordinate(layout.row, layout.col);
       console.write(fit(visible, layout.maxLength));
       final cursorOffset = value.length.clamp(0, layout.maxLength - 1);
@@ -286,12 +287,14 @@ class ModalRenderer {
 
   void _applyModalColors(TuiContext context, {required bool header}) {
     if (context.state.theme.name == 'white') {
+      context.console.setBackgroundColor(ConsoleColor.white);
       context.console.setForegroundColor(
         header ? ConsoleColor.black : ConsoleColor.brightBlack,
       );
       return;
     }
 
+    context.console.setBackgroundColor(ConsoleColor.black);
     context.console.setForegroundColor(
       header ? ConsoleColor.white : ConsoleColor.brightWhite,
     );

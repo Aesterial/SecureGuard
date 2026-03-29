@@ -15,6 +15,7 @@ defaultTranslations = <Languages, Map<String, String>>{
     'common.cancelled': 'действие отменено',
     'common.confirm': 'Подтвердить',
     'common.cancel': 'Отмена',
+    'common.close': 'Закрыть',
     'screen.serverSetup.title': 'Server Setup',
     'screen.welcome.title': 'Старт',
     'screen.login.title': 'Авторизация',
@@ -62,8 +63,7 @@ defaultTranslations = <Languages, Map<String, String>>{
     'passwords.password': 'Пароль: %value%',
     'passwords.encryption': 'Алгоритм: %value%',
     'passwords.created': 'Создан: %value%',
-    'passwords.note':
-        'Раскрытие, обновление и удаление доступны для выбранной записи.',
+    'passwords.note': 'Выберите запись и откройте действия через Enter.',
     'settings.endpoint': 'Endpoint: %value%',
     'settings.language': 'Язык интерфейса: %value%',
     'settings.theme': 'Тема: %value%',
@@ -92,7 +92,7 @@ defaultTranslations = <Languages, Map<String, String>>{
     'selector.refreshProfile': 'Обновить профиль',
     'selector.toggleRevoked': 'Переключить отозванные',
     'selector.createPassword': 'Создать пароль',
-    'selector.revealPassword': 'Раскрыть и скопировать',
+    'selector.revealPassword': 'Дешифровать',
     'selector.updatePassword': 'Обновить пароль',
     'selector.deletePassword': 'Удалить пароль',
     'selector.changeLanguage': 'Сменить язык',
@@ -142,15 +142,21 @@ defaultTranslations = <Languages, Map<String, String>>{
     'modal.password.title': 'Новый пароль',
     'modal.password.description':
         'Введите сервис, логин, пароль и сид-фразу для локального шифрования.',
+    'modal.passwordActions.title': 'Действия с записью',
+    'modal.passwordActions.description':
+        'Выберите действие для текущей записи.',
     'modal.passwordUpdate.title': 'Обновить пароль',
     'modal.passwordUpdate.description':
         'Измените поля записи и укажите сид-фразу для перешифровки.',
+    'modal.masterKey.title': 'Master key',
+    'modal.masterKey.description':
+        'Введите master_key или seed phrase для дешифровки записи.',
     'modal.passwordReveal.title': 'Раскрыть данные',
     'modal.passwordReveal.description':
         'Выберите, что скопировать в буфер обмена.',
     'modal.passwordReveal.loginAction': 'login: ******',
     'modal.passwordReveal.passwordAction': 'password: ******',
-    'modal.passwordReveal.closeAction': 'close window',
+    'modal.passwordReveal.closeAction': 'закрыть',
     'modal.seedPhrase.title': 'Сид-фраза',
     'modal.seedPhrase.description':
         'Введите локальную сид-фразу для дешифровки записи.',
@@ -165,7 +171,8 @@ defaultTranslations = <Languages, Map<String, String>>{
     'field.password': 'Password',
     'field.seedPhrase': 'Seed phrase',
     'field.endpoint': 'Endpoint',
-    'field.masterKey': 'Wrapped master key',
+    'field.masterKey': 'Master key',
+    'field.masterKeyValue': 'Master key',
     'field.masterKeyOptional': 'Wrapped master key (optional)',
     'field.salt': 'Salt',
     'field.kdfVersion': 'KDF version',
@@ -203,6 +210,7 @@ defaultTranslations = <Languages, Map<String, String>>{
     'common.cancelled': 'action cancelled',
     'common.confirm': 'Confirm',
     'common.cancel': 'Cancel',
+    'common.close': 'Close',
     'screen.serverSetup.title': 'Server Setup',
     'screen.welcome.title': 'Welcome',
     'screen.login.title': 'Login',
@@ -250,8 +258,7 @@ defaultTranslations = <Languages, Map<String, String>>{
     'passwords.password': 'Password: %value%',
     'passwords.encryption': 'Algorithm: %value%',
     'passwords.created': 'Created: %value%',
-    'passwords.note':
-        'Reveal, update, and delete are available for the selected entry.',
+    'passwords.note': 'Select an entry and open its actions with Enter.',
     'settings.endpoint': 'Endpoint: %value%',
     'settings.language': 'UI language: %value%',
     'settings.theme': 'Theme: %value%',
@@ -280,7 +287,7 @@ defaultTranslations = <Languages, Map<String, String>>{
     'selector.refreshProfile': 'Refresh profile',
     'selector.toggleRevoked': 'Toggle revoked',
     'selector.createPassword': 'Create password',
-    'selector.revealPassword': 'Reveal and copy',
+    'selector.revealPassword': 'Decrypt',
     'selector.updatePassword': 'Update password',
     'selector.deletePassword': 'Delete password',
     'selector.changeLanguage': 'Change language',
@@ -328,15 +335,21 @@ defaultTranslations = <Languages, Map<String, String>>{
     'modal.password.title': 'New password',
     'modal.password.description':
         'Enter the service, login, password, and seed phrase for local encryption.',
+    'modal.passwordActions.title': 'Entry actions',
+    'modal.passwordActions.description':
+        'Choose an action for the selected entry.',
     'modal.passwordUpdate.title': 'Update password',
     'modal.passwordUpdate.description':
         'Change the entry fields and provide the seed phrase for re-encryption.',
+    'modal.masterKey.title': 'Master key',
+    'modal.masterKey.description':
+        'Enter the master_key or seed phrase to decrypt this entry.',
     'modal.passwordReveal.title': 'Reveal data',
     'modal.passwordReveal.description':
         'Choose which value to copy into the clipboard.',
     'modal.passwordReveal.loginAction': 'login: ******',
     'modal.passwordReveal.passwordAction': 'password: ******',
-    'modal.passwordReveal.closeAction': 'close window',
+    'modal.passwordReveal.closeAction': 'close',
     'modal.seedPhrase.title': 'Seed phrase',
     'modal.seedPhrase.description':
         'Enter the local seed phrase for decrypting this entry.',
@@ -350,7 +363,8 @@ defaultTranslations = <Languages, Map<String, String>>{
     'field.password': 'Password',
     'field.seedPhrase': 'Seed phrase',
     'field.endpoint': 'Endpoint',
-    'field.masterKey': 'Wrapped master key',
+    'field.masterKey': 'Master key',
+    'field.masterKeyValue': 'Master key',
     'field.masterKeyOptional': 'Wrapped master key (optional)',
     'field.salt': 'Salt',
     'field.kdfVersion': 'KDF version',

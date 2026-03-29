@@ -79,20 +79,20 @@ if defined RUN_CLIENT (
     set /p CLIENT_VARIANT="Client (desktop/cli) [desktop]: "
     if not defined CLIENT_VARIANT set "CLIENT_VARIANT=desktop"
 
-    if /I not "%CLIENT_VARIANT%"=="desktop" if /I not "%CLIENT_VARIANT%"=="cli" (
-        echo [!] Unknown client '%CLIENT_VARIANT%'. Using 'desktop'.
+    if /I not "!CLIENT_VARIANT!"=="desktop" if /I not "!CLIENT_VARIANT!"=="cli" (
+        echo [!] Unknown client '!CLIENT_VARIANT!'. Using 'desktop'.
         set "CLIENT_VARIANT=desktop"
     )
 
-    if /I "%CLIENT_VARIANT%"=="cli" (
+    if /I "!CLIENT_VARIANT!"=="cli" (
         set "CLIENT_DIR=%CLI_CLIENT_DIR%"
     ) else (
         set "CLIENT_DIR=%DESKTOP_CLIENT_DIR%"
         set "CLIENT_VARIANT=desktop"
     )
 
-    if not exist "%CLIENT_DIR%\" (
-        echo [X] Client folder for '%CLIENT_VARIANT%' not found: %CLIENT_DIR%
+    if not exist "!CLIENT_DIR!\" (
+        echo [X] Client folder for '!CLIENT_VARIANT!' not found: !CLIENT_DIR!
         pause
         exit /b 1
     )
