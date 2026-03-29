@@ -16,10 +16,13 @@ class ModalRequest {
   final String title;
   final String description;
 
-  const ModalRequest({
-    required this.title,
-    required this.description,
-  });
+  const ModalRequest({required this.title, required this.description});
+}
+
+class ActionModalOption {
+  final String label;
+
+  const ActionModalOption({required this.label});
 }
 
 class ConfirmModal extends ModalRequest {
@@ -41,5 +44,15 @@ class ValueModal extends ModalRequest {
     required super.title,
     required super.description,
     required this.fields,
+  });
+}
+
+class ActionModal extends ModalRequest {
+  final List<ActionModalOption> options;
+
+  const ActionModal({
+    required super.title,
+    required super.description,
+    required this.options,
   });
 }

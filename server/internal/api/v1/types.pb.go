@@ -477,6 +477,7 @@ type RequestWithValueAndKdf struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Kdf           *Kdf                   `protobuf:"bytes,1,opt,name=kdf,proto3" json:"kdf,omitempty"`
 	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Salt          string                 `protobuf:"bytes,3,opt,name=salt,proto3" json:"salt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -525,6 +526,13 @@ func (x *RequestWithValueAndKdf) GetValue() string {
 	return ""
 }
 
+func (x *RequestWithValueAndKdf) GetSalt() string {
+	if x != nil {
+		return x.Salt
+	}
+	return ""
+}
+
 var File_xyz_secureguard_v1_types_proto protoreflect.FileDescriptor
 
 const file_xyz_secureguard_v1_types_proto_rawDesc = "" +
@@ -556,10 +564,11 @@ const file_xyz_secureguard_v1_types_proto_rawDesc = "" +
 	"\n" +
 	"iterations\x18\x03 \x01(\x05R\n" +
 	"iterations\x12 \n" +
-	"\vparallelism\x18\x04 \x01(\x05R\vparallelism\"Y\n" +
+	"\vparallelism\x18\x04 \x01(\x05R\vparallelism\"m\n" +
 	"\x16RequestWithValueAndKdf\x12)\n" +
 	"\x03kdf\x18\x01 \x01(\v2\x17.xyz.secureguard.v1.KdfR\x03kdf\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05valueB2Z0github.com/aesterial/secureguard/internal/api/v1b\x06proto3"
+	"\x05value\x18\x02 \x01(\tR\x05value\x12\x12\n" +
+	"\x04salt\x18\x03 \x01(\tR\x04saltB2Z0github.com/aesterial/secureguard/internal/api/v1b\x06proto3"
 
 var (
 	file_xyz_secureguard_v1_types_proto_rawDescOnce sync.Once

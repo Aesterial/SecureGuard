@@ -78,6 +78,9 @@ func (m *serverUsersRepoMock) GetPasswordByUsername(ctx context.Context, usernam
 	}
 	return "", nil
 }
+func (m *serverUsersRepoMock) GetUserKey(context.Context, domain.UUID) (*usersdomain.UserKey, error) {
+	return nil, nil
+}
 func (m *serverUsersRepoMock) IsExists(ctx context.Context, target domain.UUID) (bool, error) {
 	if m.isExistsFn != nil {
 		return m.isExistsFn(ctx, target)
@@ -129,7 +132,7 @@ func (m *serverUsersRepoMock) CreateUserKey(ctx context.Context, target domain.U
 	}
 	return nil
 }
-func (m *serverUsersRepoMock) ChangeUserKey(context.Context, domain.UUID, string, usersdomain.KDFparams) error {
+func (m *serverUsersRepoMock) ChangeUserKey(context.Context, domain.UUID, string, string, usersdomain.KDFparams) error {
 	return nil
 }
 
@@ -617,7 +620,7 @@ func TestMetaServiceServerInformationReturnsConfiguredMetadata(t *testing.T) {
 	sharedmetadata.CommitHash = "abc123"
 	sharedmetadata.BuildTime = "2026-03-23T12:34:56Z"
 
-	server := NewMetaService(metaapp.NewService())
+	server := NewMetaService(metaapp.NewService(nil))
 	resp, err := server.ServerInformation(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		t.Fatalf("ServerInformation returned error: %v", err)
@@ -648,7 +651,7 @@ func TestMetaServiceServerInformationRespectsRateLimit(t *testing.T) {
 		Meta: ratelimitdomain.Rule{Limit: 1, Window: time.Minute},
 	})
 
-	server := NewMetaService(metaapp.NewService(), limiter)
+	server := NewMetaService(metaapp.NewService(nil), limiter)
 	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs("x-real-ip", "203.0.113.10"))
 
 	_, err := server.ServerInformation(ctx, &emptypb.Empty{})
@@ -658,7 +661,7 @@ func TestMetaServiceServerInformationRespectsRateLimit(t *testing.T) {
 }
 
 func TestMetaServiceClientCompatibilityValidatesRequest(t *testing.T) {
-	server := NewMetaService(metaapp.NewService())
+	server := NewMetaService(metaapp.NewService(nil))
 
 	_, err := server.ClientCompatibility(context.Background(), &metapb.CompatibilityRequest{})
 	if !errors.Is(err, apperrors.InvalidArguments) {

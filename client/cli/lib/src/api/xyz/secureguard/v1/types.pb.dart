@@ -604,10 +604,12 @@ class RequestWithValueAndKdf extends $pb.GeneratedMessage {
   factory RequestWithValueAndKdf({
     Kdf? kdf,
     $core.String? value,
+    $core.String? salt,
   }) {
     final result = create();
     if (kdf != null) result.kdf = kdf;
     if (value != null) result.value = value;
+    if (salt != null) result.salt = salt;
     return result;
   }
 
@@ -627,6 +629,7 @@ class RequestWithValueAndKdf extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aOM<Kdf>(1, _omitFieldNames ? '' : 'kdf', subBuilder: Kdf.create)
     ..aOS(2, _omitFieldNames ? '' : 'value')
+    ..aOS(3, _omitFieldNames ? '' : 'salt')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -668,6 +671,18 @@ class RequestWithValueAndKdf extends $pb.GeneratedMessage {
   $core.bool hasValue() => $_has(1);
   @$pb.TagNumber(2)
   void clearValue() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get salt => $_getSZ(2);
+
+  @$pb.TagNumber(3)
+  set salt($core.String value) => $_setString(2, value);
+
+  @$pb.TagNumber(3)
+  $core.bool hasSalt() => $_has(2);
+
+  @$pb.TagNumber(3)
+  void clearSalt() => $_clearField(3);
 }
 
 const $core.bool _omitFieldNames =

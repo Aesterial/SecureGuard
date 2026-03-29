@@ -50,4 +50,8 @@ class LoginService {
     await _repository.logout();
     _clientStore.clear();
   }
+
+  void clearLocalSession() {
+    _clientStore.clear();
+  }
 }

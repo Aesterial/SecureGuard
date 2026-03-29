@@ -3,6 +3,7 @@ import 'package:secureguard_cli/src/tui/models/translation_source.dart';
 
 class LocalizationService {
   final List<TranslationSource> _sources;
+  TranslationSource? _overlaySource;
 
   Languages _language;
   Map<String, String> _catalog = <String, String>{};
@@ -10,7 +11,7 @@ class LocalizationService {
   LocalizationService({
     required List<TranslationSource> sources,
     Languages initialLanguage = Languages.russian,
-  }) : _sources = sources,
+  }) : _sources = List<TranslationSource>.from(sources),
        _language = initialLanguage;
 
   Languages get language => _language;
@@ -23,9 +24,17 @@ class LocalizationService {
     for (final source in _sources) {
       merged.addAll(await source.load(language));
     }
+    if (_overlaySource != null) {
+      merged.addAll(await _overlaySource!.load(language));
+    }
 
     _language = language;
     _catalog = merged;
+  }
+
+  Future<void> setOverlay(TranslationSource? source) async {
+    _overlaySource = source;
+    await use(_language);
   }
 
   String translate(

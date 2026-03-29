@@ -26,7 +26,6 @@ class LoginScreen extends BaseScreen {
       SelectorItem(label: context.tr('selector.authorize')),
       SelectorItem(label: context.tr('selector.register')),
       SelectorItem(label: context.tr('selector.logout')),
-      SelectorItem(label: context.tr('selector.refreshProfile')),
     ];
   }
 
@@ -39,32 +38,13 @@ class LoginScreen extends BaseScreen {
 
     return <String>[
       context.tr('login.status', <String, String>{'status': status}),
-      context.tr(
-        'login.user',
-        <String, String>{
-          'username': user?.username ?? context.tr('common.guest'),
-        },
-      ),
-      context.tr(
-        'login.language',
-        <String, String>{
-          'language': languageLabel(context, context.state.locale),
-        },
-      ),
-      context.tr(
-        'login.theme',
-        <String, String>{'theme': themeLabel(context, context.state.theme)},
-      ),
-      context.tr(
-        'login.crypt',
-        <String, String>{'crypt': cryptLabel(context, context.state.crypt)},
-      ),
-      context.tr(
-        'login.session',
-        <String, String>{
-          'session': _mask(context.state.authSession?.sessionToken)
-        },
-      ),
+      '',
+      context.tr('login.user', <String, String>{
+        'username': user?.username ?? context.tr('common.guest'),
+      }),
+      context.tr('login.staff', <String, String>{
+        'value': user?.staffMember == true ? '✅' : '❌',
+      }),
       '',
       context.tr('login.note'),
     ];
@@ -81,9 +61,6 @@ class LoginScreen extends BaseScreen {
         return;
       case 2:
         await _logout(context);
-        return;
-      case 3:
-        await _refreshProfile(context);
         return;
       default:
         context.setStatus(context.tr('status.selectionOnly'));
@@ -102,9 +79,13 @@ class LoginScreen extends BaseScreen {
       password: values['password']!,
     );
 
+    if (session.user.keyBundle != null) {
+      context.app.passwordCryptoService.rememberBundle(session.user.keyBundle!);
+    }
     context.applyAuthSession(session);
     await context.useLanguage(session.user.preferences.lang);
     context.setStatus(context.tr('status.authorized'));
+    await context.navigate(Route.passwords, pushToHistory: false);
   }
 
   Future<void> _register(TuiContext context) async {
@@ -114,22 +95,31 @@ class LoginScreen extends BaseScreen {
       return;
     }
 
+    final material = await context.app.passwordCryptoService
+        .buildRegistrationMaterial(
+          seedPhrase: values['seedPhrase']!,
+          crypt: context.state.crypt,
+        );
     final session = await context.app.loginService.register(
       username: values['username']!,
       password: values['password']!,
-      wrappedMasterKey: values['masterKey']!,
-      salt: values['salt']!,
+      wrappedMasterKey: material.bundle.envelope.wrappedMasterKey,
+      salt: material.bundle.envelope.wrappingSalt,
       kdfParams: Kdf(
-        version: int.parse(values['kdfVersion']!),
-        memory: Int64(int.parse(values['kdfMemory']!)),
-        iterations: int.parse(values['kdfIterations']!),
-        parallelism: int.parse(values['kdfParallelism']!),
+        version: material.bundle.kdfVersion,
+        memory: Int64(material.bundle.kdfMemory),
+        iterations: material.bundle.kdfIterations,
+        parallelism: material.bundle.kdfParallelism,
       ),
     );
 
+    context.app.passwordCryptoService.rememberBundle(
+      session.user.keyBundle ?? material.bundle,
+    );
     context.applyAuthSession(session);
     await context.useLanguage(session.user.preferences.lang);
     context.setStatus(context.tr('status.registered'));
+    await context.navigate(Route.passwords, pushToHistory: false);
   }
 
   Future<void> _logout(TuiContext context) async {
@@ -139,28 +129,8 @@ class LoginScreen extends BaseScreen {
     }
 
     await context.app.loginService.logout();
+    context.app.passwordCryptoService.clearCurrentEnvelope();
     context.clearSession();
     context.setStatus(context.tr('status.loggedOut'));
-  }
-
-  Future<void> _refreshProfile(TuiContext context) async {
-    if (!context.app.loginService.isAuthorized) {
-      context.setStatus(context.tr('status.needAuthorization'), isError: true);
-      return;
-    }
-
-    await context.refreshUser();
-    context.setStatus(context.tr('status.profileLoaded'));
-  }
-
-  String _mask(String? value) {
-    if (value == null || value.isEmpty) {
-      return '-';
-    }
-    if (value.length <= 10) {
-      return value;
-    }
-
-    return '${value.substring(0, 6)}...${value.substring(value.length - 4)}';
   }
 }

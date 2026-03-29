@@ -21,6 +21,10 @@ class StatsScreen extends BaseScreen {
 
   @override
   List<SelectorItem> buildItems(TuiContext context) {
+    if (!context.hasAdminAccess) {
+      return const <SelectorItem>[];
+    }
+
     return <SelectorItem>[
       SelectorItem(label: context.tr('selector.refresh')),
       SelectorItem(label: context.tr('selector.pickDate')),
@@ -40,50 +44,47 @@ class StatsScreen extends BaseScreen {
     }
 
     return <String>[
-      context.tr('stats.totalUsers',
-          <String, String>{'value': total.users.toString()}),
-      context.tr(
-        'stats.totalAdmins',
-        <String, String>{'value': total.admins.toString()},
-      ),
-      context.tr(
-        'stats.totalPasswords',
-        <String, String>{'value': total.passwords.toString()},
-      ),
-      context.tr(
-        'stats.totalSessions',
-        <String, String>{'value': total.activeSessions.toString()},
-      ),
+      context.tr('stats.totalUsers', <String, String>{
+        'value': total.users.toString(),
+      }),
+      context.tr('stats.totalAdmins', <String, String>{
+        'value': total.admins.toString(),
+      }),
+      context.tr('stats.totalPasswords', <String, String>{
+        'value': total.passwords.toString(),
+      }),
+      context.tr('stats.totalSessions', <String, String>{
+        'value': total.activeSessions.toString(),
+      }),
       '',
-      context.tr(
-        'stats.topServices',
-        <String, String>{'value': joinKeyValues(stats.topServices)},
-      ),
-      context.tr(
-        'stats.themeUses',
-        <String, String>{'value': joinKeyValues(stats.themeUses)},
-      ),
-      context.tr(
-        'stats.languageUses',
-        <String, String>{'value': joinKeyValues(stats.languageUses)},
-      ),
-      context.tr(
-        'stats.cryptUses',
-        <String, String>{'value': joinKeyValues(stats.cryptUses)},
-      ),
-      context.tr(
-        'stats.usersGraph',
-        <String, String>{'value': _formatGraph(stats.usersActivityGraph)},
-      ),
-      context.tr(
-        'stats.registerGraph',
-        <String, String>{'value': _formatGraph(stats.registerActivityGraph)},
-      ),
+      context.tr('stats.topServices', <String, String>{
+        'value': joinKeyValues(stats.topServices),
+      }),
+      context.tr('stats.themeUses', <String, String>{
+        'value': joinKeyValues(stats.themeUses),
+      }),
+      context.tr('stats.languageUses', <String, String>{
+        'value': joinKeyValues(stats.languageUses),
+      }),
+      context.tr('stats.cryptUses', <String, String>{
+        'value': joinKeyValues(stats.cryptUses),
+      }),
+      context.tr('stats.usersGraph', <String, String>{
+        'value': _formatGraph(stats.usersActivityGraph),
+      }),
+      context.tr('stats.registerGraph', <String, String>{
+        'value': _formatGraph(stats.registerActivityGraph),
+      }),
     ];
   }
 
   @override
   Future<void> onSelect(TuiContext context, int index) async {
+    if (!context.hasAdminAccess) {
+      context.setStatus(context.tr('status.adminRequired'), isError: true);
+      return;
+    }
+
     switch (index) {
       case 0:
         await _loadToday(context);

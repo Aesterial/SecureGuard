@@ -9,7 +9,8 @@ import 'package:secureguard_cli/src/models/user.dart';
 class GrpcLoginRepository implements LoginRepository {
   final LoginGrpcClient _client;
 
-  GrpcLoginRepository({required ClientChannel channel}) : _client = LoginGrpcClient(channel);
+  GrpcLoginRepository({required ClientChannel channel})
+    : _client = LoginGrpcClient(channel);
 
   @override
   Future<AuthSession> register({
@@ -55,6 +56,9 @@ class GrpcLoginRepository implements LoginRepository {
       throw StateError('Login repository failed to $operation: empty response');
     }
 
-    return AuthSession(user: User.fromProto(usr: response.info), sessionToken: response.session);
+    return AuthSession(
+      user: User.fromProto(usr: response.info),
+      sessionToken: response.session,
+    );
   }
 }

@@ -6,7 +6,8 @@ import 'package:secureguard_cli/src/domain/repositories/meta_repository.dart';
 class GrpcMetaRepository implements MetaRepository {
   final MetaGrpcClient _client;
 
-  GrpcMetaRepository({required ClientChannel channel}) : _client = MetaGrpcClient(channel);
+  GrpcMetaRepository({required ClientChannel channel})
+    : _client = MetaGrpcClient(channel);
 
   @override
   Future<ServerMetadata> getServerInfo() async {
@@ -27,5 +28,14 @@ class GrpcMetaRepository implements MetaRepository {
       isCompatible: isCompatible,
       reasons: List.unmodifiable(reasons),
     );
+  }
+
+  @override
+  Future<ServerLocalisations> getLocalisations() async {
+    final response = await _client.getLocalisations();
+    if (response == null) {
+      throw StateError("Meta repository failed to load localisations");
+    }
+    return ServerLocalisations(russian: response.ru, english: response.en);
   }
 }

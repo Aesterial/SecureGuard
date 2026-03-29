@@ -10,12 +10,7 @@ ArgParser initParser() {
   return ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'Shows CLI help')
     ..addFlag('version', abbr: 'v', negatable: false, help: 'Shows CLI version')
-    ..addOption(
-      'server',
-      abbr: 's',
-      help: 'SecureGuard server endpoint',
-      defaultsTo: 'https://localhost',
-    );
+    ..addOption('server', abbr: 's', help: 'SecureGuard server endpoint');
 }
 
 void initConstants() {
@@ -38,9 +33,17 @@ Future<void> main(List<String> arguments) async {
     return;
   }
 
+  final hasServerOption = results.wasParsed('server');
   final app = SecureGuardApp.bootstrap(
-    config: Config.parse(results.option('server')!),
+    config: hasServerOption
+        ? Config.parse(results.option('server')!)
+        : Config.parse('https://localhost'),
     minLogLevel: LoggerLevel.info,
+  );
+  final tui = Tui(
+    app,
+    serverConfigured: hasServerOption,
+    serverLocked: hasServerOption,
   );
 
   try {
@@ -51,11 +54,11 @@ Future<void> main(List<String> arguments) async {
       return;
     }
 
-    await Tui(app).run();
+    await tui.run();
   } on Exception catch (e) {
     app.logger.critical('exception in main loop', e, []);
     rethrow;
   } finally {
-    await app.close();
+    await tui.close();
   }
 }

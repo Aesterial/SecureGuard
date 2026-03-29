@@ -28,11 +28,10 @@ class SessionsScreen extends BaseScreen {
 
     items.addAll(
       context.state.sessions.map(
-            (session) =>
-            SelectorItem(
-              label: session.hash,
-              subtitle: formatDate(session.created),
-            ),
+        (session) => SelectorItem(
+          label: session.hash,
+          subtitle: formatDate(session.created),
+        ),
       ),
     );
 
@@ -46,18 +45,14 @@ class SessionsScreen extends BaseScreen {
     }
 
     final lines = <String>[
-      context.tr(
-        'sessions.summary',
-        <String, String>{'count': context.state.sessions.length.toString()},
-      ),
-      context.tr(
-        'sessions.showRevoked',
-        <String, String>{
-          'value': context.state.showRevokedSessions
-              ? context.tr('common.yes')
-              : context.tr('common.no'),
-        },
-      ),
+      context.tr('sessions.summary', <String, String>{
+        'count': context.state.sessions.length.toString(),
+      }),
+      context.tr('sessions.showRevoked', <String, String>{
+        'value': context.state.showRevokedSessions
+            ? context.tr('common.yes')
+            : context.tr('common.no'),
+      }),
       '',
     ];
 
@@ -75,26 +70,20 @@ class SessionsScreen extends BaseScreen {
       context.tr('sessions.selected', <String, String>{'hash': session.hash}),
       context.tr('sessions.id', <String, String>{'value': session.id}),
       context.tr('sessions.hash', <String, String>{'value': session.hash}),
-      context.tr(
-        'sessions.created',
-        <String, String>{'value': formatDate(session.created)},
-      ),
-      context.tr(
-        'sessions.expires',
-        <String, String>{'value': formatDate(session.expires)},
-      ),
-      context.tr(
-        'sessions.lastSeen',
-        <String, String>{'value': formatDate(session.lastSeen)},
-      ),
-      context.tr(
-        'sessions.revoked',
-        <String, String>{
-          'value': session.revoke?.revoked == true
-              ? formatDate(session.revoke?.at)
-              : context.tr('common.no'),
-        },
-      ),
+      context.tr('sessions.created', <String, String>{
+        'value': formatDate(session.created),
+      }),
+      context.tr('sessions.expires', <String, String>{
+        'value': formatDate(session.expires),
+      }),
+      context.tr('sessions.lastSeen', <String, String>{
+        'value': formatDate(session.lastSeen),
+      }),
+      context.tr('sessions.revoked', <String, String>{
+        'value': session.revoke?.revoked == true
+            ? formatDate(session.revoke?.at)
+            : context.tr('common.no'),
+      }),
     ]);
 
     return lines;
@@ -109,6 +98,7 @@ class SessionsScreen extends BaseScreen {
 
     if (index == 1) {
       context.state.showRevokedSessions = !context.state.showRevokedSessions;
+      context.state.setSelection(route, 0);
       await _refresh(context);
       return;
     }

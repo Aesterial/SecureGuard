@@ -12,10 +12,11 @@ message ServiceInfo {
 };
 
 message Password {
-  ServiceInfo serv = 1;
-  string login = 2;
-  string pass = 3;
-  google.protobuf.Timestamp created_at = 4;
+  string id = 1;
+  ServiceInfo serv = 2;
+  string login = 3;
+  string pass = 4;
+  google.protobuf.Timestamp created_at = 5;
 };
 
 message ListResponse {

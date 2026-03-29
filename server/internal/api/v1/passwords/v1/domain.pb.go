@@ -76,10 +76,11 @@ func (x *ServiceInfo) GetName() string {
 
 type Password struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Serv          *ServiceInfo           `protobuf:"bytes,1,opt,name=serv,proto3" json:"serv,omitempty"`
-	Login         string                 `protobuf:"bytes,2,opt,name=login,proto3" json:"login,omitempty"`
-	Pass          string                 `protobuf:"bytes,3,opt,name=pass,proto3" json:"pass,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Serv          *ServiceInfo           `protobuf:"bytes,2,opt,name=serv,proto3" json:"serv,omitempty"`
+	Login         string                 `protobuf:"bytes,3,opt,name=login,proto3" json:"login,omitempty"`
+	Pass          string                 `protobuf:"bytes,4,opt,name=pass,proto3" json:"pass,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -112,6 +113,13 @@ func (x *Password) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Password.ProtoReflect.Descriptor instead.
 func (*Password) Descriptor() ([]byte, []int) {
 	return file_xyz_secureguard_v1_passwords_v1_domain_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Password) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
 }
 
 func (x *Password) GetServ() *ServiceInfo {
@@ -457,13 +465,14 @@ const file_xyz_secureguard_v1_passwords_v1_domain_proto_rawDesc = "" +
 	",xyz/secureguard/v1/passwords/v1/domain.proto\x12\x1fxyz.secureguard.v1.passwords.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"3\n" +
 	"\vServiceInfo\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"\xb1\x01\n" +
-	"\bPassword\x12@\n" +
-	"\x04serv\x18\x01 \x01(\v2,.xyz.secureguard.v1.passwords.v1.ServiceInfoR\x04serv\x12\x14\n" +
-	"\x05login\x18\x02 \x01(\tR\x05login\x12\x12\n" +
-	"\x04pass\x18\x03 \x01(\tR\x04pass\x129\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"\xc1\x01\n" +
+	"\bPassword\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12@\n" +
+	"\x04serv\x18\x02 \x01(\v2,.xyz.secureguard.v1.passwords.v1.ServiceInfoR\x04serv\x12\x14\n" +
+	"\x05login\x18\x03 \x01(\tR\x05login\x12\x12\n" +
+	"\x04pass\x18\x04 \x01(\tR\x04pass\x129\n" +
 	"\n" +
-	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"c\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"c\n" +
 	"\fListResponse\x12=\n" +
 	"\x04list\x18\x01 \x03(\v2).xyz.secureguard.v1.passwords.v1.PasswordR\x04list\x12\x14\n" +
 	"\x05count\x18\x02 \x01(\x05R\x05count\"\xc4\x01\n" +

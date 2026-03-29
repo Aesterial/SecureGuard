@@ -78,6 +78,7 @@ func main() {
 	sesRepo := repos.NewSessionsRepository(conn.Querier())
 	passRepo := repos.NewPasswordsRepository(conn.Querier())
 	statsRepo := repos.NewStatsRepository(conn.Querier())
+	metaRepo := repos.NewMetaRepository(conn.Querier())
 
 	limiterBackend, err := ratelimit.New(ctx, ratelimit.Config{
 		Enabled:  cfg.RateLimit.Enabled,
@@ -98,7 +99,7 @@ func main() {
 	passService := passapp.NewPassService(passRepo)
 	statsService := statsapp.NewStatsService(statsRepo)
 	statsWorker := statsapp.NewPersistenceWorker(statsRepo)
-	metaService := metaapp.NewService()
+	metaService := metaapp.NewService(metaRepo)
 	loginService := loginapp.NewLoginService(usrRepo, sesService)
 	rateLimiter := ratelimitapp.NewService(
 		limiterBackend,

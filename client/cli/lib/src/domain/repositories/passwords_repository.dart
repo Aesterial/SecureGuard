@@ -1,10 +1,7 @@
 import 'package:secureguard_cli/src/models/passwords.dart';
 
 abstract interface class PasswordsRepository {
-  Future<List<Password>> getList({
-    required int limit,
-    required int offset
-  });
+  Future<List<Password>> getList({required int limit, required int offset});
 
   Future<Password> create({
     required String serviceUrl,

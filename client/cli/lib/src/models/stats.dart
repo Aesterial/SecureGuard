@@ -1,4 +1,5 @@
-import 'package:secureguard_cli/src/api/xyz/secureguard/v1/stats/v1/domain.pb.dart' as statspb;
+import 'package:secureguard_cli/src/api/xyz/secureguard/v1/stats/v1/domain.pb.dart'
+    as statspb;
 
 class GraphPoint {
   final DateTime time;
@@ -15,7 +16,11 @@ class Total {
 
   factory Total.fromProto({required statspb.TotalResponse total}) {
     return Total(
-        total.users, total.admins, total.passwords, total.activeSessions);
+      total.users,
+      total.admins,
+      total.passwords,
+      total.activeSessions,
+    );
   }
 }
 
@@ -26,18 +31,28 @@ class Stats {
   final Map<String, int> cryptUses;
   final Map<String, int> themeUses;
   final Map<String, int> languageUses;
-  const Stats(this.topServices, this.usersActivityGraph, this.registerActivityGraph, this.cryptUses, this.themeUses, this.languageUses);
+
+  const Stats(
+    this.topServices,
+    this.usersActivityGraph,
+    this.registerActivityGraph,
+    this.cryptUses,
+    this.themeUses,
+    this.languageUses,
+  );
 
   factory Stats.fromProto({required statspb.Stats stat}) {
     return Stats(
-        stat.topServices,
-        stat.usersGraph.map((value) =>
-            GraphPoint(value.time.toDateTime(), value.value)).toList(),
-        stat.registerGraph.map((value) =>
-            GraphPoint(value.time.toDateTime(), value.value)).toList(),
-        stat.cryptUses,
-        stat.themeUses,
-        stat.langUses
+      stat.topServices,
+      stat.usersGraph
+          .map((value) => GraphPoint(value.time.toDateTime(), value.value))
+          .toList(),
+      stat.registerGraph
+          .map((value) => GraphPoint(value.time.toDateTime(), value.value))
+          .toList(),
+      stat.cryptUses,
+      stat.themeUses,
+      stat.langUses,
     );
   }
 }

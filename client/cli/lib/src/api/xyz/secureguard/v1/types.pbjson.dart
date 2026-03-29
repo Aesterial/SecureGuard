@@ -150,11 +150,11 @@ const RequestWithValueAndKdf$json = {
       '10': 'kdf'
     },
     {'1': 'value', '3': 2, '4': 1, '5': 9, '10': 'value'},
+    {'1': 'salt', '3': 3, '4': 1, '5': 9, '10': 'salt'},
   ],
 };
 
 /// Descriptor for `RequestWithValueAndKdf`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List requestWithValueAndKdfDescriptor =
-    $convert.base64Decode(
-        'ChZSZXF1ZXN0V2l0aFZhbHVlQW5kS2RmEikKA2tkZhgBIAEoCzIXLnh5ei5zZWN1cmVndWFyZC'
-        '52MS5LZGZSA2tkZhIUCgV2YWx1ZRgCIAEoCVIFdmFsdWU=');
+final $typed_data.Uint8List requestWithValueAndKdfDescriptor = $convert.base64Decode(
+    'ChZSZXF1ZXN0V2l0aFZhbHVlQW5kS2RmEikKA2tkZhgBIAEoCzIXLnh5ei5zZWN1cmVndWFyZC'
+    '52MS5LZGZSA2tkZhIUCgV2YWx1ZRgCIAEoCVIFdmFsdWUSEgoEc2FsdBgDIAEoCVIEc2FsdA==');

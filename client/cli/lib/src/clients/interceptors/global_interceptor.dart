@@ -1,4 +1,5 @@
 import 'package:grpc/grpc.dart';
+import 'package:secureguard_cli/src/core/grpc_errors.dart';
 import 'package:secureguard_cli/src/core/store.dart' as store;
 
 class GlobalInterceptor extends ClientInterceptor {
@@ -19,6 +20,15 @@ class GlobalInterceptor extends ClientInterceptor {
       metadata['session'] = session.startsWith('SG-') ? session : 'SG-$session';
     }
     final nextOptions = options.mergedWith(CallOptions(metadata: metadata));
-    return invoker(method, request, nextOptions);
+    final response = invoker(method, request, nextOptions);
+    response.asStream().listen(
+      null,
+      onError: (Object error, StackTrace _) {
+        if (isUnauthenticatedGrpcError(error)) {
+          store.onUnauthenticatedGrpc?.call();
+        }
+      },
+    );
+    return response;
   }
 }

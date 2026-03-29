@@ -7,6 +7,36 @@ import 'package:secureguard_cli/src/tui/models/screen_view.dart';
 import 'package:secureguard_cli/src/tui/render/formatting.dart';
 
 class ModalRenderer {
+  Future<int?> pickAction(TuiContext context, ActionModal modal) async {
+    _drawOverlay(context, modal.title, <String>[
+      modal.description,
+      '',
+      ...List<String>.generate(
+        modal.options.length,
+        (index) => '[${index + 1}] ${modal.options[index].label}',
+      ),
+    ]);
+
+    while (true) {
+      final key = context.console.readKey();
+
+      if (_isEscapeKey(key)) {
+        return null;
+      }
+
+      if (key.isControl) {
+        continue;
+      }
+
+      final selected = int.tryParse(key.char);
+      if (selected == null || selected < 1 || selected > modal.options.length) {
+        continue;
+      }
+
+      return selected - 1;
+    }
+  }
+
   Future<bool> confirm(TuiContext context, ConfirmModal modal) async {
     _drawOverlay(context, modal.title, <String>[
       modal.description,
@@ -17,12 +47,13 @@ class ModalRenderer {
     while (true) {
       final key = context.console.readKey();
 
+      if (_isEscapeKey(key)) {
+        return false;
+      }
+
       if (key.isControl) {
         if (key.controlChar == ControlCharacter.enter) {
           return true;
-        }
-        if (key.controlChar == ControlCharacter.escape) {
-          return false;
         }
         continue;
       }
@@ -77,12 +108,13 @@ class ModalRenderer {
 
     while (true) {
       final key = context.console.readKey();
+      if (_isEscapeKey(key)) {
+        return null;
+      }
+
       if (key.isControl) {
         if (key.controlChar == ControlCharacter.enter) {
           return values;
-        }
-        if (key.controlChar == ControlCharacter.escape) {
-          return null;
         }
       }
     }
@@ -110,7 +142,7 @@ class ModalRenderer {
     final startRow = math.max(1, (console.windowHeight - lines.length) ~/ 2);
     final startCol = math.max(1, (console.windowWidth - width) ~/ 2);
 
-    console.setForegroundColor(ConsoleColor.brightWhite);
+    _applyModalColors(context, header: true);
     for (var index = 0; index < lines.length; index++) {
       console.cursorPosition = Coordinate(startRow + index, startCol);
       console.write(lines[index]);
@@ -162,7 +194,7 @@ class ModalRenderer {
     );
     context.frameRenderer.render(context, view, selectedIndex: 0);
 
-    console.setForegroundColor(ConsoleColor.brightWhite);
+    _applyModalColors(context, header: true);
     for (var index = 0; index < lines.length; index++) {
       console.cursorPosition = Coordinate(startRow + index, startCol);
       console.write(lines[index]);
@@ -209,12 +241,14 @@ class ModalRenderer {
 
     while (true) {
       final key = console.readKey();
+      if (_isEscapeKey(key)) {
+        return null;
+      }
+
       if (key.isControl) {
         switch (key.controlChar) {
           case ControlCharacter.enter:
             return buffer.toString();
-          case ControlCharacter.escape:
-            return null;
           case ControlCharacter.backspace:
           case ControlCharacter.ctrlH:
             final value = buffer.toString();
@@ -236,6 +270,31 @@ class ModalRenderer {
       buffer.write(key.char);
       repaint();
     }
+  }
+
+  bool _isEscapeKey(Key key) {
+    if (key.isControl &&
+        (key.controlChar == ControlCharacter.escape ||
+            key.controlChar == ControlCharacter.unknown)) {
+      return true;
+    }
+
+    return !key.isControl &&
+        key.char.isNotEmpty &&
+        key.char.codeUnitAt(0) == 27;
+  }
+
+  void _applyModalColors(TuiContext context, {required bool header}) {
+    if (context.state.theme.name == 'white') {
+      context.console.setForegroundColor(
+        header ? ConsoleColor.black : ConsoleColor.brightBlack,
+      );
+      return;
+    }
+
+    context.console.setForegroundColor(
+      header ? ConsoleColor.white : ConsoleColor.brightWhite,
+    );
   }
 }
 

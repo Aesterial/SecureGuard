@@ -10,4 +10,6 @@ class MetaService {
 
   Future<ServerCompatibility> checkCompatibility() =>
       _repository.checkCompatibility();
+
+  Future<ServerLocalisations> locales() => _repository.getLocalisations();
 }

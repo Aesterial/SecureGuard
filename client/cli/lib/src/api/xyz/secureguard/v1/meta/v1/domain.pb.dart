@@ -351,7 +351,6 @@ class LocalisationResponse extends $pb.GeneratedMessage {
   factory LocalisationResponse.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(data, registry);
-
   factory LocalisationResponse.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(json, registry);
@@ -375,7 +374,6 @@ class LocalisationResponse extends $pb.GeneratedMessage {
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   LocalisationResponse clone() => deepCopy();
-
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
   LocalisationResponse copyWith(void Function(LocalisationResponse) updates) =>
       super.copyWith((message) => updates(message as LocalisationResponse))
@@ -386,10 +384,8 @@ class LocalisationResponse extends $pb.GeneratedMessage {
 
   @$core.pragma('dart2js:noInline')
   static LocalisationResponse create() => LocalisationResponse._();
-
   @$core.override
   LocalisationResponse createEmptyInstance() => create();
-
   @$core.pragma('dart2js:noInline')
   static LocalisationResponse getDefault() => _defaultInstance ??=
       $pb.GeneratedMessage.$_defaultFor<LocalisationResponse>(create);

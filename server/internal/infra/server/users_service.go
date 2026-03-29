@@ -87,14 +87,14 @@ func (u *UserService) ChangeLanguage(ctx context.Context, req *userpb.ChangeLang
 }
 
 func (u *UserService) ChangeKey(ctx context.Context, req *typespb.RequestWithValueAndKdf) (*emptypb.Empty, error) {
-	if req == nil || req.GetValue() == "" {
+	if req == nil || req.GetValue() == "" || req.GetSalt() == "" {
 		return nil, apperrors.InvalidArguments
 	}
 	auth, err := u.auth.User(ctx)
 	if err != nil {
 		return nil, apperrors.Wrap(err)
 	}
-	err = u.usr.ChangeUserKey(ctx, *auth.UserID, req.GetValue(), usersdomain.ParseKdfParams(req.GetKdf()))
+	err = u.usr.ChangeUserKey(ctx, *auth.UserID, req.GetValue(), req.GetSalt(), usersdomain.ParseKdfParams(req.GetKdf()))
 	if err != nil {
 		return nil, err
 	}

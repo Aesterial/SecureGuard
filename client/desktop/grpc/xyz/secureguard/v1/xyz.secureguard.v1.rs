@@ -65,5 +65,7 @@ pub struct RequestWithValueAndKdf {
     pub kdf: ::core::option::Option<Kdf>,
     #[prost(string, tag = "2")]
     pub value: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub salt: ::prost::alloc::string::String,
 }
 // @@protoc_insertion_point(module)

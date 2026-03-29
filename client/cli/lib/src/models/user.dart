@@ -1,6 +1,7 @@
-import 'package:uuid/uuid.dart';
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/users/v1/domain.pb.dart'
     as user;
+import 'package:secureguard_cli/src/models/vault.dart';
+import 'package:uuid/uuid.dart';
 
 enum Themes {
   black('black'),
@@ -68,14 +69,14 @@ class Preferences {
   Languages lang;
   Crypt crypt;
 
-  Preferences({
-    required this.theme,
-    required this.lang,
-    required this.crypt
-  });
+  Preferences({required this.theme, required this.lang, required this.crypt});
 
   factory Preferences.fromProto({required user.Preferences prefs}) {
-    return Preferences(theme: Themes.fromProto(prefs.theme), lang: Languages.fromProto(prefs.lang), crypt: Crypt.fromProto(prefs.crypto));
+    return Preferences(
+      theme: Themes.fromProto(prefs.theme),
+      lang: Languages.fromProto(prefs.lang),
+      crypt: Crypt.fromProto(prefs.crypto),
+    );
   }
 }
 
@@ -85,6 +86,7 @@ class User {
   final DateTime joinedAt;
   final bool staffMember;
   final Preferences preferences;
+  final UserKeyBundle? keyBundle;
 
   User({
     required this.id,
@@ -92,14 +94,19 @@ class User {
     required this.joinedAt,
     required this.staffMember,
     required this.preferences,
+    required this.keyBundle,
   });
   factory User.fromProto({required user.UserSelf usr}) {
+    final preferences = Preferences.fromProto(prefs: usr.preferences);
     return User(
       id: UuidValue.fromString(usr.id),
       username: usr.username,
       joinedAt: usr.joined.toDateTime(),
       staffMember: usr.staff,
-      preferences: Preferences.fromProto(prefs: usr.preferences),
+      preferences: preferences,
+      keyBundle: usr.hasPhrase()
+          ? UserKeyBundle.tryParse(usr.phrase, fallbackCrypt: preferences.crypt)
+          : null,
     );
   }
 }

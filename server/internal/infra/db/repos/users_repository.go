@@ -22,7 +22,11 @@ func NewUserRepository(q dbsqlc.Querier) *UserRepository {
 
 var _ usersdomain.Repository = (*UserRepository)(nil)
 
-func (u *UserRepository) compileUser(usr dbsqlc.User, prefs dbsqlc.GetUserPreferencesRow) *usersdomain.User {
+func (u *UserRepository) compileUser(usr dbsqlc.User, prefs dbsqlc.GetUserPreferencesRow, key *usersdomain.UserKey) *usersdomain.User {
+	if key != nil {
+		key.Algorithm = usersdomain.ParseCryptSTR(prefs.Crypt)
+	}
+
 	return &usersdomain.User{
 		ID:       domain.ParseUUID(usr.ID.Bytes),
 		Username: usr.Username,
@@ -33,6 +37,7 @@ func (u *UserRepository) compileUser(usr dbsqlc.User, prefs dbsqlc.GetUserPrefer
 			Lang:  usersdomain.ParseLanguageSTR(prefs.Lang),
 			Crypt: usersdomain.ParseCryptSTR(prefs.Crypt),
 		},
+		Key: key,
 	}
 }
 
@@ -58,7 +63,11 @@ func (u *UserRepository) GetByID(ctx context.Context, id domain.UUID) (*usersdom
 	if err != nil {
 		return nil, err
 	}
-	return u.compileUser(usr, prefs), nil
+	key, err := u.GetUserKey(ctx, id)
+	if err != nil && !errors.Is(err, apperrors.NotFound) {
+		return nil, err
+	}
+	return u.compileUser(usr, prefs, key), nil
 }
 
 func (u *UserRepository) GetByUsername(ctx context.Context, username string) (*usersdomain.User, error) {
@@ -76,7 +85,11 @@ func (u *UserRepository) GetByUsername(ctx context.Context, username string) (*u
 	if err != nil {
 		return nil, err
 	}
-	return u.compileUser(usr, prefs), nil
+	key, err := u.GetUserKey(ctx, domain.ParseUUID(usr.ID.Bytes))
+	if err != nil && !errors.Is(err, apperrors.NotFound) {
+		return nil, err
+	}
+	return u.compileUser(usr, prefs, key), nil
 }
 
 func (u *UserRepository) IsExists(ctx context.Context, id domain.UUID) (bool, error) {
@@ -104,7 +117,7 @@ func (u *UserRepository) GetByIDs(ctx context.Context, limit int32, ids ...domai
 		if err != nil {
 			return nil, err
 		}
-		response[i] = u.compileUser(users[i], prefs)
+		response[i] = u.compileUser(users[i], prefs, nil)
 	}
 	return response, nil
 }
@@ -120,7 +133,7 @@ func (u *UserRepository) GetList(ctx context.Context, limit, offset int32) (user
 		if err != nil {
 			return nil, err
 		}
-		response[i] = u.compileUser(usrs[i], prefs)
+		response[i] = u.compileUser(usrs[i], prefs, nil)
 	}
 	return response, nil
 }
@@ -154,6 +167,27 @@ func (u *UserRepository) GetPasswordByUsername(ctx context.Context, username str
 		return "", apperrors.InvalidArguments
 	}
 	return password, nil
+}
+
+func (u *UserRepository) GetUserKey(ctx context.Context, target domain.UUID) (*usersdomain.UserKey, error) {
+	row, err := u.querier.GetUserKey(ctx, target.PG())
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, apperrors.NotFound
+		}
+		return nil, err
+	}
+
+	return &usersdomain.UserKey{
+		WrappedMasterKey: row.MasterKey,
+		Salt:             row.Salt,
+		KDF: usersdomain.KDFparams{
+			Version:     row.Version,
+			Memory:      row.Memory,
+			Iterations:  row.Iterations,
+			Parallelism: row.Parallelism,
+		},
+	}, nil
 }
 
 func (u *UserRepository) ChangeCrypt(ctx context.Context, target domain.UUID, set usersdomain.Crypt) error {
@@ -224,7 +258,7 @@ func (u *UserRepository) Create(ctx context.Context, username string, passwordHa
 	if err != nil {
 		return nil, err
 	}
-	return u.compileUser(usr, prefs), nil
+	return u.compileUser(usr, prefs, nil), nil
 }
 
 func (u *UserRepository) CreateUserKey(ctx context.Context, target domain.UUID, key string, salt string, kdf usersdomain.KDFparams) error {
@@ -238,11 +272,11 @@ func (u *UserRepository) CreateUserKey(ctx context.Context, target domain.UUID, 
 	return nil
 }
 
-func (u *UserRepository) ChangeUserKey(ctx context.Context, target domain.UUID, key string, kdf usersdomain.KDFparams) error {
-	if key == "" {
+func (u *UserRepository) ChangeUserKey(ctx context.Context, target domain.UUID, key string, salt string, kdf usersdomain.KDFparams) error {
+	if key == "" || salt == "" {
 		return apperrors.InvalidArguments
 	}
-	err := u.querier.UpdateUserKey(ctx, dbsqlc.UpdateUserKeyParams{MasterKey: key, Version: kdf.Version, Memory: kdf.Memory, Iterations: kdf.Iterations, Parallelism: kdf.Parallelism, Owner: target.PG()})
+	err := u.querier.UpdateUserKey(ctx, dbsqlc.UpdateUserKeyParams{MasterKey: key, Salt: salt, Version: kdf.Version, Memory: kdf.Memory, Iterations: kdf.Iterations, Parallelism: kdf.Parallelism, Owner: target.PG()})
 	if err != nil {
 		return err
 	}

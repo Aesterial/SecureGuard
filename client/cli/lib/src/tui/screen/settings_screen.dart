@@ -21,7 +21,6 @@ class SettingsScreen extends BaseScreen {
   @override
   List<SelectorItem> buildItems(TuiContext context) {
     return <SelectorItem>[
-      SelectorItem(label: context.tr('selector.refreshProfile')),
       SelectorItem(label: context.tr('selector.changeLanguage')),
       SelectorItem(label: context.tr('selector.changeTheme')),
       SelectorItem(label: context.tr('selector.changeCrypt')),
@@ -33,7 +32,7 @@ class SettingsScreen extends BaseScreen {
   List<String> buildContent(TuiContext context) {
     return <String>[
       context.tr('settings.endpoint', <String, String>{
-        'value': context.app.configService.current.serverUri.toString(),
+        'value': context.currentConfig.serverUri.toString(),
       }),
       context.tr('settings.language', <String, String>{
         'value': languageLabel(context, context.state.locale),
@@ -56,18 +55,15 @@ class SettingsScreen extends BaseScreen {
   Future<void> onSelect(TuiContext context, int index) async {
     switch (index) {
       case 0:
-        await _refreshProfile(context);
-        return;
-      case 1:
         await _changeLanguage(context);
         return;
-      case 2:
+      case 1:
         await _changeTheme(context);
         return;
-      case 3:
+      case 2:
         await _changeCrypt(context);
         return;
-      case 4:
+      case 3:
         context.state.serverCompatibility = await context.app.metaService
             .checkCompatibility();
         context.setStatus(context.tr('status.serverLoaded'));
@@ -75,16 +71,6 @@ class SettingsScreen extends BaseScreen {
       default:
         context.setStatus(context.tr('status.selectionOnly'));
     }
-  }
-
-  Future<void> _refreshProfile(TuiContext context) async {
-    if (!context.app.loginService.isAuthorized) {
-      context.setStatus(context.tr('status.needAuthorization'), isError: true);
-      return;
-    }
-
-    await context.refreshUser();
-    context.setStatus(context.tr('status.profileLoaded'));
   }
 
   Future<void> _changeLanguage(TuiContext context) async {

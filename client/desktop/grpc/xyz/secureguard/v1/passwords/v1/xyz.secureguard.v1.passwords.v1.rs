@@ -9,13 +9,15 @@ pub struct ServiceInfo {
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
 pub struct Password {
-    #[prost(message, optional, tag = "1")]
+  #[prost(string, tag = "1")]
+  pub id: ::prost::alloc::string::String,
+  #[prost(message, optional, tag = "2")]
     pub serv: ::core::option::Option<ServiceInfo>,
-    #[prost(string, tag = "2")]
-    pub login: ::prost::alloc::string::String,
     #[prost(string, tag = "3")]
+    pub login: ::prost::alloc::string::String,
+  #[prost(string, tag = "4")]
     pub pass: ::prost::alloc::string::String,
-    #[prost(message, optional, tag = "4")]
+  #[prost(message, optional, tag = "5")]
     pub created_at: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]

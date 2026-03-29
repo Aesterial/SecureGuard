@@ -1,9 +1,9 @@
 import 'package:grpc/grpc.dart';
 import 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart';
-
-import '../api/xyz/secureguard/v1/meta/v1/service.pbgrpc.dart';
 import 'package:secureguard_cli/src/api/xyz/secureguard/v1/meta/v1/domain.pb.dart';
 import 'package:secureguard_cli/src/core/constants.dart';
+
+import '../api/xyz/secureguard/v1/meta/v1/service.pbgrpc.dart';
 
 class MetaGrpcClient {
   final MetaServiceClient client;
@@ -31,6 +31,15 @@ class MetaGrpcClient {
         return (true, <String>[]);
       }
       return (response.value, response.reasons.toList());
+    } on GrpcError {
+      rethrow;
+    }
+  }
+
+  Future<LocalisationResponse?> getLocalisations() async {
+    try {
+      final response = await client.localisation(Empty());
+      return response;
     } on GrpcError {
       rethrow;
     }

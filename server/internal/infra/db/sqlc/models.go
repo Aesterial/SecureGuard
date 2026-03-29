@@ -5,14 +5,67 @@
 package dbsqlc
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type LocalisationType string
+
+const (
+	LocalisationTypeRu LocalisationType = "ru"
+	LocalisationTypeEn LocalisationType = "en"
+)
+
+func (e *LocalisationType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = LocalisationType(s)
+	case string:
+		*e = LocalisationType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for LocalisationType: %T", src)
+	}
+	return nil
+}
+
+type NullLocalisationType struct {
+	LocalisationType LocalisationType `json:"localisation_type"`
+	Valid            bool             `json:"valid"` // Valid is true if LocalisationType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullLocalisationType) Scan(value interface{}) error {
+	if value == nil {
+		ns.LocalisationType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.LocalisationType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullLocalisationType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.LocalisationType), nil
+}
 
 type Activity struct {
 	ID        pgtype.UUID        `json:"id"`
 	Users     int32              `json:"users"`
 	Registers int32              `json:"registers"`
 	At        pgtype.Timestamptz `json:"at"`
+}
+
+type Localisation struct {
+	Key       string             `json:"key"`
+	Content   string             `json:"content"`
+	Locale    LocalisationType   `json:"locale"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Password struct {

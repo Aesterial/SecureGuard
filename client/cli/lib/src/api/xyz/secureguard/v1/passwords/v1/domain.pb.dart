@@ -87,12 +87,14 @@ class ServiceInfo extends $pb.GeneratedMessage {
 
 class Password extends $pb.GeneratedMessage {
   factory Password({
+    $core.String? id,
     ServiceInfo? serv,
     $core.String? login,
     $core.String? pass,
     $0.Timestamp? createdAt,
   }) {
     final result = create();
+    if (id != null) result.id = id;
     if (serv != null) result.serv = serv;
     if (login != null) result.login = login;
     if (pass != null) result.pass = pass;
@@ -114,11 +116,12 @@ class Password extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'xyz.secureguard.v1.passwords.v1'),
       createEmptyInstance: create)
-    ..aOM<ServiceInfo>(1, _omitFieldNames ? '' : 'serv',
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOM<ServiceInfo>(2, _omitFieldNames ? '' : 'serv',
         subBuilder: ServiceInfo.create)
-    ..aOS(2, _omitFieldNames ? '' : 'login')
-    ..aOS(3, _omitFieldNames ? '' : 'pass')
-    ..aOM<$0.Timestamp>(4, _omitFieldNames ? '' : 'createdAt',
+    ..aOS(3, _omitFieldNames ? '' : 'login')
+    ..aOS(4, _omitFieldNames ? '' : 'pass')
+    ..aOM<$0.Timestamp>(5, _omitFieldNames ? '' : 'createdAt',
         subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false;
 
@@ -141,44 +144,58 @@ class Password extends $pb.GeneratedMessage {
   static Password? _defaultInstance;
 
   @$pb.TagNumber(1)
-  ServiceInfo get serv => $_getN(0);
+  $core.String get id => $_getSZ(0);
   @$pb.TagNumber(1)
-  set serv(ServiceInfo value) => $_setField(1, value);
+  set id($core.String value) => $_setString(0, value);
   @$pb.TagNumber(1)
-  $core.bool hasServ() => $_has(0);
+  $core.bool hasId() => $_has(0);
   @$pb.TagNumber(1)
-  void clearServ() => $_clearField(1);
-  @$pb.TagNumber(1)
-  ServiceInfo ensureServ() => $_ensure(0);
+  void clearId() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $core.String get login => $_getSZ(1);
+  ServiceInfo get serv => $_getN(1);
   @$pb.TagNumber(2)
-  set login($core.String value) => $_setString(1, value);
+  set serv(ServiceInfo value) => $_setField(2, value);
   @$pb.TagNumber(2)
-  $core.bool hasLogin() => $_has(1);
+  $core.bool hasServ() => $_has(1);
   @$pb.TagNumber(2)
-  void clearLogin() => $_clearField(2);
+  void clearServ() => $_clearField(2);
+
+  @$pb.TagNumber(2)
+  ServiceInfo ensureServ() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $core.String get pass => $_getSZ(2);
+  $core.String get login => $_getSZ(2);
   @$pb.TagNumber(3)
-  set pass($core.String value) => $_setString(2, value);
+  set login($core.String value) => $_setString(2, value);
   @$pb.TagNumber(3)
-  $core.bool hasPass() => $_has(2);
+  $core.bool hasLogin() => $_has(2);
   @$pb.TagNumber(3)
-  void clearPass() => $_clearField(3);
+  void clearLogin() => $_clearField(3);
 
   @$pb.TagNumber(4)
-  $0.Timestamp get createdAt => $_getN(3);
+  $core.String get pass => $_getSZ(3);
   @$pb.TagNumber(4)
-  set createdAt($0.Timestamp value) => $_setField(4, value);
+  set pass($core.String value) => $_setString(3, value);
   @$pb.TagNumber(4)
-  $core.bool hasCreatedAt() => $_has(3);
+  $core.bool hasPass() => $_has(3);
   @$pb.TagNumber(4)
-  void clearCreatedAt() => $_clearField(4);
-  @$pb.TagNumber(4)
-  $0.Timestamp ensureCreatedAt() => $_ensure(3);
+  void clearPass() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $0.Timestamp get createdAt => $_getN(4);
+
+  @$pb.TagNumber(5)
+  set createdAt($0.Timestamp value) => $_setField(5, value);
+
+  @$pb.TagNumber(5)
+  $core.bool hasCreatedAt() => $_has(4);
+
+  @$pb.TagNumber(5)
+  void clearCreatedAt() => $_clearField(5);
+
+  @$pb.TagNumber(5)
+  $0.Timestamp ensureCreatedAt() => $_ensure(4);
 }
 
 class ListResponse extends $pb.GeneratedMessage {

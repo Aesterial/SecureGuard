@@ -32,19 +32,20 @@ final $typed_data.Uint8List serviceInfoDescriptor = $convert.base64Decode(
 const Password$json = {
   '1': 'Password',
   '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {
       '1': 'serv',
-      '3': 1,
+      '3': 2,
       '4': 1,
       '5': 11,
       '6': '.xyz.secureguard.v1.passwords.v1.ServiceInfo',
       '10': 'serv'
     },
-    {'1': 'login', '3': 2, '4': 1, '5': 9, '10': 'login'},
-    {'1': 'pass', '3': 3, '4': 1, '5': 9, '10': 'pass'},
+    {'1': 'login', '3': 3, '4': 1, '5': 9, '10': 'login'},
+    {'1': 'pass', '3': 4, '4': 1, '5': 9, '10': 'pass'},
     {
       '1': 'created_at',
-      '3': 4,
+      '3': 5,
       '4': 1,
       '5': 11,
       '6': '.google.protobuf.Timestamp',
@@ -55,10 +56,10 @@ const Password$json = {
 
 /// Descriptor for `Password`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List passwordDescriptor = $convert.base64Decode(
-    'CghQYXNzd29yZBJACgRzZXJ2GAEgASgLMiwueHl6LnNlY3VyZWd1YXJkLnYxLnBhc3N3b3Jkcy'
-    '52MS5TZXJ2aWNlSW5mb1IEc2VydhIUCgVsb2dpbhgCIAEoCVIFbG9naW4SEgoEcGFzcxgDIAEo'
-    'CVIEcGFzcxI5CgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcF'
-    'IJY3JlYXRlZEF0');
+    'CghQYXNzd29yZBIOCgJpZBgBIAEoCVICaWQSQAoEc2VydhgCIAEoCzIsLnh5ei5zZWN1cmVndW'
+    'FyZC52MS5wYXNzd29yZHMudjEuU2VydmljZUluZm9SBHNlcnYSFAoFbG9naW4YAyABKAlSBWxv'
+    'Z2luEhIKBHBhc3MYBCABKAlSBHBhc3MSOQoKY3JlYXRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm'
+    '90b2J1Zi5UaW1lc3RhbXBSCWNyZWF0ZWRBdA==');
 
 @$core.Deprecated('Use listResponseDescriptor instead')
 const ListResponse$json = {

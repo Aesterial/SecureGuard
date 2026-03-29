@@ -1,6 +1,7 @@
 package usersdomain
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -206,12 +207,41 @@ type Preferences struct {
 	Crypt Crypt
 }
 
+type UserKey struct {
+	WrappedMasterKey string
+	Salt             string
+	KDF              KDFparams
+	Algorithm        Crypt
+}
+
+func (u *UserKey) Payload() string {
+	if u == nil {
+		return ""
+	}
+
+	payload, err := json.Marshal(map[string]any{
+		"wrapped_master_key": u.WrappedMasterKey,
+		"salt":               u.Salt,
+		"version":            u.KDF.Version,
+		"memory":             u.KDF.Memory,
+		"iterations":         u.KDF.Iterations,
+		"parallelism":        u.KDF.Parallelism,
+		"encryption_method":  u.Algorithm.String(),
+	})
+	if err != nil {
+		return ""
+	}
+
+	return string(payload)
+}
+
 type User struct {
 	ID          domain.UUID
 	Username    string
 	Joined      time.Time
 	Staff       bool
 	Preferences Preferences
+	Key         *UserKey
 }
 
 func (u *User) ProtobufSelf() *userpb.UserSelf {
@@ -219,15 +249,18 @@ func (u *User) ProtobufSelf() *userpb.UserSelf {
 		return nil
 	}
 	p := u.Preferences
+	payload := u.Key.Payload()
 
 	return &userpb.UserSelf{
 		Id:       u.ID.String(),
 		Username: u.Username,
 		Joined:   timestamppb.New(u.Joined),
 		Staff:    u.Staff,
+		Phrase:   stringPtr(payload),
 		Preferences: &userpb.Preferences{
-			Theme: p.Theme.PB(),
-			Lang:  p.Lang.PB(),
+			Theme:  p.Theme.PB(),
+			Lang:   p.Lang.PB(),
+			Crypto: p.Crypt.PB(),
 		},
 	}
 }
@@ -242,6 +275,7 @@ func (u *User) ProtobufPublic() *userpb.UserPublic {
 		Username:  u.Username,
 		Lang:      p.Lang.PB(),
 		Crypt:     p.Crypt.PB(),
+		PhraseSet: u.Key != nil,
 	}
 }
 
@@ -266,10 +300,22 @@ type KDFparams struct {
 }
 
 func ParseKdfParams(kdf *typespb.Kdf) KDFparams {
+	if kdf == nil {
+		return KDFparams{}
+	}
+
 	return KDFparams{
 		Version:     kdf.GetVersion(),
 		Memory:      kdf.GetMemory(),
 		Iterations:  kdf.GetIterations(),
 		Parallelism: kdf.GetParallelism(),
 	}
+}
+
+func stringPtr(value string) *string {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+
+	return &value
 }

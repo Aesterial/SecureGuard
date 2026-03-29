@@ -61,6 +61,18 @@ void main() {
       expect(repository.lastRegisterKdf, same(kdf));
       expect(store.getSession(), 'session-token');
     });
+
+    test('can clear local session without remote logout', () {
+      final repository = _FakeLoginRepository();
+      final store = ClientStore()..set('session-token');
+      final service = LoginService(repository, store);
+
+      service.clearLocalSession();
+
+      expect(repository.logoutCalled, isFalse);
+      expect(store.isAuthorized, isFalse);
+      expect(store.getSession(), isNull);
+    });
   });
 }
 
@@ -100,7 +112,18 @@ class _FakeLoginRepository implements LoginRepository {
 
   AuthSession _session() {
     return AuthSession(
-      user: user.User(id: UuidValue.fromString(Uuid().v4()), username: 'admin', joinedAt: DateTime(2026), staffMember: false, preferences: user.Preferences(theme: user.Themes.black, lang: user.Languages.english, crypt: user.Crypt.argon2ID)),
+      user: user.User(
+        id: UuidValue.fromString(Uuid().v4()),
+        username: 'admin',
+        joinedAt: DateTime(2026),
+        staffMember: false,
+        preferences: user.Preferences(
+          theme: user.Themes.black,
+          lang: user.Languages.english,
+          crypt: user.Crypt.argon2ID,
+        ),
+        keyBundle: null,
+      ),
       sessionToken: 'session-token',
     );
   }

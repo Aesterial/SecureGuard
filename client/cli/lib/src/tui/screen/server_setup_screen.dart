@@ -1,14 +1,15 @@
 import 'package:secureguard_cli/src/core/grpc_errors.dart';
 import 'package:secureguard_cli/src/tui/core/tui_context.dart';
+import 'package:secureguard_cli/src/tui/modals/enter_value.dart';
 import 'package:secureguard_cli/src/tui/models/route.dart';
 import 'package:secureguard_cli/src/tui/models/selector_item.dart';
 import 'package:secureguard_cli/src/tui/screen/base_screen.dart';
 
-class WelcomeScreen extends BaseScreen {
-  const WelcomeScreen();
+class ServerSetupScreen extends BaseScreen {
+  const ServerSetupScreen();
 
   @override
-  Route get route => Route.welcome;
+  Route get route => Route.serverSetup;
 
   @override
   Future<void> onEnter(TuiContext context) async {
@@ -22,15 +23,9 @@ class WelcomeScreen extends BaseScreen {
   @override
   List<SelectorItem> buildItems(TuiContext context) {
     return <SelectorItem>[
-      SelectorItem(
-        label: context.tr(
-          context.app.loginService.isAuthorized
-              ? 'selector.openPasswords'
-              : 'selector.openLogin',
-        ),
-      ),
-      SelectorItem(label: context.tr('selector.openSettings')),
+      SelectorItem(label: context.tr('selector.configureServer')),
       SelectorItem(label: context.tr('selector.refresh')),
+      SelectorItem(label: context.tr('selector.continue')),
     ];
   }
 
@@ -39,8 +34,7 @@ class WelcomeScreen extends BaseScreen {
     final info = context.state.serverMetadata;
     final compatibility = context.state.serverCompatibility;
     final lines = <String>[
-      context.tr('welcome.headline'),
-      context.tr('welcome.description'),
+      context.tr('serverSetup.headline'),
       '',
       context.tr('welcome.server', <String, String>{
         'server': context.currentConfig.serverUri.toString(),
@@ -88,15 +82,18 @@ class WelcomeScreen extends BaseScreen {
   Future<void> onSelect(TuiContext context, int index) async {
     switch (index) {
       case 0:
-        await context.navigate(
-          context.app.loginService.isAuthorized ? Route.passwords : Route.login,
-        );
+        final values = await context.prompt(buildServerEndpointModal(context));
+        if (values == null) {
+          context.setStatus(context.tr('common.cancelled'));
+          return;
+        }
+        await context.configureServer(values['endpoint']!);
         return;
       case 1:
-        await context.navigate(Route.settings);
+        await _refreshServer(context);
         return;
       case 2:
-        await _refreshServer(context);
+        await context.navigate(Route.welcome);
         return;
       default:
         context.setStatus(context.tr('status.selectionOnly'));

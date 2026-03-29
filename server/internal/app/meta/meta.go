@@ -1,15 +1,20 @@
 package metaapp
 
 import (
+	"context"
+	"sync"
+
 	metapb "github.com/aesterial/secureguard/internal/api/v1/meta/v1"
 	metadomain "github.com/aesterial/secureguard/internal/domain/meta"
 	meta "github.com/aesterial/secureguard/internal/shared/metadata"
 )
 
-type Service struct{}
+type Service struct {
+	meta metadomain.Repository
+}
 
-func NewService() *Service {
-	return &Service{}
+func NewService(r metadomain.Repository) *Service {
+	return &Service{meta: r}
 }
 
 func (s *Service) CheckCompability(clientVer float32, clientType metapb.ClientType) (bool, []string) {
@@ -43,4 +48,37 @@ func (s *Service) ServerInformation() *metadomain.ServerInfo {
 		Repository:     meta.Repository,
 		BuildTime:      meta.BuildTimestamp(),
 	}
+}
+
+func (s *Service) GetLocalisations(ctx context.Context) (*metadomain.Localisation, error) {
+	var wg sync.WaitGroup
+	var resp = metadomain.Localisation{
+		Russian: make(map[string]string),
+		English: make(map[string]string),
+	}
+	var err error
+	setErr := func(e error) {
+		err = e
+	}
+	for _, element := range []string{"ru", "en"} {
+		wg.Add(1)
+		go func() {
+			data, loopErr := s.meta.GetLocalisationsByLocale(ctx, element)
+			if loopErr != nil {
+				setErr(loopErr)
+			}
+			switch element {
+			case "ru":
+				resp.Russian = data
+			case "en":
+				resp.English = data
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
 }

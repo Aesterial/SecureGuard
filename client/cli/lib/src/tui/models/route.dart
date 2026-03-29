@@ -1,31 +1,36 @@
 import 'package:dart_console/dart_console.dart';
 
 enum Route {
-  welcome('screen.welcome.title', null, true),
-  login('screen.login.title', 'L', false),
-  sessions('screen.sessions.title', 'S', false),
-  passwords('screen.passwords.title', 'P', false),
-  settings('screen.settings.title', 'T', false),
-  stats('screen.stats.title', 'A', false);
+  serverSetup('screen.serverSetup.title', <String>[], true),
+  welcome('screen.welcome.title', <String>[], false),
+  login('screen.login.title', <String>['L', 'Д'], false),
+  sessions('screen.sessions.title', <String>['S', 'Ы'], false),
+  passwords('screen.passwords.title', <String>['P', 'З'], false),
+  settings('screen.settings.title', <String>['T', 'Е'], false),
+  stats('screen.stats.title', <String>['A', 'Ф'], false);
 
   final String titleKey;
-  final String? hotkey;
+  final List<String> hotkeys;
   final bool isStarter;
 
-  const Route(this.titleKey, this.hotkey, this.isStarter);
+  const Route(this.titleKey, this.hotkeys, this.isStarter);
+
+  String? get primaryHotkey => hotkeys.isEmpty ? null : hotkeys.first;
+
+  String get hotkeyLabel => hotkeys.join('/');
 
   static Route getStarter() {
     return Route.values.firstWhere((route) => route.isStarter);
   }
 
   static Route? getByKey(Key key) {
-    if (key.isControl) {
+    if (key.isControl || key.char.isEmpty) {
       return null;
     }
 
     final pressed = key.char.toUpperCase();
     for (final route in Route.values) {
-      if (route.hotkey == pressed) {
+      if (route.hotkeys.contains(pressed)) {
         return route;
       }
     }

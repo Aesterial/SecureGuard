@@ -46,5 +46,33 @@ void main() {
       await service.use(Languages.english);
       expect(service.translate('hello'), 'hello');
     });
+
+    test('applies overlay translations over base catalog', () async {
+      final service = LocalizationService(
+        sources: <MapTranslationSource>[
+          const MapTranslationSource(<Languages, Map<String, String>>{
+            Languages.english: <String, String>{
+              'title': 'base',
+              'footer': 'default',
+            },
+          }),
+        ],
+        initialLanguage: Languages.english,
+      );
+
+      await service.bootstrap();
+      await service.setOverlay(
+        const MapTranslationSource(<Languages, Map<String, String>>{
+          Languages.english: <String, String>{
+            'footer': 'server',
+            'extra': 'loaded',
+          },
+        }),
+      );
+
+      expect(service.translate('title'), 'base');
+      expect(service.translate('footer'), 'server');
+      expect(service.translate('extra'), 'loaded');
+    });
   });
 }

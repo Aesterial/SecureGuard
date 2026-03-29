@@ -1,5 +1,6 @@
 import 'package:secureguard_cli/src/domain/models/auth_session.dart';
 import 'package:secureguard_cli/src/domain/models/server_info.dart';
+import 'package:secureguard_cli/src/models/config.dart';
 import 'package:secureguard_cli/src/models/passwords.dart';
 import 'package:secureguard_cli/src/models/sessions.dart';
 import 'package:secureguard_cli/src/models/stats.dart';
@@ -12,11 +13,14 @@ class TuiState {
 
   Route currentRoute = Route.getStarter();
   bool welcomeShown = false;
+  bool serverConfigured = true;
+  bool serverLocked = false;
 
   AuthSession? authSession;
   User? currentUser;
   ServerMetadata? serverMetadata;
   ServerCompatibility? serverCompatibility;
+  Config? serverConfig;
   List<Session> sessions = const <Session>[];
   List<Password> passwords = const <Password>[];
   Stats? stats;

@@ -8,7 +8,7 @@ class ServerMetadata {
   final String commitHash;
   final String repository;
   final DateTime? buildTime;
-  
+
   const ServerMetadata({
     required this.name,
     required this.version,
@@ -45,4 +45,11 @@ class ServerCompatibility {
     required this.isCompatible,
     required this.reasons,
   });
+}
+
+class ServerLocalisations {
+  final Map<String, String> russian;
+  final Map<String, String> english;
+
+  const ServerLocalisations({required this.russian, required this.english});
 }
