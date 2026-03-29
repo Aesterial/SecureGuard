@@ -1,7 +1,7 @@
+use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
-use reqwest::Url;
 use tonic::metadata::MetadataValue;
 use tonic::transport::{Channel, Endpoint};
 use tonic::{Code, Request, Status};
@@ -76,8 +76,8 @@ pub mod xyz {
     }
 }
 
-use self::xyz::secureguard::v1 as shared_contract_v1;
 use self::xyz::secureguard::api::v1::meta::v1 as api_meta_contract_v1;
+use self::xyz::secureguard::v1 as shared_contract_v1;
 use self::xyz::secureguard::v1::login::v1 as login_contract_v1;
 use self::xyz::secureguard::v1::passwords::v1 as passwords_contract_v1;
 use self::xyz::secureguard::v1::sessions::v1 as sessions_contract_v1;
@@ -204,7 +204,7 @@ impl ApiClient {
             .filter(|v| !v.trim().is_empty())
             .or_else(|| env::var("SECUREGUARD_BACKEND").ok())
             .filter(|v| !v.trim().is_empty())
-            .unwrap_or_else(|| DEFAULT_BACKEND.to_string());
+          .unwrap_or_else(|| compiled_default_backend().to_string());
         let backend = validate_backend_endpoint(&backend)
             .unwrap_or_else(|_| DEFAULT_BACKEND.to_string());
 
@@ -711,6 +711,13 @@ impl ApiClient {
         }
 
         response
+    }
+}
+
+fn compiled_default_backend() -> &'static str {
+    match option_env!("SECUREGUARD_DEFAULT_BACKEND") {
+        Some(value) if !value.trim().is_empty() => value,
+        _ => DEFAULT_BACKEND,
     }
 }
 

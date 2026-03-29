@@ -4322,6 +4322,16 @@ function initApp(invoke) {
   document.addEventListener("keydown", onUserActivity);
 
   async function init() {
+    try {
+      var initialBackendEndpoint = validateBackendEndpoint(
+        await invoke("get_backend_endpoint"),
+      );
+      DEFAULT_BACKEND_ENDPOINT = initialBackendEndpoint;
+      currentBackendEndpoint = initialBackendEndpoint;
+    } catch (e) {
+      currentBackendEndpoint = DEFAULT_BACKEND_ENDPOINT;
+    }
+
     renderSettings();
     await syncBackendOnStart();
 

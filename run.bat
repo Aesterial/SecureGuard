@@ -14,13 +14,15 @@ cd /d "%~dp0" || (
 )
 
 set "ROOT=%CD%"
-set "CLIENT_DIR=%ROOT%\client\desktop"
+set "CLIENT_ROOT=%ROOT%\client"
+set "DESKTOP_CLIENT_DIR=%CLIENT_ROOT%\desktop"
+set "CLI_CLIENT_DIR=%CLIENT_ROOT%\cli"
 set "SERVER_DIR=%ROOT%\server\starter"
 set "SERVER_ENV=%SERVER_DIR%\.env"
 set "SERVER_ENV_EXAMPLE=%SERVER_DIR%\.env.example"
 set "SCHEMA_FILE=%ROOT%\server\migrations\scheme\sqlc.sql"
 
-if not exist "%CLIENT_DIR%\" (
+if not exist "%CLIENT_ROOT%\" (
     echo [X] Folder 'client' not found.
     pause
     exit /b 1
@@ -64,6 +66,36 @@ if /I not "%RUN_TARGET%"=="full" if /I not "%RUN_TARGET%"=="backend" if /I not "
     set "RUN_TARGET=full"
     set "RUN_BACKEND=1"
     set "RUN_CLIENT=1"
+)
+
+if defined RUN_CLIENT (
+    echo.
+    echo  Client variant:
+    echo  [DESKTOP] Tauri desktop app
+    echo  [CLI]     Dart CLI
+    echo.
+
+    set "CLIENT_VARIANT="
+    set /p CLIENT_VARIANT="Client (desktop/cli) [desktop]: "
+    if not defined CLIENT_VARIANT set "CLIENT_VARIANT=desktop"
+
+    if /I not "%CLIENT_VARIANT%"=="desktop" if /I not "%CLIENT_VARIANT%"=="cli" (
+        echo [!] Unknown client '%CLIENT_VARIANT%'. Using 'desktop'.
+        set "CLIENT_VARIANT=desktop"
+    )
+
+    if /I "%CLIENT_VARIANT%"=="cli" (
+        set "CLIENT_DIR=%CLI_CLIENT_DIR%"
+    ) else (
+        set "CLIENT_DIR=%DESKTOP_CLIENT_DIR%"
+        set "CLIENT_VARIANT=desktop"
+    )
+
+    if not exist "%CLIENT_DIR%\" (
+        echo [X] Client folder for '%CLIENT_VARIANT%' not found: %CLIENT_DIR%
+        pause
+        exit /b 1
+    )
 )
 
 if exist "%ROOT%\.git\" (
@@ -239,6 +271,31 @@ set "KAFKA_LOCAL="
 if /I "!KAFKA_HOST!"=="127.0.0.1" set "KAFKA_LOCAL=1"
 if /I "!KAFKA_HOST!"=="0.0.0.0" set "KAFKA_LOCAL=1"
 
+set "BACKEND_RUNNING="
+for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":%BACKEND_PORT% .*LISTENING"') do (
+    set "BACKEND_RUNNING=1"
+    goto :backend_status_ready
+)
+
+:backend_status_ready
+if defined BACKEND_RUNNING (
+    echo [+] Backend is already listening on port %BACKEND_PORT%.
+) else (
+    echo [*] Backend is not running on port %BACKEND_PORT%.
+)
+
+if not defined RUN_BACKEND goto :after_backend
+
+where go >nul 2>&1
+if errorlevel 1 (
+    echo [!] Go is not installed or not in PATH.
+    echo [!] Backend was not started automatically.
+    echo [!] Install Go and run: cd /d server\starter ^&^& go run .
+    goto :after_backend
+)
+
+if defined BACKEND_RUNNING goto :after_backend
+
 set "REDIS_USE_DEFAULT=n"
 if /I "!RATE_LIMIT_ENABLED!"=="true" set "REDIS_USE_DEFAULT=y"
 if /I "!RATE_LIMIT_ENABLED!"=="1" set "REDIS_USE_DEFAULT=y"
@@ -282,31 +339,6 @@ if defined REDIS_REQUIRED (
 if defined KAFKA_REQUIRED (
     echo [*] Kafka brokers: !KAFKA_EFFECTIVE_BROKERS!
 )
-
-set "BACKEND_RUNNING="
-for /f "tokens=5" %%P in ('netstat -ano ^| findstr /R /C:":%BACKEND_PORT% .*LISTENING"') do (
-    set "BACKEND_RUNNING=1"
-    goto :backend_status_ready
-)
-
-:backend_status_ready
-if defined BACKEND_RUNNING (
-    echo [+] Backend is already listening on port %BACKEND_PORT%.
-) else (
-    echo [*] Backend is not running on port %BACKEND_PORT%.
-)
-
-if not defined RUN_BACKEND goto :after_backend
-
-where go >nul 2>&1
-if errorlevel 1 (
-    echo [!] Go is not installed or not in PATH.
-    echo [!] Backend was not started automatically.
-    echo [!] Install Go and run: cd /d server\starter ^&^& go run .
-    goto :after_backend
-)
-
-if defined BACKEND_RUNNING goto :after_backend
 
 echo [*] Checking database (PostgreSQL)...
 if /I "!DB_HOST!"=="localhost" set "DB_HOST=127.0.0.1"
@@ -434,6 +466,18 @@ cd /d "%CLIENT_DIR%" || (
     exit /b 1
 )
 
+if /I "%CLIENT_VARIANT%"=="desktop" goto :client_desktop
+if /I "%CLIENT_VARIANT%"=="cli" goto :client_cli
+
+echo [X] Unsupported client variant '%CLIENT_VARIANT%'.
+pause
+exit /b 1
+
+:done
+pause
+exit /b 0
+
+:client_desktop
 if not exist "node_modules\" (
     echo [*] Installing npm dependencies...
     if exist "package-lock.json" (
@@ -451,7 +495,7 @@ if not exist "node_modules\" (
 )
 
 echo.
-echo  Starting SecureGuard client...
+echo  Starting SecureGuard desktop client...
 echo.
 echo  [DEV]   npm run dev
 echo  [BUILD] npm run build
@@ -461,16 +505,30 @@ set "MODE="
 set /p MODE="Mode (dev/build): "
 if not defined MODE set "MODE=dev"
 
-set "SECUREGUARD_GRPC_ENDPOINT=%BACKEND_ENDPOINT%"
-set "SECUREGUARD_BACKEND=%BACKEND_ENDPOINT%"
+if /I not "%MODE%"=="dev" if /I not "%MODE%"=="build" (
+    echo [!] Unknown mode '%MODE%'. Using 'dev'.
+    set "MODE=dev"
+)
+
+set "CLIENT_SERVER_ENDPOINT=%BACKEND_ENDPOINT%"
+if /I "%MODE%"=="build" (
+    echo.
+    set /p CLIENT_SERVER_ENDPOINT="Server endpoint for built client [%BACKEND_ENDPOINT%]: "
+    if not defined CLIENT_SERVER_ENDPOINT set "CLIENT_SERVER_ENDPOINT=%BACKEND_ENDPOINT%"
+)
+call :normalize_endpoint_var CLIENT_SERVER_ENDPOINT
+
+set "SECUREGUARD_GRPC_ENDPOINT=%CLIENT_SERVER_ENDPOINT%"
+set "SECUREGUARD_BACKEND=%CLIENT_SERVER_ENDPOINT%"
+set "SECUREGUARD_DEFAULT_BACKEND=%CLIENT_SERVER_ENDPOINT%"
 
 cls
 
 if /i "%MODE%"=="build" (
-    echo  SecureGuard - BUILD
+    echo  SecureGuard Desktop - BUILD
     echo.
     echo [*] Building release EXE...
-    echo [*] Backend endpoint for local runs: %SECUREGUARD_GRPC_ENDPOINT%
+    echo [*] Built client default backend: %CLIENT_SERVER_ENDPOINT%
     echo.
     call npm run build
 
@@ -489,20 +547,100 @@ if /i "%MODE%"=="build" (
     set "OPEN="
     set /p OPEN="Open folder? (y/n): "
     if /i "%OPEN%"=="y" explorer "src-tauri\target\release"
-) else (
-    echo  ==================================
-    echo   SecureGuard - DEV
-    echo  ==================================
-    echo.
-    echo [*] Using backend: %SECUREGUARD_GRPC_ENDPOINT%
-    echo [*] Starting dev mode...
-    echo.
-    call npm run dev
+    goto :done
 )
 
-:done
-pause
-exit /b 0
+echo  ==================================
+echo   SecureGuard Desktop - DEV
+echo  ==================================
+echo.
+echo [*] Using backend: %CLIENT_SERVER_ENDPOINT%
+echo [*] Starting dev mode...
+echo.
+call npm run dev
+goto :done
+
+:client_cli
+where dart >nul 2>&1
+if errorlevel 1 (
+    echo [X] Dart SDK is not installed or not in PATH.
+    pause
+    exit /b 1
+)
+
+if not exist ".dart_tool\package_config.json" (
+    echo [*] Installing Dart dependencies...
+    call dart pub get
+
+    if errorlevel 1 (
+        echo [X] dart pub get failed.
+        pause
+        exit /b 1
+    )
+    echo [+] Dependencies installed.
+)
+
+echo.
+echo  Starting SecureGuard CLI client...
+echo.
+echo  [DEV]   dart run bin\secureguard_cli.dart
+echo  [BUILD] dart compile exe bin\secureguard_cli.dart
+echo.
+
+set "MODE="
+set /p MODE="Mode (dev/build): "
+if not defined MODE set "MODE=dev"
+
+if /I not "%MODE%"=="dev" if /I not "%MODE%"=="build" (
+    echo [!] Unknown mode '%MODE%'. Using 'dev'.
+    set "MODE=dev"
+)
+
+set "CLIENT_SERVER_ENDPOINT=%BACKEND_ENDPOINT%"
+if /I "%MODE%"=="build" (
+    echo.
+    set /p CLIENT_SERVER_ENDPOINT="Server endpoint for built client [%BACKEND_ENDPOINT%]: "
+    if not defined CLIENT_SERVER_ENDPOINT set "CLIENT_SERVER_ENDPOINT=%BACKEND_ENDPOINT%"
+)
+call :normalize_endpoint_var CLIENT_SERVER_ENDPOINT
+
+cls
+
+if /I "%MODE%"=="build" (
+    echo  SecureGuard CLI - BUILD
+    echo.
+    echo [*] Building CLI executable...
+    echo [*] Built client default backend: %CLIENT_SERVER_ENDPOINT%
+    echo.
+    if not exist "build\" mkdir "build"
+    call dart compile exe "-DSECUREGUARD_DEFAULT_SERVER=%CLIENT_SERVER_ENDPOINT%" bin\secureguard_cli.dart -o "build\secureguard-cli.exe"
+
+    if errorlevel 1 (
+        echo [X] Build failed.
+        pause
+        exit /b 1
+    )
+
+    echo.
+    echo [+] BUILD SUCCESS
+    echo [+] EXE: build\secureguard-cli.exe
+    echo.
+
+    set "OPEN="
+    set /p OPEN="Open folder? (y/n): "
+    if /i "%OPEN%"=="y" explorer "build"
+    goto :done
+)
+
+echo  ==================================
+echo   SecureGuard CLI - DEV
+echo  ==================================
+echo.
+echo [*] Using backend: %CLIENT_SERVER_ENDPOINT%
+echo [*] Starting dev mode...
+echo.
+call dart run bin\secureguard_cli.dart --server "%CLIENT_SERVER_ENDPOINT%"
+goto :done
 
 :ensure_redis
 echo [*] Checking Redis...
@@ -609,3 +747,16 @@ for /l %%I in (1,1,45) do (
 echo [X] Kafka did not become ready on !KAFKA_EFFECTIVE_BROKERS!.
 echo [X] Kafka is not ready. Backend start canceled.
 exit /b 1
+
+:normalize_endpoint_var
+setlocal EnableDelayedExpansion
+set "VALUE=!%~1!"
+if not defined VALUE (
+    endlocal
+    exit /b 0
+)
+set "VALUE=!VALUE:"=!"
+echo(!VALUE!| findstr /I "://" >nul
+if errorlevel 1 set "VALUE=http://!VALUE!"
+endlocal & set "%~1=%VALUE%"
+exit /b 0

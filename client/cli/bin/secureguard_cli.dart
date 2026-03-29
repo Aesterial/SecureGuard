@@ -6,6 +6,11 @@ import 'package:secureguard_cli/src/api/xyz/secureguard/v1/meta/v1/domain.pb.dar
 import 'package:secureguard_cli/src/core/constants.dart';
 import 'package:secureguard_cli/src/tui/tui.dart';
 
+const String defaultServer = String.fromEnvironment(
+  'SECUREGUARD_DEFAULT_SERVER',
+  defaultValue: 'https://localhost',
+);
+
 ArgParser initParser() {
   return ArgParser()
     ..addFlag('help', abbr: 'h', negatable: false, help: 'Shows CLI help')
@@ -37,7 +42,7 @@ Future<void> main(List<String> arguments) async {
   final app = SecureGuardApp.bootstrap(
     config: hasServerOption
         ? Config.parse(results.option('server')!)
-        : Config.parse('https://localhost'),
+        : Config.parse(defaultServer),
     minLogLevel: LoggerLevel.info,
   );
   final tui = Tui(
