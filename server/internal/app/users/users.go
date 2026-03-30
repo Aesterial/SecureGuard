@@ -112,11 +112,11 @@ func (s *Service) ChangeTheme(ctx context.Context, target domain.UUID, set userp
 	return nil
 }
 
-func (s *Service) ChangeUserKey(ctx context.Context, target domain.UUID, key string, kdf usersdomain.KDFparams) error {
-	if key == "" {
+func (s *Service) ChangeUserKey(ctx context.Context, target domain.UUID, key string, salt string, kdf usersdomain.KDFparams) error {
+	if key == "" || salt == "" {
 		return apperrors.InvalidArguments
 	}
-	err := s.usr.ChangeUserKey(ctx, target, key, kdf)
+	err := s.usr.ChangeUserKey(ctx, target, key, salt, kdf)
 	if err != nil {
 		logging.Error("failed to change user key", logging.F("error", err.Error()))
 		return apperrors.Wrap(err)

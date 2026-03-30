@@ -382,6 +382,37 @@ func (q *Queries) GetIsUsernameExists(ctx context.Context, username string) (boo
 	return exists, err
 }
 
+const getListByLocale = `-- name: GetListByLocale :many
+select key, content
+from localisations
+where locale = $1
+`
+
+type GetListByLocaleRow struct {
+	Key     string `json:"key"`
+	Content string `json:"content"`
+}
+
+func (q *Queries) GetListByLocale(ctx context.Context, locale LocalisationType) ([]GetListByLocaleRow, error) {
+	rows, err := q.db.Query(ctx, getListByLocale, locale)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetListByLocaleRow{}
+	for rows.Next() {
+		var i GetListByLocaleRow
+		if err := rows.Scan(&i.Key, &i.Content); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getListSessionsByOwner = `-- name: GetListSessionsByOwner :many
 select id, owner, client_hash, revoked, revoked_at, created, expires, last_seen
 from sessions
@@ -615,7 +646,7 @@ func (q *Queries) GetTotalAdmins(ctx context.Context) (int64, error) {
 }
 
 const getTotalPasswords = `-- name: GetTotalPasswords :one
-select COUNT(*) from users limit 1
+select COUNT(*) from passwords limit 1
 `
 
 func (q *Queries) GetTotalPasswords(ctx context.Context) (int64, error) {
@@ -672,6 +703,28 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Password,
 		&i.AdminAccess,
 		&i.Joined,
+	)
+	return i, err
+}
+
+const getUserKey = `-- name: GetUserKey :one
+select owner, master_key, salt, version, memory, iterations, parallelism
+from users_keys
+where owner = $1
+limit 1
+`
+
+func (q *Queries) GetUserKey(ctx context.Context, owner pgtype.UUID) (UsersKey, error) {
+	row := q.db.QueryRow(ctx, getUserKey, owner)
+	var i UsersKey
+	err := row.Scan(
+		&i.Owner,
+		&i.MasterKey,
+		&i.Salt,
+		&i.Version,
+		&i.Memory,
+		&i.Iterations,
+		&i.Parallelism,
 	)
 	return i, err
 }
@@ -925,11 +978,12 @@ func (q *Queries) UpdatePreferenceTheme(ctx context.Context, arg UpdatePreferenc
 }
 
 const updateUserKey = `-- name: UpdateUserKey :exec
-update users_keys set master_key = $1, version = $2, memory = $3, iterations = $4, parallelism = $5 where owner = $6
+update users_keys set master_key = $1, salt = $2, version = $3, memory = $4, iterations = $5, parallelism = $6 where owner = $7
 `
 
 type UpdateUserKeyParams struct {
 	MasterKey   string      `json:"master_key"`
+	Salt        string      `json:"salt"`
 	Version     int32       `json:"version"`
 	Memory      int64       `json:"memory"`
 	Iterations  int32       `json:"iterations"`
@@ -940,6 +994,7 @@ type UpdateUserKeyParams struct {
 func (q *Queries) UpdateUserKey(ctx context.Context, arg UpdateUserKeyParams) error {
 	_, err := q.db.Exec(ctx, updateUserKey,
 		arg.MasterKey,
+		arg.Salt,
 		arg.Version,
 		arg.Memory,
 		arg.Iterations,

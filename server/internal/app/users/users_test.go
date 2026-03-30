@@ -50,6 +50,9 @@ func (m *usersRepoMock) GetPassword(context.Context, domain.UUID) (string, error
 func (m *usersRepoMock) GetPasswordByUsername(context.Context, string) (string, error) {
 	return "", nil
 }
+func (m *usersRepoMock) GetUserKey(context.Context, domain.UUID) (*usersdomain.UserKey, error) {
+	return nil, nil
+}
 func (m *usersRepoMock) IsExists(ctx context.Context, target domain.UUID) (bool, error) {
 	if m.isExistsFn != nil {
 		return m.isExistsFn(ctx, target)
@@ -95,7 +98,7 @@ func (m *usersRepoMock) Create(context.Context, string, string, string) (*usersd
 func (m *usersRepoMock) CreateUserKey(context.Context, domain.UUID, string, string, usersdomain.KDFparams) error {
 	return nil
 }
-func (m *usersRepoMock) ChangeUserKey(context.Context, domain.UUID, string, usersdomain.KDFparams) error {
+func (m *usersRepoMock) ChangeUserKey(context.Context, domain.UUID, string, string, usersdomain.KDFparams) error {
 	return nil
 }
 

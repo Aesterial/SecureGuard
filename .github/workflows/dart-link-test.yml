@@ -1,0 +1,34 @@
+name: Dart Link + Test
+
+on:
+  pull_request:
+    paths:
+      - "client/cli/**"
+      - ".github/workflows/dart-link-test.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "client/cli/**"
+  workflow_dispatch:
+
+jobs:
+  dart:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client/cli
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Download deps
+        run: dart pub get
+
+      - name: Link check
+        run: dart compile exe bin/secureguard_cli.dart -o secureguard_cli
+
+      - name: Tests
+        run: dart test

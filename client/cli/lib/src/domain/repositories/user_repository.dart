@@ -1,0 +1,16 @@
+import 'package:secureguard_cli/src/models/passwords.dart';
+import 'package:secureguard_cli/src/models/user.dart';
+
+abstract interface class UserRepository {
+  Future<User> info();
+
+  Future<Themes> changeTheme({required Themes theme});
+  Future<Languages> changeLanguage({required Languages lang});
+  Future<Crypt> changeCrypt({required Crypt crypt});
+
+  Future<void> changeKey({
+    required String wrappedMasterKey,
+    required String salt,
+    required KdfParams kdf,
+  });
+}

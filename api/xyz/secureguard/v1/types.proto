@@ -50,4 +50,5 @@ message Kdf {
 message RequestWithValueAndKdf {
   Kdf kdf = 1;
   string value = 2;
+  string salt = 3;
 }

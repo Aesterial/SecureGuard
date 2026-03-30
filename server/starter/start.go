@@ -31,7 +31,7 @@ import (
 	dbclient "github.com/aesterial/secureguard/internal/infra/db"
 	"github.com/aesterial/secureguard/internal/infra/db/repos"
 	"github.com/aesterial/secureguard/internal/infra/ratelimit"
-	"github.com/aesterial/secureguard/internal/infra/server"
+	serverInfra "github.com/aesterial/secureguard/internal/infra/server"
 
 	loginpb "github.com/aesterial/secureguard/internal/api/v1/login/v1"
 	passpb "github.com/aesterial/secureguard/internal/api/v1/passwords/v1"
@@ -78,6 +78,7 @@ func main() {
 	sesRepo := repos.NewSessionsRepository(conn.Querier())
 	passRepo := repos.NewPasswordsRepository(conn.Querier())
 	statsRepo := repos.NewStatsRepository(conn.Querier())
+	metaRepo := repos.NewMetaRepository(conn.Querier())
 
 	limiterBackend, err := ratelimit.New(ctx, ratelimit.Config{
 		Enabled:  cfg.RateLimit.Enabled,
@@ -98,7 +99,7 @@ func main() {
 	passService := passapp.NewPassService(passRepo)
 	statsService := statsapp.NewStatsService(statsRepo)
 	statsWorker := statsapp.NewPersistenceWorker(statsRepo)
-	metaService := metaapp.NewService()
+	metaService := metaapp.NewService(metaRepo)
 	loginService := loginapp.NewLoginService(usrRepo, sesService)
 	rateLimiter := ratelimitapp.NewService(
 		limiterBackend,
@@ -118,13 +119,13 @@ func main() {
 		},
 	)
 
-	authentificator := server.NewAuthentificator(sesService, usrService)
-	usrServer := server.NewUserService(usrService, authentificator)
-	loginServer := server.NewLoginService(usrService, loginService, authentificator, rateLimiter)
-	metaServer := server.NewMetaService(metaService, rateLimiter)
-	passServer := server.NewPasswordsService(passService, authentificator)
-	statsServer := server.NewStatsService(statsService, authentificator)
-	sessionsServer := server.NewSessionsService(sesService, authentificator)
+	authentificator := serverInfra.NewAuthentificator(sesService, usrService)
+	usrServer := serverInfra.NewUserService(usrService, authentificator)
+	loginServer := serverInfra.NewLoginService(usrService, loginService, authentificator, rateLimiter)
+	metaServer := serverInfra.NewMetaService(metaService, rateLimiter)
+	passServer := serverInfra.NewPasswordsService(passService, authentificator)
+	statsServer := serverInfra.NewStatsService(statsService, authentificator)
+	sessionsServer := serverInfra.NewSessionsService(sesService, authentificator)
 
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(

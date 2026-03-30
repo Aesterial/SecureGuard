@@ -1,6 +1,6 @@
 module github.com/aesterial/secureguard/starter
 
-go 1.26.1
+go 1.26
 
 require (
 	github.com/aesterial/secureguard/internal v0.5.0

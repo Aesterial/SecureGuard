@@ -10,37 +10,36 @@
 </p>
 
 <p align="center">
-  <i>Windows-first desktop password vault с локальным шифрованием, hardening-интеграциями ОС и Go gRPC backend.</i>
+  <i>Windows-first менеджер паролей с Tauri desktop-клиентом, Dart terminal-клиентом и Go gRPC backend.</i>
 </p>
 
 <p align="center">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-3e4c75.svg?style=flat-square" alt="Лицензия AGPL-3.0" /></a>
-  <img src="https://img.shields.io/badge/stack-Tauri%20%2B%20Rust%20%2B%20Go%20%2B%20PostgreSQL-222?style=flat-square" alt="Технологический стек" />
+  <img src="https://img.shields.io/badge/stack-Tauri%20%2B%20Rust%20%2B%20Dart%20%2B%20Go%20%2B%20PostgreSQL-222?style=flat-square" alt="Технологический стек" />
   <img src="https://img.shields.io/badge/platform-Windows-0078D6?style=flat-square&logo=windows" alt="Платформа Windows" />
   <br />
   <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/go-link-static.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aesterial/SecureGuard/go-link-static.yml?branch=main&style=flat-square&label=Go%20Test" alt="Статус Go Test" /></a>
   <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/rust-link-static.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aesterial/SecureGuard/rust-link-static.yml?branch=main&style=flat-square&label=Rust%20Test" alt="Статус Rust Test" /></a>
+  <a href="https://github.com/Aesterial/SecureGuard/actions/workflows/dart-link-test.yml"><img src="https://img.shields.io/github/actions/workflow/status/Aesterial/SecureGuard/dart-link-test.yml?branch=main&style=flat-square&label=Dart%20Test" alt="Статус Dart Test" /></a>
 </p>
 
 ## Обзор
 
-`SecureGuard` - это монорепозиторий десктопного менеджера паролей из трех основных частей:
+`SecureGuard` - это монорепозиторий менеджера паролей с четырьмя основными частями:
 
-- `client/`: Tauri-приложение (`Rust + HTML/CSS/JS`)
+- `client/desktop/`: Tauri desktop-приложение (`Rust + HTML/CSS/JS`)
+- `client/cli/`: Dart terminal-клиент с TUI
 - `server/`: Go gRPC backend со слоистой структурой `domain/app/infra`
-- `api/`: protobuf-контракты и входы для генерации Go- и Rust-клиентов
-
-Сейчас репозиторий находится на стадии активного MVP. Десктопное приложение уже закрывает основной vault flow, а backend держит более широкую API-поверхность для сессий, настроек, метаданных и admin-статистики.
+- `api/`: protobuf-контракты и входы для генерации клиентов на Go, Rust и Dart
 
 ## Документация
 
-Материалы по API и генерации:
-
-- [api/README.md](./api/README.md) - заметки по protobuf и генерации
+- [api/README.md](./api/README.md) - protobuf и генерация кода
+- [client/cli/README.md](./client/cli/README.md) - запуск, навигация и сборка Dart CLI
 
 ## Текущее состояние
 
-### Десктопный клиент
+### Desktop-клиент
 
 - Регистрация и логин через gRPC
 - Локальная генерация vault-key envelope из seed phrase до регистрации
@@ -68,6 +67,22 @@
   - блокировка context menu
 - Windows-специфичные интеграции для screenshot protection, автозапуска и release-only защит
 
+### CLI-клиент
+
+- TUI flow для настройки сервера, загрузки метаданных и проверки совместимости
+- Регистрация и логин через gRPC
+- Локальное шифрование и расшифровка паролей с той же wrapped-key моделью, что и в desktop-клиенте
+- Vault flow для паролей:
+  - создание записей
+  - просмотр списка
+  - обновление записей
+  - удаление записей
+  - расшифровка логина или пароля и копирование в буфер на `30s`
+- Просмотр и отзыв сессий
+- Staff-only экран статистики
+- Локализация RU/EN
+- Переключение темы и crypt mode с синхронизацией через backend после авторизации
+
 ### Backend и API
 
 - gRPC-сервисы, регистрируемые в `server/starter/start.go`:
@@ -78,30 +93,26 @@
   - `StatsService`
   - `SessionsService`
 - PostgreSQL persistence через `sqlc`
-- Session-based authentication с привязкой по client metadata и background worker для cleanup
+- Session-based authentication с привязкой по client metadata и background cleanup worker
 - Опциональный Redis-backed rate limiting для register/login/meta endpoint'ов
 - Structured logging subsystem
 - Опциональный Kafka-backed transport логов и log reader
 - Hourly и daily workers для сохранения статистики
-- Buf-based генерация protobuf-кода для Go и Rust
-- GitHub Actions workflows для Go и Rust link/static analysis
-
-### Текущие ограничения
-
-- Десктопный клиент сейчас сфокусирован на аутентификации, vault management, настройках и staff-статистике.
-- UI пока не раскрывает password updates, session management и key rotation, хотя backend/API для части этих сценариев уже есть.
-- Экран admin-статистики зависит от Kafka log reader path. В минимальной локальной конфигурации с `KAFKA_ENABLED=false` staff analytics недоступна.
-- Во время регистрации сервер не получает raw seed phrase. Он хранит wrapped master key вместе с salt/KDF params в `users_keys`, поэтому текущий дизайн безопаснее старого, но это все еще не strict zero-knowledge vault.
-- Репозиторий ориентирован в первую очередь на Windows. В Tauri-клиенте есть Windows-only интеграции для screenshot protection и управления автозапуском.
+- Buf-based генерация protobuf-кода для Go, Rust и Dart клиентов
 
 ## Структура репозитория
 
 ```text
 SecureGuard/
 |-- client/
-|   |-- src/                # Frontend HTML/CSS/JS
-|   |-- src-tauri/          # Tauri shell, crypto, OS integrations
-|   `-- grpc/               # Сгенерированные Rust gRPC stubs
+|   |-- desktop/
+|   |   |-- src/            # Frontend HTML/CSS/JS
+|   |   |-- src-tauri/      # Tauri shell, crypto, OS integrations
+|   |   `-- grpc/           # Сгенерированные Rust gRPC stubs
+|   `-- cli/
+|       |-- bin/            # CLI entrypoint
+|       |-- lib/            # TUI, сервисы, сгенерированные Dart gRPC stubs
+|       `-- test/           # Dart tests
 |-- server/
 |   |-- internal/           # Domain, app, infra, сгенерированные Go stubs
 |   |-- starter/            # Entry point для bootstrap gRPC-сервера
@@ -118,7 +129,8 @@ SecureGuard/
 - Windows 10/11
 - `Rust` stable
 - `Node.js` с `npm`
-- `Go 1.26.1` или совместимая версия по `go.mod`
+- `Dart SDK 3.11+`
+- `Go 1.26` или совместимая версия по `go.mod`
 - `Docker`, если хотите, чтобы `run.bat` сам поднимал PostgreSQL
 - `Git` с поддержкой submodules
 
@@ -137,12 +149,14 @@ cd SecureGuard
 git submodule update --init --recursive api/third_party/googleapis api/third_party/grpc-web
 ```
 
-3. Установите frontend-зависимости:
+3. Установите зависимости клиентов:
 
 ```bash
-cd client
+cd client/desktop
 npm ci
-cd ..
+cd ../cli
+dart pub get
+cd ../..
 ```
 
 4. Настройте backend environment:
@@ -151,7 +165,7 @@ cd ..
 Copy-Item server/starter/.env.example server/starter/.env
 ```
 
-Обновите `server/starter/.env`, чтобы десктопный клиент и backend использовали один и тот же порт:
+Обновите `server/starter/.env`, чтобы локальные клиенты и backend использовали один и тот же endpoint:
 
 ```env
 POSTGRES_HOST=127.0.0.1
@@ -168,13 +182,11 @@ KAFKA_ENABLED=false
 DEBUG_MODE=false
 ```
 
-Почему `8080`: Tauri-клиент по умолчанию ходит на `http://127.0.0.1:8080` в `client/src-tauri/src/api.rs`.
-
 Примечания:
 
-- `server/starter/.env.example` теперь ориентирован на локальный desktop flow и по умолчанию держит Kafka analytics и Redis rate limiting выключенными.
+- `server/starter/.env.example` ориентирован на локальный запуск desktop и CLI-клиента и по умолчанию держит Kafka analytics и Redis rate limiting выключенными.
 - Корневой `docker compose` stack по-прежнему включает Kafka и rate limiting своими container defaults, так что для минимальной локальной разработки вручную это включать не нужно.
-- Для минимального desktop flow хватает облегченной конфигурации выше, но staff analytics в ней не будет.
+- Минимальная локальная конфигурация подходит для desktop-приложения и CLI, но staff analytics в ней недоступна.
 
 5. Запустите все через helper-скрипт:
 
@@ -189,7 +201,7 @@ run.bat
 - запускать PostgreSQL в Docker, если локально он не поднят
 - применять `server/migrations/scheme/sqlc.sql`
 - стартовать Go gRPC backend
-- запускать Tauri-приложение в `dev` или `build` режиме
+- запускать либо desktop-клиент, либо Dart CLI в `dev` или `build` режиме
 
 ## Docker Compose
 
@@ -243,11 +255,11 @@ go run .
 ### 4. Запустите desktop app
 
 ```bash
-cd client
+cd client/desktop
 npm run dev
 ```
 
-Если хотите держать backend на другом порту, перед запуском клиента экспортируйте одну из переменных:
+Если хотите держать backend на другом порту, перед запуском desktop-клиента экспортируйте одну из переменных:
 
 - `SECUREGUARD_GRPC_ENDPOINT`
 - `SECUREGUARD_BACKEND`
@@ -256,9 +268,24 @@ npm run dev
 
 ```powershell
 $env:SECUREGUARD_GRPC_ENDPOINT = "http://127.0.0.1:50051"
-cd client
+cd client/desktop
 npm run dev
 ```
+
+### 5. Запустите CLI app
+
+Для локального backend из `server/starter/.env` передайте явный non-TLS endpoint:
+
+```bash
+cd client/cli
+dart run bin/secureguard_cli.dart --server http://127.0.0.1:8080
+```
+
+Примечания:
+
+- Без `--server` CLI по умолчанию использует `https://localhost`.
+- Если `--server` не передан, endpoint можно поменять из server setup screen внутри TUI.
+- Если `--server` передан, endpoint фиксируется на время текущей сессии.
 
 ## Локальные проверки качества
 
@@ -272,16 +299,22 @@ cd ../starter
 go test ./...
 ```
 
-### Rust
+### Rust desktop app
 
 ```bash
-cd client/src-tauri
+cd client/desktop/src-tauri
 cargo fmt --all -- --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo build --all-targets --all-features --locked
 ```
 
-Эти команды соответствуют текущим CI workflow в `.github/workflows/go-link-static.yml` и `.github/workflows/rust-link-static.yml`.
+### Dart CLI
+
+```bash
+cd client/cli
+dart test
+dart compile exe bin/secureguard_cli.dart -o build/secureguard-cli.exe
+```
 
 ## API и генерация кода
 
@@ -296,12 +329,14 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 cargo install protoc-gen-prost
 cargo install protoc-gen-tonic
+dart pub global activate protoc_plugin
 ```
 
 2. Убедитесь, что бинарники генераторов лежат в `PATH`:
 
 - Go: `%USERPROFILE%\go\bin`
 - Rust: `%USERPROFILE%\.cargo\bin`
+- Dart: `%LOCALAPPDATA%\Pub\Cache\bin`
 
 3. Сгенерируйте код:
 
@@ -313,7 +348,8 @@ buf generate
 Результат генерации:
 
 - Go stubs: `server/internal/api/...`
-- Rust stubs: `client/grpc/...`
+- Rust stubs: `client/desktop/grpc/...`
+- Dart stubs: `client/cli/lib/src/api/...`
 
 ## Вклад
 

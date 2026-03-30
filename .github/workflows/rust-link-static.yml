@@ -3,14 +3,14 @@ name: Rust Link + Static Analysis
 on:
   pull_request:
     paths:
-      - "client/src-tauri/**"
-      - "client/grpc/**"
+      - "client/desktop/src-tauri/**"
+      - "client/desktop/grpc/**"
       - ".github/workflows/rust-link-static.yml"
   push:
     branches: ["main"]
     paths:
-      - "client/src-tauri/**"
-      - "client/grpc/**"
+      - "client/desktop/src-tauri/**"
+      - "client/desktop/grpc/**"
   workflow_dispatch:
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: client/src-tauri
+        working-directory: client/desktop/src-tauri
 
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            client/src-tauri -> target
+            client/desktop/src-tauri -> target
 
       - name: Format check
         run: cargo fmt --all -- --check

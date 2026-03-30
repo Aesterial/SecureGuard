@@ -85,6 +85,7 @@ type Password struct {
 
 func (p *Password) Protobuf() *passpb.Password {
 	return &passpb.Password{
+		Id:        p.ID.String(),
 		Serv:      p.Service.Protobuf(),
 		Login:     p.Login,
 		Pass:      p.Password,

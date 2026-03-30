@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	MetaService_ServerInformation_FullMethodName   = "/xyz.secureguard.api.v1.meta.v1.MetaService/ServerInformation"
 	MetaService_ClientCompatibility_FullMethodName = "/xyz.secureguard.api.v1.meta.v1.MetaService/ClientCompatibility"
+	MetaService_Localisation_FullMethodName        = "/xyz.secureguard.api.v1.meta.v1.MetaService/Localisation"
 )
 
 // MetaServiceClient is the client API for MetaService service.
@@ -30,6 +31,7 @@ const (
 type MetaServiceClient interface {
 	ServerInformation(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ServerInfoResponse, error)
 	ClientCompatibility(ctx context.Context, in *CompatibilityRequest, opts ...grpc.CallOption) (*CompatibilityResponse, error)
+	Localisation(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LocalisationResponse, error)
 }
 
 type metaServiceClient struct {
@@ -60,12 +62,23 @@ func (c *metaServiceClient) ClientCompatibility(ctx context.Context, in *Compati
 	return out, nil
 }
 
+func (c *metaServiceClient) Localisation(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LocalisationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LocalisationResponse)
+	err := c.cc.Invoke(ctx, MetaService_Localisation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MetaServiceServer is the server API for MetaService service.
 // All implementations should embed UnimplementedMetaServiceServer
 // for forward compatibility.
 type MetaServiceServer interface {
 	ServerInformation(context.Context, *emptypb.Empty) (*ServerInfoResponse, error)
 	ClientCompatibility(context.Context, *CompatibilityRequest) (*CompatibilityResponse, error)
+	Localisation(context.Context, *emptypb.Empty) (*LocalisationResponse, error)
 }
 
 // UnimplementedMetaServiceServer should be embedded to have
@@ -80,6 +93,9 @@ func (UnimplementedMetaServiceServer) ServerInformation(context.Context, *emptyp
 }
 func (UnimplementedMetaServiceServer) ClientCompatibility(context.Context, *CompatibilityRequest) (*CompatibilityResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ClientCompatibility not implemented")
+}
+func (UnimplementedMetaServiceServer) Localisation(context.Context, *emptypb.Empty) (*LocalisationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Localisation not implemented")
 }
 func (UnimplementedMetaServiceServer) testEmbeddedByValue() {}
 
@@ -137,6 +153,24 @@ func _MetaService_ClientCompatibility_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MetaService_Localisation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetaServiceServer).Localisation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MetaService_Localisation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetaServiceServer).Localisation(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MetaService_ServiceDesc is the grpc.ServiceDesc for MetaService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -151,6 +185,10 @@ var MetaService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClientCompatibility",
 			Handler:    _MetaService_ClientCompatibility_Handler,
+		},
+		{
+			MethodName: "Localisation",
+			Handler:    _MetaService_Localisation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
