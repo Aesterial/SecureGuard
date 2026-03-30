@@ -777,34 +777,9 @@ fn install_rustls_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
-#[cfg(target_os = "windows")]
-fn configure_webview2_runtime() {
-    const WEBVIEW2_ARGS_ENV: &str = "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS";
-    const DISABLE_GPU_FLAG: &str = "--disable-gpu";
-
-    let current = std::env::var(WEBVIEW2_ARGS_ENV).unwrap_or_default();
-    if current
-        .split_whitespace()
-        .any(|arg| arg == DISABLE_GPU_FLAG)
-    {
-        return;
-    }
-
-    let next = if current.trim().is_empty() {
-        DISABLE_GPU_FLAG.to_string()
-    } else {
-        format!("{} {}", current.trim(), DISABLE_GPU_FLAG)
-    };
-
-    std::env::set_var(WEBVIEW2_ARGS_ENV, next);
-}
-
-#[cfg(not(target_os = "windows"))]
-fn configure_webview2_runtime() {}
 
 fn main() {
     install_rustls_provider();
-    configure_webview2_runtime();
 
     //     protection::init_protection();
 

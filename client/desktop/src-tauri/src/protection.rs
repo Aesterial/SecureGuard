@@ -1354,8 +1354,8 @@ fn spawn_watchdog() {
             }
 
             check_hardware_breakpoints();
-            check_ntquery_debug_port();
-            check_ntquery_debug_flags();
+            // check_ntquery_debug_port();
+            // check_ntquery_debug_flags();
             check_yield_trap();
         }
     });
@@ -1419,13 +1419,13 @@ fn spawn_syscall_watchdog() {
                 + 1500;
             thread::sleep(Duration::from_millis(jitter));
 
-            raw_syscall::check_debug_port_direct();
-            raw_syscall::check_debug_object_direct();
-            raw_syscall::check_debug_flags_direct();
+            // raw_syscall::check_debug_port_direct();
+            // raw_syscall::check_debug_object_direct();
+            // raw_syscall::check_debug_flags_direct();
             raw_syscall::check_ntdll_hooks();
-            raw_syscall::close_handle_trap_direct();
+            // raw_syscall::close_handle_trap_direct();
             check_hardware_breakpoints();
-            check_timing();
+            // check_timing();
         }
     });
 }
