@@ -1,9 +1,9 @@
-
-
 #[cfg(target_os = "windows")]
 use winapi::shared::minwindef::*;
 #[cfg(target_os = "windows")]
 use winapi::um::debugapi::*;
+#[cfg(target_os = "windows")]
+use winapi::um::errhandlingapi::*;
 #[cfg(target_os = "windows")]
 use winapi::um::handleapi::*;
 #[cfg(target_os = "windows")]
@@ -18,15 +18,11 @@ use winapi::um::tlhelp32::*;
 use winapi::um::winnt::*;
 #[cfg(target_os = "windows")]
 use winapi::um::winuser::FindWindowA;
-#[cfg(target_os = "windows")]
-use winapi::um::errhandlingapi::*;
 
 use std::process;
 use std::ptr;
 use std::thread;
 use std::time::{Duration, Instant};
-
-
 
 macro_rules! junk_ops {
     () => {
@@ -72,8 +68,12 @@ macro_rules! junk_branch {
 
 macro_rules! junk_mem {
     () => {{
-        let mut _sink: [u64; 4] = [0xDEAD_BEEF_CAFE_BABE, 0x1337_7331_DEAD_C0DE,
-                                     0xFEED_FACE_0BAD_F00D, 0xAAAA_BBBB_CCCC_DDDD];
+        let mut _sink: [u64; 4] = [
+            0xDEAD_BEEF_CAFE_BABE,
+            0x1337_7331_DEAD_C0DE,
+            0xFEED_FACE_0BAD_F00D,
+            0xAAAA_BBBB_CCCC_DDDD,
+        ];
         for _i in 0..4 {
             _sink[_i] = _sink[_i].wrapping_mul(0x5DEECE66D).wrapping_add(0xB);
             _sink[_i] = _sink[_i].rotate_left((_i as u32 + 1) * 7);
@@ -116,8 +116,6 @@ macro_rules! junk_scatter {
     };
 }
 
-
-
 #[cfg(target_os = "windows")]
 fn spawn_guard_thread<F>(name: &str, f: F)
 where
@@ -153,8 +151,6 @@ fn corrupt_and_exit() -> ! {
     silent_exit()
 }
 
-
-
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
 mod raw_syscall {
     use super::*;
@@ -181,10 +177,7 @@ mod raw_syscall {
         resolve_ssn_from_neighbors(ptr, func_name)
     }
 
-    unsafe fn resolve_ssn_from_neighbors(
-        hooked_func: *const u8,
-        func_name: &[u8],
-    ) -> Option<u32> {
+    unsafe fn resolve_ssn_from_neighbors(hooked_func: *const u8, func_name: &[u8]) -> Option<u32> {
         let base = hooked_func as isize;
         let stub_size: isize = 0x20;
 
@@ -561,12 +554,7 @@ mod raw_syscall {
 
     pub fn hide_thread_direct() {
         unsafe {
-            syscall_nt_set_info_thread(
-                GetCurrentThread(),
-                0x11,
-                ptr::null_mut(),
-                0,
-            );
+            syscall_nt_set_info_thread(GetCurrentThread(), 0x11, ptr::null_mut(), 0);
         }
     }
 
@@ -623,8 +611,6 @@ mod raw_syscall {
         }
     }
 }
-
-
 
 #[cfg(target_os = "windows")]
 fn blacklisted_hashes() -> Vec<u32> {
@@ -693,8 +679,6 @@ fn blacklisted_hashes() -> Vec<u32> {
     ]
 }
 
-
-
 pub fn init_protection() {
     #[cfg(target_os = "windows")]
     {
@@ -732,8 +716,6 @@ pub fn init_protection() {
         spawn_syscall_watchdog();
     }
 }
-
-
 
 #[cfg(target_os = "windows")]
 fn check_debugger() {
@@ -788,7 +770,9 @@ fn check_hardware_breakpoints() {
 fn check_int2d_trap() {
     junk_ops!();
     unsafe {
-        use winapi::um::errhandlingapi::{AddVectoredExceptionHandler, RemoveVectoredExceptionHandler};
+        use winapi::um::errhandlingapi::{
+            AddVectoredExceptionHandler, RemoveVectoredExceptionHandler,
+        };
         use winapi::um::winnt::{EXCEPTION_POINTERS, LONG};
 
         unsafe extern "system" fn int2d_handler(info: *mut EXCEPTION_POINTERS) -> LONG {
@@ -805,10 +789,10 @@ fn check_int2d_trap() {
 
         let was_debugged: u64;
         core::arch::asm!(
-            "mov {result}, 1",   
+            "mov {result}, 1",
             "int 0x2d",
             "nop",
-            "mov {result}, 0",   
+            "mov {result}, 0",
             result = out(reg) was_debugged,
             options(nomem, nostack),
         );
@@ -837,10 +821,15 @@ fn check_output_debug_string_trap() {
         if err == 0x1337 {
             let ntdll = GetModuleHandleA(b"ntdll.dll\0".as_ptr() as *const i8);
             if !ntdll.is_null() {
-                let func = GetProcAddress(ntdll, b"NtQueryInformationProcess\0".as_ptr() as *const i8);
+                let func =
+                    GetProcAddress(ntdll, b"NtQueryInformationProcess\0".as_ptr() as *const i8);
                 if !func.is_null() {
                     type NtQueryInfoProc = unsafe extern "system" fn(
-                        HANDLE, u32, *mut std::ffi::c_void, u32, *mut u32,
+                        HANDLE,
+                        u32,
+                        *mut std::ffi::c_void,
+                        u32,
+                        *mut u32,
                     ) -> i32;
                     let nt_query: NtQueryInfoProc = std::mem::transmute(func);
 
@@ -861,7 +850,6 @@ fn check_output_debug_string_trap() {
         }
     }
 }
-
 
 #[cfg(target_os = "windows")]
 fn check_yield_trap() {
@@ -887,7 +875,6 @@ fn check_yield_trap() {
                 success_count += 1;
             }
         }
-
 
         if success_count >= 18 {
             corrupt_and_exit();
@@ -954,7 +941,6 @@ fn check_ntquery_debug_object() {
             ptr::null_mut(),
         );
 
-
         if status == 0 {
             corrupt_and_exit();
         }
@@ -1012,8 +998,6 @@ fn check_closehandle_trap() {
     }
 }
 
-
-
 #[cfg(target_os = "windows")]
 fn check_timing() {
     junk_ops!();
@@ -1064,8 +1048,6 @@ fn check_timing() {
     }
 }
 
-
-
 #[cfg(target_os = "windows")]
 fn patch_dbg_attach() {
     junk_loop!();
@@ -1095,9 +1077,9 @@ fn patch_dbg_attach() {
                 let exit_proc = GetProcAddress(kernel32, b"ExitProcess\0".as_ptr() as *const i8);
                 if !exit_proc.is_null() {
                     let target = func as *mut u8;
-                    *target = 0x31;         // xor ecx, ecx
+                    *target = 0x31; // xor ecx, ecx
                     *target.add(1) = 0xC9;
-                    *target.add(2) = 0xE9;  // jmp rel32
+                    *target.add(2) = 0xE9; // jmp rel32
                     let rel_addr = (exit_proc as isize) - (target.add(7) as isize);
                     ptr::write_unaligned(target.add(3) as *mut i32, rel_addr as i32);
                 }
@@ -1165,8 +1147,6 @@ fn erase_pe_header() {
         }
     }
 }
-
-
 
 #[cfg(target_os = "windows")]
 unsafe fn check_debugger_windows() {
@@ -1338,8 +1318,6 @@ unsafe fn check_parent_process() {
     CloseHandle(snapshot);
 }
 
-
-
 #[cfg(target_os = "windows")]
 fn spawn_watchdog() {
     spawn_guard_thread("sg-watchdog", || {
@@ -1454,8 +1432,6 @@ fn spawn_syscall_watchdog() {
 
 #[cfg(not(all(target_os = "windows", target_arch = "x86_64")))]
 fn spawn_syscall_watchdog() {}
-
-
 
 #[cfg(target_os = "windows")]
 unsafe fn hash_code_region(addr: usize, len: usize) -> u32 {

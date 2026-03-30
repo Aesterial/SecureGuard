@@ -5,6 +5,12 @@
 
 mod api;
 mod crypto;
+#[allow(
+    dead_code,
+    clippy::approx_constant,
+    clippy::manual_c_str_literals,
+    clippy::manual_range_contains
+)]
 mod protection;
 mod screenshot_guard;
 
@@ -99,7 +105,7 @@ async fn login(
             *current_user = Some(profile.clone());
         }
         state.authenticated.store(true, Ordering::SeqCst);
-        return Ok(profile);
+        Ok(profile)
     }
 }
 
@@ -214,7 +220,6 @@ fn get_session_user(state: State<'_, AppState>) -> Result<Option<AuthProfile>, S
         .map_err(|_| "Failed to read session user".to_string())
 }
 
-
 #[tauri::command]
 fn store_vault_envelope(
     state: State<'_, AppState>,
@@ -238,9 +243,7 @@ fn store_vault_envelope(
 }
 
 #[tauri::command]
-fn get_vault_envelope(
-    state: State<'_, AppState>,
-) -> Result<Option<MasterKeyEnvelope>, String> {
+fn get_vault_envelope(state: State<'_, AppState>) -> Result<Option<MasterKeyEnvelope>, String> {
     if !state.authenticated.load(Ordering::SeqCst) {
         return Err("Не авторизован".into());
     }
@@ -288,7 +291,11 @@ async fn rotate_seed_phrase(
         &current_envelope.encryption_algorithm,
     )?;
 
-    let new_envelope = wrap_master_key(&master_key, new_seed, &current_envelope.encryption_algorithm)?;
+    let new_envelope = wrap_master_key(
+        &master_key,
+        new_seed,
+        &current_envelope.encryption_algorithm,
+    )?;
     master_key.zeroize();
 
     if let Ok(mut env) = state.vault_envelope.lock() {
@@ -413,6 +420,7 @@ async fn get_passwords(state: State<'_, AppState>) -> Result<Vec<PasswordEntry>,
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 async fn add_password(
     state: State<'_, AppState>,
     title: String,
@@ -442,11 +450,7 @@ async fn add_password(
     let selected_algorithm = resolve_encryption_algorithm(&encryption_algorithm)
         .ok_or("Неподдерживаемый алгоритм шифрования")?;
 
-    let envelope_from_state = state
-        .vault_envelope
-        .lock()
-        .ok()
-        .and_then(|e| e.clone());
+    let envelope_from_state = state.vault_envelope.lock().ok().and_then(|e| e.clone());
 
     let envelope_from_local = match (local_wrapped_master_key, local_wrapping_salt) {
         (Some(wrapped_master_key), Some(wrapping_salt))
@@ -779,7 +783,10 @@ fn configure_webview2_runtime() {
     const DISABLE_GPU_FLAG: &str = "--disable-gpu";
 
     let current = std::env::var(WEBVIEW2_ARGS_ENV).unwrap_or_default();
-    if current.split_whitespace().any(|arg| arg == DISABLE_GPU_FLAG) {
+    if current
+        .split_whitespace()
+        .any(|arg| arg == DISABLE_GPU_FLAG)
+    {
         return;
     }
 
@@ -799,8 +806,7 @@ fn main() {
     install_rustls_provider();
     configure_webview2_runtime();
 
-
-//     protection::init_protection();
+    //     protection::init_protection();
 
     tauri::Builder::default()
         .manage(AppState {

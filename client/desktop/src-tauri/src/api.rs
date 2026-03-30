@@ -7,6 +7,12 @@ use tonic::transport::{Channel, Endpoint};
 use tonic::{Code, Request, Status};
 use zeroize::{Zeroize, Zeroizing};
 
+#[allow(
+    dead_code,
+    clippy::clone_on_copy,
+    clippy::empty_docs,
+    clippy::enum_variant_names
+)]
 pub mod xyz {
     pub mod secureguard {
         pub mod api {
@@ -204,9 +210,9 @@ impl ApiClient {
             .filter(|v| !v.trim().is_empty())
             .or_else(|| env::var("SECUREGUARD_BACKEND").ok())
             .filter(|v| !v.trim().is_empty())
-          .unwrap_or_else(|| compiled_default_backend().to_string());
-        let backend = validate_backend_endpoint(&backend)
-            .unwrap_or_else(|_| DEFAULT_BACKEND.to_string());
+            .unwrap_or_else(|| compiled_default_backend().to_string());
+        let backend =
+            validate_backend_endpoint(&backend).unwrap_or_else(|_| DEFAULT_BACKEND.to_string());
 
         let client_hash = format!(
             "tauri-{}-{}",
@@ -288,8 +294,8 @@ impl ApiClient {
         wrapping_salt: &str,
     ) -> Result<(), String> {
         use login_contract_v1::login_service_client::LoginServiceClient;
-        use shared_contract_v1::Kdf;
         use login_contract_v1::RegisterRequest;
+        use shared_contract_v1::Kdf;
 
         let channel = self.connect().await?;
         let mut client = LoginServiceClient::new(channel);
@@ -405,7 +411,7 @@ impl ApiClient {
             let batch_len = payload.list.len() as i32;
 
             for item in payload.list {
-                let fallback_created_at = timestamp_to_string(item.created_at.clone());
+                let fallback_created_at = timestamp_to_string(item.created_at);
                 let decoded = decode_password_entry(&item, fallback_created_at);
                 out.push(PasswordEntry {
                     id: decoded.id,
@@ -506,7 +512,7 @@ impl ApiClient {
             .info
             .ok_or("Сервер не вернул данные записи")?;
 
-        let fallback_created_at = timestamp_to_string(info.created_at.clone());
+        let fallback_created_at = timestamp_to_string(info.created_at);
         let decoded = decode_password_entry(&info, fallback_created_at);
 
         Ok(PasswordEntry {
@@ -684,11 +690,10 @@ impl ApiClient {
         response.healthy = true;
         response.info = info_response.info.map(serialize_server_metadata);
 
-        let compatibility_request =
-            api_meta_contract_v1::CompatibilityRequest {
-                client_api_version: CLIENT_API_VERSION,
-                r#type: resolve_client_type() as i32,
-            };
+        let compatibility_request = api_meta_contract_v1::CompatibilityRequest {
+            client_api_version: CLIENT_API_VERSION,
+            r#type: resolve_client_type() as i32,
+        };
         let compatibility_request =
             match self.with_client_metadata(Request::new(compatibility_request)) {
                 Ok(request) => request,
@@ -764,7 +769,7 @@ fn serialize_graph_points(points: &[stats_contract_v1::GraphPoint]) -> Vec<Stats
     points
         .iter()
         .map(|point| StatsGraphPoint {
-            time: timestamp_to_unix_seconds(point.time.clone()),
+            time: timestamp_to_unix_seconds(point.time),
             value: point.value,
         })
         .collect()

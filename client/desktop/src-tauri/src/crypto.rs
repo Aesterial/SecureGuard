@@ -36,7 +36,6 @@ pub fn resolve_encryption_algorithm(value: &str) -> Option<&'static str> {
     }
 }
 
-
 pub fn decrypt_password(
     encrypted_b64: &str,
     salt_b64: &str,
