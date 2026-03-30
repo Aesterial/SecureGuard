@@ -777,11 +777,10 @@ fn install_rustls_provider() {
     let _ = rustls::crypto::ring::default_provider().install_default();
 }
 
-
 fn main() {
     install_rustls_provider();
 
-    //     protection::init_protection();
+    protection::init_protection();
 
     tauri::Builder::default()
         .manage(AppState {
