@@ -5,16 +5,16 @@ ARG BUILD_TIME=1970-01-01T00:00:00Z
 
 WORKDIR /src
 
-COPY server/internal/go.mod server/internal/go.sum ./server/internal/
-COPY server/starter/go.mod server/starter/go.sum ./server/starter/
+COPY internal/go.mod internal/go.sum ./internal/
+COPY starter/go.mod starter/go.sum ./starter/
 
-RUN cd /src/server/internal && go mod download
-RUN cd /src/server/starter && go mod download
+RUN cd /src/internal && go mod download
+RUN cd /src/starter && go mod download
 
-COPY server/internal ./server/internal
-COPY server/starter ./server/starter
+COPY internal ./internal
+COPY starter ./starter
 
-RUN cd /src/server/starter && CGO_ENABLED=0 GOOS=linux go build \
+RUN cd /src/starter && CGO_ENABLED=0 GOOS=linux go build \
 	-ldflags="-s -w -X github.com/aesterial/secureguard/internal/shared/metadata.CommitHash=${COMMIT_HASH} -X github.com/aesterial/secureguard/internal/shared/metadata.BuildTime=${BUILD_TIME}" \
 	-o /out/secureguard-server .
 
@@ -25,8 +25,8 @@ RUN apk add --no-cache ca-certificates postgresql-client
 WORKDIR /app
 
 COPY --from=build /out/secureguard-server /app/secureguard-server
-COPY server/migrations/scheme/sqlc.sql /app/migrations/sqlc.sql
-COPY server/docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY migrations/scheme/sqlc.sql /app/migrations/sqlc.sql
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
 RUN chmod +x /app/docker-entrypoint.sh
 
