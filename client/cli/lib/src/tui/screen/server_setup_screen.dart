@@ -1,4 +1,5 @@
 import 'package:secureguard_cli/src/core/grpc_errors.dart';
+import 'package:secureguard_cli/src/models/config.dart';
 import 'package:secureguard_cli/src/tui/core/tui_context.dart';
 import 'package:secureguard_cli/src/tui/modals/enter_value.dart';
 import 'package:secureguard_cli/src/tui/models/route.dart';
@@ -87,7 +88,9 @@ class ServerSetupScreen extends BaseScreen {
           context.setStatus(context.tr('common.cancelled'));
           return;
         }
-        await context.configureServer(values['endpoint']!);
+        await context.configureServer(
+          Config.normalizeEndpoint(values['endpoint']!),
+        );
         return;
       case 1:
         await _refreshServer(context);

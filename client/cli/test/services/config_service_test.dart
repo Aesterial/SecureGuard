@@ -20,5 +20,23 @@ void main() {
       expect(config.port, 50051);
       expect(config.useTls, isFalse);
     });
+
+    test('strips duplicated https scheme at the start', () {
+      final config = Config.parse('https://https://example.com:8443');
+
+      expect(config.serverUri.scheme, 'https');
+      expect(config.host, 'example.com');
+      expect(config.port, 8443);
+      expect(config.useTls, isTrue);
+    });
+
+    test('strips duplicated http scheme at the start', () {
+      final config = Config.parse('http://http://127.0.0.1:50051');
+
+      expect(config.serverUri.scheme, 'http');
+      expect(config.host, '127.0.0.1');
+      expect(config.port, 50051);
+      expect(config.useTls, isFalse);
+    });
   });
 }

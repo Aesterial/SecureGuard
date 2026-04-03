@@ -5,9 +5,7 @@ class Config {
   const Config({required this.serverUri, required this.useTls});
 
   factory Config.parse(String endpoint, {bool? useTls}) {
-    final normalizedEndpoint = endpoint.contains('://')
-        ? endpoint
-        : 'https://$endpoint';
+    final normalizedEndpoint = normalizeEndpoint(endpoint);
     final uri = Uri.parse(normalizedEndpoint);
 
     if (uri.host.isEmpty) {
@@ -25,5 +23,28 @@ class Config {
     }
 
     return useTls ? 443 : 80;
+  }
+
+  static String normalizeEndpoint(String endpoint) {
+    final trimmedEndpoint = endpoint.trim();
+    final protocolPattern = RegExp(r'^(https?):\/\/', caseSensitive: false);
+    var normalizedEndpoint = trimmedEndpoint;
+    String? scheme;
+
+    while (true) {
+      final match = protocolPattern.firstMatch(normalizedEndpoint);
+      if (match == null) {
+        break;
+      }
+
+      scheme ??= match.group(1)!.toLowerCase();
+      normalizedEndpoint = normalizedEndpoint.substring(match.end);
+    }
+
+    if (scheme == null) {
+      return 'https://$trimmedEndpoint';
+    }
+
+    return '$scheme://$normalizedEndpoint';
   }
 }
