@@ -58,7 +58,9 @@ var I18N = {
 
     "add.title": "Новая запись",
     "add.name": "Название",
+    "add.login": "Логин",
     "add.namePlaceholder": "Gmail, GitHub, VK...",
+    "add.loginPlaceholder": "Логин для сохранения",
     "add.passwordPlaceholder": "Пароль для аккаунта",
     "add.seedPlaceholder": "Локальная сид-фраза для шифрования",
     "add.save": "Сохранить и закрыть",
@@ -282,7 +284,9 @@ var I18N = {
     "dashboard.emptySubtitle": "Add your first entry",
     "add.title": "New password",
     "add.name": "Name",
+    "add.login": "Login",
     "add.namePlaceholder": "Gmail, GitHub, VK...",
+    "add.loginPlaceholder": "Login for this entry",
     "add.passwordPlaceholder": "Password to store",
     "add.seedPlaceholder": "Your local seed phrase for encryption",
     "add.save": "Encrypt and save",
@@ -803,6 +807,7 @@ function createFallbackInvoke() {
         return {
           id: entry.id,
           title: entry.title,
+          encrypted_login: entry.encrypted_login || "",
           encrypted_password: entry.encrypted_password,
           salt: entry.salt,
           wrapped_master_key: entry.wrapped_master_key || "",
@@ -816,17 +821,19 @@ function createFallbackInvoke() {
 
     if (command === "add_password") {
       var title = (args.title || "").trim();
+      var login = (args.login || "").trim();
       var password = args.password || "";
       var seed = (args.seedPhrase || "").trim();
       var encryptionAlgorithm = normalizeEncryptionAlgorithm(
         args.encryptionAlgorithm,
       );
-      if (!title || !password || !seed) {
+      if (!title || !login || !password || !seed) {
         throw "Заполните все поля";
       }
       var entry = {
         id: String(nextId++),
         title: title,
+        encrypted_login: login,
         encrypted_password: password,
         salt: args.localWrappingSalt || "local",
         wrapped_master_key: args.localWrappedMasterKey || "",
@@ -984,11 +991,32 @@ function initApp(invoke) {
       encryption_algorithm: normalizeEncryptionAlgorithm(
         source && source.encryption_algorithm,
       ),
+      wrapped_master_key:
+        source && source.wrapped_master_key
+          ? String(source.wrapped_master_key)
+          : "",
+      wrapping_salt:
+        source && source.wrapping_salt ? String(source.wrapping_salt) : "",
+      vault_encryption_algorithm: normalizeEncryptionAlgorithm(
+        source && source.vault_encryption_algorithm,
+      ),
     };
   }
 
   function setCurrentUser(source) {
     currentUser = source ? normalizeSessionUser(source) : null;
+    if (
+      currentUser &&
+      currentUser.username &&
+      currentUser.wrapped_master_key &&
+      currentUser.wrapping_salt
+    ) {
+      saveMasterKeyEnvelope(currentUser.username, {
+        wrapped_master_key: currentUser.wrapped_master_key,
+        wrapping_salt: currentUser.wrapping_salt,
+        encryption_algorithm: currentUser.vault_encryption_algorithm,
+      });
+    }
     updateAdminVisibility();
   }
 
@@ -1455,8 +1483,9 @@ function initApp(invoke) {
 
     setText("#page-add .dash-brand h1", "add.title");
     setText("#page-add .field:nth-of-type(1) label", "add.name");
-    setText("#page-add .field:nth-of-type(2) label", "common.password");
-    setText("#page-add .field:nth-of-type(3) label", "common.seedPhrase");
+    setText("#page-add .field:nth-of-type(2) label", "add.login");
+    setText("#page-add .field:nth-of-type(3) label", "common.password");
+    setText("#page-add .field:nth-of-type(4) label", "common.seedPhrase");
     setText("#save-btn .btn-t", "add.save");
 
     setText("#page-settings .dash-brand h1", "settings.title");
@@ -1573,6 +1602,7 @@ function initApp(invoke) {
     setPlaceholder("reg-pass2", "register.passwordConfirmPlaceholder");
     setPlaceholder("reg-seed", "register.seedPlaceholder");
     setPlaceholder("add-title", "add.namePlaceholder");
+    setPlaceholder("add-login", "add.loginPlaceholder");
     setPlaceholder("add-pass", "add.passwordPlaceholder");
     setPlaceholder("add-seed", "add.seedPlaceholder");
     setPlaceholder("modal-seed", "seedModal.placeholder");
@@ -4054,6 +4084,7 @@ function initApp(invoke) {
           username: u,
           password: p,
           seedPhrase: s,
+          encryptionAlgorithm: appSettings.encryptionAlgorithm,
         });
         saveMasterKeyEnvelope(u, preparedEnvelope);
         notify(localizeMessage(msg, "notify.accountCreated"));
@@ -4146,10 +4177,11 @@ function initApp(invoke) {
     .getElementById("save-btn")
     .addEventListener("click", async function () {
       var title = document.getElementById("add-title").value.trim();
+      var login = document.getElementById("add-login").value.trim();
       var p = document.getElementById("add-pass").value;
       var s = document.getElementById("add-seed").value;
 
-      if (!title || !p || !s) {
+      if (!title || !login || !p || !s) {
         notify(t("error.fillAllFields"), "err");
         return;
       }
@@ -4171,6 +4203,7 @@ function initApp(invoke) {
             : null;
         var savedEntry = await invoke("add_password", {
           title: title,
+          login: login,
           password: p,
           seedPhrase: s,
           encryptionAlgorithm: appSettings.encryptionAlgorithm,

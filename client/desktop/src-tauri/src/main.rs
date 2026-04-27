@@ -20,8 +20,8 @@ use api::{
 };
 use crypto::{
     decrypt_password, decrypt_password_with_master_key, default_encryption_algorithm,
-    encrypt_password_with_master_key, generate_master_key, prepare_master_key_envelope,
-    resolve_encryption_algorithm, unwrap_master_key, wrap_master_key, MasterKeyEnvelope,
+    encrypt_password_with_master_key, prepare_master_key_envelope, resolve_encryption_algorithm,
+    unwrap_master_key, wrap_master_key, MasterKeyEnvelope,
 };
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex as StdMutex;
@@ -101,6 +101,23 @@ async fn login(
     {
         let mut api = state.api.lock().await;
         let profile = api.authorize(username, password.as_str()).await?;
+        if let Ok(mut envelope) = state.vault_envelope.lock() {
+            if !profile.wrapped_master_key.trim().is_empty()
+                && !profile.wrapping_salt.trim().is_empty()
+            {
+                *envelope = Some(MasterKeyEnvelope {
+                    wrapped_master_key: profile.wrapped_master_key.clone(),
+                    wrapping_salt: profile.wrapping_salt.clone(),
+                    encryption_algorithm: resolve_encryption_algorithm(
+                        &profile.vault_encryption_algorithm,
+                    )
+                    .unwrap_or(default_encryption_algorithm())
+                    .to_string(),
+                });
+            } else {
+                *envelope = None;
+            }
+        }
         if let Ok(mut current_user) = state.current_user.lock() {
             *current_user = Some(profile.clone());
         }
@@ -115,6 +132,7 @@ async fn register(
     username: String,
     password: String,
     seed_phrase: String,
+    encryption_algorithm: Option<String>,
 ) -> Result<String, String> {
     let password = Zeroizing::new(password);
     let mut seed = Zeroizing::new(seed_phrase);
@@ -132,7 +150,11 @@ async fn register(
         return Err("Seed phrase must contain at least 1 word".into());
     }
 
-    let envelope = prepare_master_key_envelope(&trimmed, default_encryption_algorithm())?;
+    let selected_algorithm = encryption_algorithm
+        .as_deref()
+        .and_then(resolve_encryption_algorithm)
+        .unwrap_or(default_encryption_algorithm());
+    let envelope = prepare_master_key_envelope(&trimmed, selected_algorithm)?;
     seed.zeroize();
 
     {
@@ -424,6 +446,7 @@ async fn get_passwords(state: State<'_, AppState>) -> Result<Vec<PasswordEntry>,
 async fn add_password(
     state: State<'_, AppState>,
     title: String,
+    login: String,
     password: String,
     seed_phrase: String,
     encryption_algorithm: String,
@@ -436,6 +459,9 @@ async fn add_password(
     }
     if title.trim().is_empty() {
         return Err("Введите название".into());
+    }
+    if login.trim().is_empty() {
+        return Err("Введите логин".into());
     }
     let password = Zeroizing::new(password);
     if password.trim().is_empty() {
@@ -479,9 +505,10 @@ async fn add_password(
             &envelope.encryption_algorithm,
         )?
     } else {
-        generate_master_key()
+        return Err("User key bundle is unavailable".into());
     };
 
+    let encrypted_login = encrypt_password_with_master_key(login.trim(), &master_key)?;
     let encrypted_password = encrypt_password_with_master_key(password.as_str(), &master_key)?;
     let entry_envelope = wrap_master_key(&master_key, seed_phrase, selected_algorithm)?;
     master_key.zeroize();
@@ -495,6 +522,7 @@ async fn add_password(
     let entry = PasswordEntry {
         id: uuid::Uuid::new_v4().to_string(),
         title: title.trim().to_string(),
+        encrypted_login,
         encrypted_password,
         salt: entry_envelope.wrapping_salt,
         wrapped_master_key: entry_envelope.wrapped_master_key,
@@ -582,7 +610,23 @@ async fn copy_password(
         )?);
         master_key.zeroize();
         result
+    } else if let Some(envelope) = state.vault_envelope.lock().ok().and_then(|e| e.clone()) {
+        let mut master_key = unwrap_master_key(
+            &envelope.wrapped_master_key,
+            &envelope.wrapping_salt,
+            seed_phrase,
+            &envelope.encryption_algorithm,
+        )?;
+        let result = Zeroizing::new(decrypt_password_with_master_key(
+            &entry.encrypted_password,
+            &master_key,
+        )?);
+        master_key.zeroize();
+        result
     } else {
+        if entry.salt.trim().is_empty() {
+            return Err("Vault envelope is unavailable for this entry".into());
+        }
         Zeroizing::new(decrypt_password(
             &entry.encrypted_password,
             &entry.salt,
@@ -791,8 +835,9 @@ fn main() {
             password_cache: StdMutex::new(None),
         })
         .setup(|app| {
-            let window = app.get_window("main").unwrap();
-            screenshot_guard::init_screenshot_protection(window);
+            if let Some(window) = app.get_window("main") {
+                screenshot_guard::init_screenshot_protection(window);
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -57,9 +57,14 @@ pub fn set_screenshot_protection(enabled: bool) {
 pub fn init_screenshot_protection(window: Window) {
     #[cfg(target_os = "windows")]
     {
-        let hwnd = window.hwnd().unwrap().0;
+        let hwnd = match window.hwnd() {
+            Ok(hwnd) => hwnd.0,
+            Err(err) => {
+                eprintln!("SecureGuard screenshot guard init failed: {}", err);
+                return;
+            }
+        };
         let _ = WINDOW_HWND.set(hwnd);
-        PROTECTION_ON.store(true, Ordering::SeqCst);
         spawn_guard_thread("sg-affinity-keepalive", move || {
             monitor_affinity(hwnd as HWND);
         });

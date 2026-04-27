@@ -19,10 +19,12 @@ use winapi::um::winnt::*;
 #[cfg(target_os = "windows")]
 use winapi::um::winuser::FindWindowA;
 
-use std::process;
 use std::ptr;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
+
+static PROTECTION_DETECTED: AtomicBool = AtomicBool::new(false);
 
 macro_rules! junk_ops {
     () => {
@@ -142,13 +144,15 @@ fn hash_lower(s: &str) -> u32 {
     djb2_hash(&lower)
 }
 
-fn silent_exit() -> ! {
-    process::exit(0);
+fn silent_exit() {
+    corrupt_and_exit();
 }
 
-fn corrupt_and_exit() -> ! {
+fn corrupt_and_exit() {
     junk_mem!();
-    silent_exit()
+    if !PROTECTION_DETECTED.swap(true, Ordering::SeqCst) {
+        eprintln!("SecureGuard protection detected a suspicious runtime condition");
+    }
 }
 
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
@@ -704,11 +708,6 @@ pub fn init_protection() {
             thread::sleep(Duration::from_millis(300));
             hide_thread();
             patch_dbg_attach();
-        });
-
-        thread::spawn(|| {
-            thread::sleep(Duration::from_secs(2));
-            erase_pe_header();
         });
 
         spawn_watchdog();

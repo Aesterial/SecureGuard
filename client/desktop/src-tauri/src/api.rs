@@ -1,3 +1,5 @@
+use crate::crypto;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -99,6 +101,7 @@ const PAGE_SIZE: i32 = 200;
 pub struct PasswordEntry {
     pub id: String,
     pub title: String,
+    pub encrypted_login: String,
     pub encrypted_password: String,
     pub salt: String,
     pub wrapped_master_key: String,
@@ -115,6 +118,9 @@ pub struct AuthProfile {
     pub light_theme_enabled: bool,
     pub language: String,
     pub encryption_algorithm: String,
+    pub wrapped_master_key: String,
+    pub wrapping_salt: String,
+    pub vault_encryption_algorithm: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -186,6 +192,8 @@ struct PasswordPayload {
     #[serde(default)]
     title: String,
     #[serde(default)]
+    encrypted_login: String,
+    #[serde(default)]
     encrypted_password: String,
     #[serde(default)]
     salt: String,
@@ -195,6 +203,20 @@ struct PasswordPayload {
     encryption_algorithm: String,
     #[serde(default)]
     created_at: String,
+}
+
+#[derive(Deserialize, Default)]
+struct UserKeyBundlePayload {
+    #[serde(default)]
+    wrapped_master_key: String,
+    #[serde(default)]
+    salt: String,
+    #[serde(default)]
+    wrapping_salt: String,
+    #[serde(default)]
+    encryption_method: String,
+    #[serde(default)]
+    encryption_algorithm: String,
 }
 
 pub struct ApiClient {
@@ -348,9 +370,20 @@ impl ApiClient {
                 light_theme_enabled: false,
                 language: String::new(),
                 encryption_algorithm: String::new(),
+                wrapped_master_key: String::new(),
+                wrapping_salt: String::new(),
+                vault_encryption_algorithm: String::new(),
             },
             |info| {
                 let preferences = info.preferences;
+                let encryption_algorithm = preferences
+                    .as_ref()
+                    .map(|p| map_crypt(p.crypto))
+                    .unwrap_or_default();
+                let key_bundle = info
+                    .phrase
+                    .as_deref()
+                    .and_then(|phrase| parse_user_key_bundle(phrase, &encryption_algorithm));
                 AuthProfile {
                     id: info.id,
                     username: info.username,
@@ -364,9 +397,18 @@ impl ApiClient {
                         .as_ref()
                         .map(|p| map_language(p.lang))
                         .unwrap_or_default(),
-                    encryption_algorithm: preferences
+                    encryption_algorithm,
+                    wrapped_master_key: key_bundle
                         .as_ref()
-                        .map(|p| map_crypt(p.crypto))
+                        .map(|bundle| bundle.wrapped_master_key.clone())
+                        .unwrap_or_default(),
+                    wrapping_salt: key_bundle
+                        .as_ref()
+                        .map(|bundle| bundle.wrapping_salt.clone())
+                        .unwrap_or_default(),
+                    vault_encryption_algorithm: key_bundle
+                        .as_ref()
+                        .map(|bundle| bundle.encryption_algorithm.clone())
                         .unwrap_or_default(),
                 }
             },
@@ -416,6 +458,7 @@ impl ApiClient {
                 out.push(PasswordEntry {
                     id: decoded.id,
                     title: decoded.title,
+                    encrypted_login: decoded.encrypted_login,
                     encrypted_password: decoded.encrypted_password,
                     salt: decoded.salt,
                     wrapped_master_key: decoded.wrapped_master_key,
@@ -486,24 +529,16 @@ impl ApiClient {
         let channel = self.connect().await?;
         let mut client = PasswordServiceClient::new(channel);
 
-        let meta = serde_json::json!({
-            "id": entry.id,
-            "title": entry.title,
-            "salt": entry.salt,
-            "wrapped_master_key": entry.wrapped_master_key,
-            "encryption_algorithm": normalize_encryption(&entry.encryption_algorithm),
-            "created_at": entry.created_at,
-        })
-        .to_string();
+        let meta = serde_json::json!({ "format": "self-contained-aesgcm-v1" }).to_string();
 
         let request = CreateRequest {
             service_url: entry.title.clone(),
-            login: meta,
+            login: entry.encrypted_login.clone(),
             ciphertext: entry.encrypted_password.clone(),
             version: 1,
-            nonce: "inline-v1".to_string(),
+            nonce: "self-contained-aesgcm-v1".to_string(),
             aad: vec![1],
-            metadata: "{\"format\":\"inline-v1\"}".to_string(),
+            metadata: meta,
         };
         let req = self.with_auth_metadata(Request::new(request))?;
         let response = client.create(req).await.map_err(map_tonic_error)?;
@@ -518,6 +553,7 @@ impl ApiClient {
         Ok(PasswordEntry {
             id: decoded.id,
             title: decoded.title,
+            encrypted_login: decoded.encrypted_login,
             encrypted_password: decoded.encrypted_password,
             salt: decoded.salt,
             wrapped_master_key: decoded.wrapped_master_key,
@@ -758,6 +794,37 @@ fn normalize_encryption(value: &str) -> String {
     normalized
 }
 
+fn parse_user_key_bundle(raw: &str, fallback_algorithm: &str) -> Option<crypto::MasterKeyEnvelope> {
+    let bundle = serde_json::from_str::<UserKeyBundlePayload>(raw).ok()?;
+    let wrapped_master_key = bundle.wrapped_master_key.trim().to_string();
+    let wrapping_salt = if bundle.wrapping_salt.trim().is_empty() {
+        bundle.salt.trim().to_string()
+    } else {
+        bundle.wrapping_salt.trim().to_string()
+    };
+
+    if wrapped_master_key.is_empty() || wrapping_salt.is_empty() {
+        return None;
+    }
+
+    let raw_algorithm = if bundle.encryption_algorithm.trim().is_empty() {
+        bundle.encryption_method
+    } else {
+        bundle.encryption_algorithm
+    };
+    let encryption_algorithm = if raw_algorithm.trim().is_empty() {
+        normalize_encryption(fallback_algorithm)
+    } else {
+        normalize_encryption(&raw_algorithm)
+    };
+
+    Some(crypto::MasterKeyEnvelope {
+        wrapped_master_key,
+        wrapping_salt,
+        encryption_algorithm,
+    })
+}
+
 fn normalize_language(value: &str) -> String {
     match value.trim().to_lowercase().as_str() {
         "en" => "en".to_string(),
@@ -804,6 +871,7 @@ fn decode_password_entry(
     let mut payload = PasswordPayload {
         id: String::new(),
         title: String::new(),
+        encrypted_login: String::new(),
         encrypted_password: item.pass.clone(),
         salt: String::new(),
         wrapped_master_key: String::new(),
@@ -817,6 +885,9 @@ fn decode_password_entry(
         }
         if !meta.title.trim().is_empty() {
             payload.title = meta.title;
+        }
+        if !meta.encrypted_login.trim().is_empty() {
+            payload.encrypted_login = meta.encrypted_login;
         }
         if !meta.salt.trim().is_empty() {
             payload.salt = meta.salt;
@@ -832,12 +903,26 @@ fn decode_password_entry(
         }
     }
 
-    if payload.salt.trim().is_empty() {
+    if payload.encrypted_login.trim().is_empty() && looks_like_encrypted_field(&item.login) {
+        payload.encrypted_login = item.login.clone();
+    } else if payload.salt.trim().is_empty() {
         payload.salt = item.login.clone();
     }
 
     fill_payload_defaults(item, &mut payload, String::new());
     payload
+}
+
+fn looks_like_encrypted_field(value: &str) -> bool {
+    let normalized = value.trim();
+    if normalized.is_empty() || normalized.len() < 24 {
+        return false;
+    }
+
+    BASE64
+        .decode(normalized)
+        .map(|decoded| decoded.len() >= 28)
+        .unwrap_or(false)
 }
 
 fn fill_payload_defaults(
