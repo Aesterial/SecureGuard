@@ -33,6 +33,12 @@ use winreg::enums::HKEY_CURRENT_USER;
 use winreg::RegKey;
 use zeroize::{Zeroize, Zeroizing};
 
+#[derive(Clone, serde::Serialize)]
+struct DecryptedPasswordEntry {
+    login: String,
+    password: String,
+}
+
 struct AppState {
     authenticated: AtomicBool,
     api: Mutex<ApiClient>,
@@ -84,6 +90,130 @@ fn sanitize_clipboard_timeout_seconds(value: Option<u64>) -> u64 {
     value
         .unwrap_or(DEFAULT_CLIPBOARD_TIMEOUT_SECS)
         .clamp(MIN_CLIPBOARD_TIMEOUT_SECS, MAX_CLIPBOARD_TIMEOUT_SECS)
+}
+
+async fn find_password_entry(
+    state: &State<'_, AppState>,
+    entry_id: &str,
+) -> Result<PasswordEntry, String> {
+    let cached = state
+        .password_cache
+        .lock()
+        .ok()
+        .and_then(|c| c.clone())
+        .and_then(|list| list.into_iter().find(|e| e.id == entry_id));
+
+    if let Some(entry) = cached {
+        return Ok(entry);
+    }
+
+    let mut api = state.api.lock().await;
+    let list = match api.list_passwords().await {
+        Ok(list) => list,
+        Err(err) => {
+            if is_not_authenticated_error(&err) {
+                clear_auth_state(state, &mut api);
+            }
+            return Err(err);
+        }
+    };
+
+    if let Ok(mut cache) = state.password_cache.lock() {
+        *cache = Some(list.clone());
+    }
+
+    list.into_iter()
+        .find(|entry| entry.id == entry_id)
+        .ok_or_else(|| "Запись не найдена".to_string())
+}
+
+fn decrypt_password_entry_with_seed(
+    state: &State<'_, AppState>,
+    entry: &PasswordEntry,
+    seed_phrase: &str,
+) -> Result<DecryptedPasswordEntry, String> {
+    if seed_phrase.trim().is_empty() {
+        return Err("Введите сид-фразу".into());
+    }
+
+    let algorithm = if entry.encryption_algorithm.trim().is_empty() {
+        default_encryption_algorithm()
+    } else {
+        resolve_encryption_algorithm(&entry.encryption_algorithm)
+            .ok_or("Неподдерживаемый алгоритм шифрования записи")?
+    };
+
+    if !entry.wrapped_master_key.trim().is_empty() {
+        let mut master_key = unwrap_master_key(
+            &entry.wrapped_master_key,
+            &entry.salt,
+            seed_phrase,
+            algorithm,
+        )?;
+        let decrypted = decrypt_with_master_key(entry, &master_key);
+        master_key.zeroize();
+        return decrypted;
+    }
+
+    if let Some(envelope) = state.vault_envelope.lock().ok().and_then(|e| e.clone()) {
+        let mut master_key = unwrap_master_key(
+            &envelope.wrapped_master_key,
+            &envelope.wrapping_salt,
+            seed_phrase,
+            &envelope.encryption_algorithm,
+        )?;
+        let decrypted = decrypt_with_master_key(entry, &master_key);
+        master_key.zeroize();
+        return decrypted;
+    }
+
+    if entry.salt.trim().is_empty() {
+        return Err("Vault envelope is unavailable for this entry".into());
+    }
+
+    Ok(DecryptedPasswordEntry {
+        login: String::new(),
+        password: decrypt_password(
+            &entry.encrypted_password,
+            &entry.salt,
+            seed_phrase,
+            algorithm,
+        )?,
+    })
+}
+
+fn decrypt_with_master_key(
+    entry: &PasswordEntry,
+    master_key: &[u8; 32],
+) -> Result<DecryptedPasswordEntry, String> {
+    let login = if entry.encrypted_login.trim().is_empty() {
+        String::new()
+    } else {
+        decrypt_password_with_master_key(&entry.encrypted_login, master_key)?
+    };
+    let password = decrypt_password_with_master_key(&entry.encrypted_password, master_key)?;
+
+    Ok(DecryptedPasswordEntry { login, password })
+}
+
+fn write_clipboard_with_timeout(
+    app_handle: &tauri::AppHandle,
+    value: &str,
+    clipboard_timeout_seconds: Option<u64>,
+) -> Result<(), String> {
+    app_handle
+        .clipboard_manager()
+        .write_text(value)
+        .map_err(|e| format!("Буфер обмена: {}", e))?;
+
+    let handle = app_handle.clone();
+    let timeout = sanitize_clipboard_timeout_seconds(clipboard_timeout_seconds);
+    tokio::spawn(async move {
+        tokio::time::sleep(tokio::time::Duration::from_secs(timeout)).await;
+        let _ = handle.clipboard_manager().write_text("");
+    });
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -543,6 +673,37 @@ async fn add_password(
 }
 
 #[tauri::command]
+async fn decrypt_password_entry(
+    state: State<'_, AppState>,
+    entry_id: String,
+    seed_phrase: String,
+) -> Result<DecryptedPasswordEntry, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("Не авторизован".into());
+    }
+
+    let seed_phrase = Zeroizing::new(seed_phrase);
+    let entry = find_password_entry(&state, &entry_id).await?;
+    decrypt_password_entry_with_seed(&state, &entry, seed_phrase.trim())
+}
+
+#[tauri::command]
+async fn copy_secret_to_clipboard(
+    app_handle: tauri::AppHandle,
+    state: State<'_, AppState>,
+    value: String,
+    clipboard_timeout_seconds: Option<u64>,
+) -> Result<String, String> {
+    if !state.authenticated.load(Ordering::SeqCst) {
+        return Err("Не авторизован".into());
+    }
+
+    let value = Zeroizing::new(value);
+    write_clipboard_with_timeout(&app_handle, value.as_str(), clipboard_timeout_seconds)?;
+    Ok("Скопировано".into())
+}
+
+#[tauri::command]
 async fn copy_password(
     app_handle: tauri::AppHandle,
     state: State<'_, AppState>,
@@ -554,99 +715,10 @@ async fn copy_password(
         return Err("Не авторизован".into());
     }
 
-    let entry = {
-        let cached = state
-            .password_cache
-            .lock()
-            .ok()
-            .and_then(|c| c.clone())
-            .and_then(|list| list.into_iter().find(|e| e.id == entry_id));
-
-        if let Some(e) = cached {
-            e
-        } else {
-            let mut api = state.api.lock().await;
-            let list = match api.list_passwords().await {
-                Ok(l) => l,
-                Err(err) => {
-                    if is_not_authenticated_error(&err) {
-                        clear_auth_state(&state, &mut api);
-                    }
-                    return Err(err);
-                }
-            };
-            if let Ok(mut cache) = state.password_cache.lock() {
-                *cache = Some(list.clone());
-            }
-            list.into_iter()
-                .find(|e| e.id == entry_id)
-                .ok_or_else(|| "Запись не найдена".to_string())?
-        }
-    };
-
     let seed_phrase = Zeroizing::new(seed_phrase);
-    let seed_phrase = seed_phrase.trim();
-    if seed_phrase.is_empty() {
-        return Err("Введите сид-фразу".into());
-    }
-
-    let algorithm = if entry.encryption_algorithm.trim().is_empty() {
-        default_encryption_algorithm()
-    } else {
-        resolve_encryption_algorithm(&entry.encryption_algorithm)
-            .ok_or("Неподдерживаемый алгоритм шифрования записи")?
-    };
-
-    let decrypted = if !entry.wrapped_master_key.trim().is_empty() {
-        let mut master_key = unwrap_master_key(
-            &entry.wrapped_master_key,
-            &entry.salt,
-            seed_phrase,
-            algorithm,
-        )?;
-        let result = Zeroizing::new(decrypt_password_with_master_key(
-            &entry.encrypted_password,
-            &master_key,
-        )?);
-        master_key.zeroize();
-        result
-    } else if let Some(envelope) = state.vault_envelope.lock().ok().and_then(|e| e.clone()) {
-        let mut master_key = unwrap_master_key(
-            &envelope.wrapped_master_key,
-            &envelope.wrapping_salt,
-            seed_phrase,
-            &envelope.encryption_algorithm,
-        )?;
-        let result = Zeroizing::new(decrypt_password_with_master_key(
-            &entry.encrypted_password,
-            &master_key,
-        )?);
-        master_key.zeroize();
-        result
-    } else {
-        if entry.salt.trim().is_empty() {
-            return Err("Vault envelope is unavailable for this entry".into());
-        }
-        Zeroizing::new(decrypt_password(
-            &entry.encrypted_password,
-            &entry.salt,
-            seed_phrase,
-            algorithm,
-        )?)
-    };
-
-    app_handle
-        .clipboard_manager()
-        .write_text(decrypted.as_str())
-        .map_err(|e| format!("Буфер обмена: {}", e))?;
-
-    let handle = app_handle.clone();
-    let timeout = sanitize_clipboard_timeout_seconds(clipboard_timeout_seconds);
-    tokio::spawn(async move {
-        tokio::time::sleep(tokio::time::Duration::from_secs(timeout)).await;
-        let _ = handle.clipboard_manager().write_text("");
-    });
-
+    let entry = find_password_entry(&state, &entry_id).await?;
+    let decrypted = decrypt_password_entry_with_seed(&state, &entry, seed_phrase.trim())?;
+    write_clipboard_with_timeout(&app_handle, &decrypted.password, clipboard_timeout_seconds)?;
     Ok("Скопировано".into())
 }
 
@@ -855,6 +927,8 @@ fn main() {
             set_encryption_preference,
             get_passwords,
             add_password,
+            decrypt_password_entry,
+            copy_secret_to_clipboard,
             copy_password,
             delete_password,
             list_sessions,

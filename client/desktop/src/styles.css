@@ -1653,7 +1653,8 @@ h3,
     letter-spacing: 0.3px;
 }
 
-.modal-box > p {
+.modal-box > p,
+#seed-prompt > p {
     font-size: 11px;
     color: var(--gray1);
     margin-bottom: 18px;
@@ -1668,6 +1669,57 @@ h3,
 }
 
 .modal-btns .btn { flex: 1; }
+
+.decrypt-result {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.copy-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.copy-field input {
+    min-width: 0;
+}
+
+.secret-blur {
+    filter: blur(4px);
+    user-select: none;
+    pointer-events: none;
+}
+
+.copy-value {
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--border-h);
+    border-radius: var(--rad);
+    background: rgba(255,255,255,0.92);
+    color: #000;
+    font-size: 10px;
+    font-weight: 800;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.copy-value:hover {
+    transform: translateY(-1px);
+    background: var(--white);
+}
+
+.copy-value:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
 
 .weak-list {
     margin: -4px 0 10px;
@@ -1843,6 +1895,16 @@ body.theme-light .btn-back:hover {
     background: #fffdf9;
     color: var(--white);
     border-color: rgba(154, 132, 104, 0.22);
+}
+
+body.theme-light .copy-value {
+    background: #2d261f;
+    color: #fffdf9;
+    border-color: rgba(45, 38, 31, 0.08);
+}
+
+body.theme-light .copy-value:hover {
+    background: #3a3229;
 }
 
 body.theme-light .dash-top {

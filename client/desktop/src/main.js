@@ -121,7 +121,10 @@ var I18N = {
     "seedModal.desc":
       "Нужна локальная сид-фраза для расшифровки и копирования записи",
     "seedModal.placeholder": "Введите сид-фразу",
-    "seedModal.copy": "Скопировать",
+    "seedModal.decrypt": "Расшифровать",
+    "seedModal.copy": "Копировать",
+    "seedModal.login": "Логин",
+    "seedModal.password": "Пароль",
 
     "deleteModal.title": "Удалить запись?",
     "deleteModal.desc": "Это действие необратимо",
@@ -165,6 +168,7 @@ var I18N = {
     "error.login": "Ошибка входа",
     "error.register": "Ошибка регистрации",
     "error.save": "Ошибка сохранения",
+    "error.copy": "Ошибка копирования",
     "error.screenshotGuardChange": "Не удалось изменить Screenshot Guard",
     "error.startupChange": "Не удалось изменить автозапуск",
     "error.startupStatus": "Не удалось определить статус автозапуска",
@@ -335,7 +339,10 @@ var I18N = {
     "seedModal.desc":
       "Required to decrypt and copy this entry with your local seed phrase",
     "seedModal.placeholder": "Your seed phrase",
+    "seedModal.decrypt": "Decrypt",
     "seedModal.copy": "Copy",
+    "seedModal.login": "Login",
+    "seedModal.password": "Password",
     "deleteModal.title": "Delete entry?",
     "deleteModal.desc": "This action cannot be undone",
     "notify.sessionExpired": "Session expired due to inactivity",
@@ -376,6 +383,7 @@ var I18N = {
     "error.login": "Login error",
     "error.register": "Registration error",
     "error.save": "Save error",
+    "error.copy": "Copy error",
     "error.screenshotGuardChange": "Failed to update Screenshot Guard",
     "error.startupChange": "Failed to update startup option",
     "error.startupStatus": "Failed to get startup status",
@@ -861,6 +869,29 @@ function createFallbackInvoke() {
       return "Скопировано";
     }
 
+    if (command === "decrypt_password_entry") {
+      var decryptId = String(args.entryId || "");
+      var decryptEntry = entries.find(function (item) {
+        return item.id === decryptId;
+      });
+      if (!decryptEntry) {
+        throw "Запись не найдена";
+      }
+      return {
+        login: decryptEntry.encrypted_login || "",
+        password: decryptEntry._plain || decryptEntry.encrypted_password || "",
+      };
+    }
+
+    if (command === "copy_secret_to_clipboard") {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(args.value || "");
+        } catch (e) {}
+      }
+      return "Скопировано";
+    }
+
     if (command === "delete_password") {
       var deleteId = String(args.entryId || "");
       entries = entries.filter(function (item) {
@@ -898,6 +929,7 @@ function initApp(invoke) {
   var adminStatsLoading = false;
   var sessionSummaries = [];
   var sessionsLoading = false;
+  var currentDecryptedEntry = null;
   var sessionActionId = "";
   var serverProbeInProgress = false;
   var lastProbedBackendEndpoint = "";
@@ -1200,12 +1232,24 @@ function initApp(invoke) {
   }
 
   function getPasswordCopiedMessage() {
+    return getSecretCopiedMessage("password");
+  }
+
+  function getSecretCopiedMessage(kind) {
+    var label = kind === "login" ? "Login" : "Password";
     if (getLanguage() === "en") {
-      return "Password copied! Clipboard clears in " + appSettings.clipboardTimeoutSeconds + "s";
+      return (
+        label +
+        " copied! Clipboard clears in " +
+        appSettings.clipboardTimeoutSeconds +
+        "s"
+      );
     }
 
+    label = kind === "login" ? "Логин" : "Пароль";
     return (
-      "Пароль скопирован! Очистка через " +
+      label +
+      " скопирован. Очистка через " +
       appSettings.clipboardTimeoutSeconds +
       " с."
     );
@@ -1589,7 +1633,11 @@ function initApp(invoke) {
     setText("#seed-modal h2", "seedModal.title");
     setText("#seed-modal p", "seedModal.desc");
     setText("#modal-no", "common.cancel");
-    setText("#modal-yes .btn-t", "seedModal.copy");
+    setText("#modal-yes .btn-t", "seedModal.decrypt");
+    setText("#decrypt-login-label", "seedModal.login");
+    setText("#decrypt-password-label", "seedModal.password");
+    setText("#copy-login", "seedModal.copy");
+    setText("#copy-password", "seedModal.copy");
     setText("#del-modal h2", "deleteModal.title");
     setText("#del-modal p", "deleteModal.desc");
     setText("#del-no", "common.cancel");
@@ -1668,11 +1716,63 @@ function initApp(invoke) {
 
   function hideModal(name) {
     if (modals[name]) modals[name].classList.add("hidden");
-    if (name === "seed") document.getElementById("modal-seed").value = "";
+    if (name === "seed") resetSeedModal();
     if (name === "weak") {
       document.getElementById("weak-list").innerHTML = "";
       document.getElementById("weak-text").textContent = t("weak.defaultText");
     }
+  }
+
+  function resetSeedModal() {
+    currentDecryptedEntry = null;
+    document.getElementById("modal-seed").value = "";
+    document.getElementById("decrypt-login").value = "";
+    document.getElementById("decrypt-password").value = "";
+    document.getElementById("copy-login").disabled = true;
+    document.getElementById("copy-password").disabled = true;
+    document.getElementById("seed-prompt").classList.remove("hidden");
+    document.getElementById("modal-yes").classList.remove("hidden");
+    document.getElementById("decrypt-result").classList.add("hidden");
+    setText("#modal-yes .btn-t", "seedModal.decrypt");
+  }
+
+  function buildBlurredSecret(value) {
+    var length = Math.max(8, Math.min(String(value || "").length, 24));
+    return new Array(length + 1).join("*");
+  }
+
+  function showDecryptedEntry(entry) {
+    currentDecryptedEntry = {
+      login: entry && entry.login ? String(entry.login) : "",
+      password: entry && entry.password ? String(entry.password) : "",
+    };
+    document.getElementById("decrypt-login").value = buildBlurredSecret(
+      currentDecryptedEntry.login,
+    );
+    document.getElementById("decrypt-password").value =
+      buildBlurredSecret(currentDecryptedEntry.password);
+    document.getElementById("copy-login").disabled = !currentDecryptedEntry.login;
+    document.getElementById("copy-password").disabled =
+      !currentDecryptedEntry.password;
+    document.getElementById("seed-prompt").classList.add("hidden");
+    document.getElementById("modal-yes").classList.add("hidden");
+    document.getElementById("decrypt-result").classList.remove("hidden");
+  }
+
+  async function copyVisibleSecret(kind) {
+    if (!currentDecryptedEntry) {
+      return;
+    }
+    var value = kind === "login" ? currentDecryptedEntry.login : currentDecryptedEntry.password;
+    if (!value) {
+      return;
+    }
+
+    await invoke("copy_secret_to_clipboard", {
+      value: value,
+      clipboardTimeoutSeconds: appSettings.clipboardTimeoutSeconds,
+    });
+    notify(getSecretCopiedMessage(kind));
   }
 
   function notify(msg, type) {
@@ -3744,6 +3844,7 @@ function initApp(invoke) {
       if (e.target.closest(".card-del")) return;
 
       currentId = entry.id;
+      resetSeedModal();
       showModal("seed");
       setTimeout(function () {
         document.getElementById("modal-seed").focus();
@@ -4263,14 +4364,11 @@ function initApp(invoke) {
       setLoad("modal-yes", true);
 
       try {
-        await invoke("copy_password", {
+        var decryptedEntry = await invoke("decrypt_password_entry", {
           entryId: currentId,
           seedPhrase: seed,
-          clipboardTimeoutSeconds: appSettings.clipboardTimeoutSeconds,
         });
-        hideModal("seed");
-        notify(getPasswordCopiedMessage());
-        currentId = null;
+        showDecryptedEntry(decryptedEntry);
       } catch (err) {
         if (await handleAuthFailure(err)) {
           setLoad("modal-yes", false);
@@ -4283,6 +4381,28 @@ function initApp(invoke) {
       seed = "";
       document.getElementById("modal-seed").value = "";
       setLoad("modal-yes", false);
+    });
+
+  document.getElementById("copy-login").addEventListener("click", async function () {
+    try {
+      await copyVisibleSecret("login");
+    } catch (err) {
+      if (!(await handleAuthFailure(err))) {
+        notify(localizeMessage(err, "error.copy"), "err");
+      }
+    }
+  });
+
+  document
+    .getElementById("copy-password")
+    .addEventListener("click", async function () {
+      try {
+        await copyVisibleSecret("password");
+      } catch (err) {
+        if (!(await handleAuthFailure(err))) {
+          notify(localizeMessage(err, "error.copy"), "err");
+        }
+      }
     });
 
   document.getElementById("modal-no").addEventListener("click", function () {
